@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.routers import players
+from app.routers import players, games
 from app.firebase import firebase_manager
 
 app = FastAPI(
@@ -26,6 +26,7 @@ def startup_event():
 
 # Incluir rutas
 app.include_router(players.router)
+app.include_router(games.router)
 
 @app.get("/")
 def read_root():
