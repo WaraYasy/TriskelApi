@@ -11,11 +11,18 @@ Esto mantiene el desacoplamiento y asegura que:
 - Usa las mismas validaciones que el juego
 - Más fácil de escalar (puede estar en otro servidor)
 """
-import httpx
 from typing import List, Dict, Any, Optional
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
+
+# Imports opcionales (instalar si se necesitan visualizaciones)
+try:
+    import httpx
+    import pandas as pd
+    import plotly.express as px
+    import plotly.graph_objects as go
+    ANALYTICS_AVAILABLE = True
+except ImportError:
+    ANALYTICS_AVAILABLE = False
+    print("⚠️  Analytics libs no instaladas. Instala: pip install httpx pandas plotly")
 
 
 class AnalyticsService:
@@ -36,7 +43,10 @@ class AnalyticsService:
             api_base_url: URL base de la API REST
         """
         self.api_base_url = api_base_url
-        self.client = httpx.AsyncClient(base_url=api_base_url)
+        if ANALYTICS_AVAILABLE:
+            self.client = httpx.AsyncClient(base_url=api_base_url)
+        else:
+            self.client = None
 
     async def get_all_players(self) -> List[Dict[str, Any]]:
         """

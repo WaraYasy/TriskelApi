@@ -1,14 +1,14 @@
-o a"""
+"""
 Blueprint de Analytics
 
 Dashboard de métricas y visualizaciones del juego.
 
 Rutas:
-- GET /analytics/          → Dashboard principal con métricas globales
-- GET /analytics/players   → Análisis detallado de jugadores
-- GET /analytics/games     → Análisis de partidas y progresión
-- GET /analytics/choices   → Análisis de decisiones morales
-- GET /analytics/export    → Exportar datos a CSV
+- GET /dashboard/          → Dashboard principal con métricas globales
+- GET /dashboard/players   → Análisis detallado de jugadores
+- GET /dashboard/games     → Análisis de partidas y progresión
+- GET /dashboard/choices   → Análisis de decisiones morales
+- GET /dashboard/export    → Exportar datos a CSV
 """
 from flask import Blueprint, render_template, jsonify, request, send_file
 from .service import AnalyticsService
