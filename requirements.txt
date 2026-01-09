@@ -1,5 +1,38 @@
+# ============================================================
+# Triskel API - Dependencias Completas
+# ============================================================
+# Incluye tanto la API REST (FastAPI) como el Dashboard Web (Flask)
+#
+# Instalación:
+#   pip install -r requirements.txt
+#
+# ============================================================
+
+# ==================== API REST (FastAPI) ====================
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
-python-dotenv==1.0.0
 pydantic-settings==2.1.0
-firebase-admin==6.4.0
+
+# ==================== Base de Datos ====================
+firebase-admin==6.4.0            # Firestore (NoSQL)
+# sqlalchemy==2.0.25             # MariaDB (SQL) - TODO: Descomentar cuando se implemente
+# pymysql==1.1.0                 # Driver para MariaDB
+
+# ==================== Dashboard Web (Flask) ====================
+flask==3.0.0                     # Framework web
+httpx==0.25.2                    # Cliente HTTP para consumir API REST
+pandas==2.1.4                    # Procesamiento de datos
+plotly==5.18.0                   # Visualizaciones interactivas
+
+# ==================== Configuración ====================
+python-dotenv==1.0.0             # Variables de entorno
+
+# ==================== Producción ====================
+gunicorn==21.2.0                 # WSGI server (producción)
+
+# ==================== Opcional (Descomentar si se necesita) ====================
+# flask-caching==2.1.0           # Sistema de caché
+# flask-session==0.5.0           # Gestión de sesiones
+# flask-login==0.6.3             # Sistema de login
+# redis==5.0.1                   # Cache distribuido
+# celery==5.3.4                  # Tareas asíncronas
