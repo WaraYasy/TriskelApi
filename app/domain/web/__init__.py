@@ -1,11 +1,13 @@
 """
-Dominio: Analytics (Dashboard y Visualizaciones)
+Dominio Web
 
-Dashboard web con Flask para visualizar métricas:
-- Gráficos con Plotly
-- Análisis de decisiones morales
-- Leaderboards
-- Exportación de datos
+Portal web de Triskel que integra:
+- Dashboard de analytics (métricas y visualizaciones)
+- Panel de administración (futuro)
+- Landing page pública (futuro)
 
-Arquitectura: Especial (Flask consume API REST, no tiene repository propio)
+Este dominio usa Flask y se monta en FastAPI.
 """
+from .app import flask_app
+
+__all__ = ['flask_app']
