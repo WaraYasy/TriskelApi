@@ -2,11 +2,12 @@
 Triskel API - Main Application
 
 Aplicación principal con arquitectura hexagonal por dominios.
-Integra FastAPI para la API REST del juego.
+Integra FastAPI para la API REST del juego + Flask para el dashboard web.
 """
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.wsgi import WSGIMiddleware
 
 # Imports desde la nueva arquitectura
 from app.shared.settings import settings
@@ -14,6 +15,7 @@ from app.shared.firebase_client import firebase_manager
 from app.shared.logger import logger
 from app.domain.players.api import router as players_router
 from app.domain.games.api import router as games_router
+from app.domain.web import flask_app  # ⭐ Flask app
 from app.middleware.auth import auth_middleware
 
 # Crear aplicación FastAPI
@@ -52,7 +54,7 @@ def startup_event():
     logger.info("Triskel API lista")
 
 
-# Registrar routers de dominios
+# Registrar routers de dominios (FastAPI REST API)
 app.include_router(players_router)
 app.include_router(games_router)
 
@@ -60,7 +62,10 @@ app.include_router(games_router)
 # app.include_router(events_router)
 # app.include_router(sessions_router)
 # app.include_router(auth_router)
-# app.include_router(analytics_router)
+
+# Montar Flask app (Dashboard Web)
+app.mount("/web", WSGIMiddleware(flask_app))
+logger.info("Flask app montada en /web")
 
 
 # Endpoints raíz
@@ -71,7 +76,9 @@ def read_root():
         "message": "Bienvenido a Triskel-API",
         "version": "2.0.0",
         "status": "online",
-        "docs": "/docs"
+        "api_docs": "/docs",
+        "dashboard": "/web/",
+        "analytics": "/web/dashboard/"
     }
 
 
