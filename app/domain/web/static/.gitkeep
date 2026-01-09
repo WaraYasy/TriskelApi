@@ -1,0 +1,15 @@
+# Assets estáticos para el dashboard
+
+# TODO: Añadir CSS, JS e imágenes
+#
+# Estructura sugerida:
+# static/
+#   ├── css/
+#   │   └── style.css (estilos del dashboard)
+#   ├── js/
+#   │   └── dashboard.js (JavaScript para interactividad)
+#   └── images/
+#       └── logo.png
+#
+# El CSS puede usar frameworks como Bootstrap o Tailwind
+# para ahorrar tiempo en el diseño.
