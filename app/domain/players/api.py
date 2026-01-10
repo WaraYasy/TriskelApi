@@ -126,10 +126,21 @@ def create_player(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/me", response_model=Player)
+@router.get(
+    "/me",
+    response_model=Player,
+    responses={
+        200: {"description": "Perfil del jugador autenticado"},
+        401: {"description": "No autenticado - requiere X-Player-ID y X-Player-Token"}
+    },
+    summary="Ver mi perfil",
+    dependencies=[]
+)
 def get_my_profile(request: Request):
     """
     Obtener mi propio perfil (jugador autenticado).
+
+    **Requiere autenticación:** X-Player-ID + X-Player-Token
 
     El middleware ya validó la autenticación y obtuvo el player.
     Simplemente devolvemos el player que ya está en memoria.
