@@ -208,12 +208,22 @@ Deberías recibir:
 cat config/firebase-credentials.json | base64 -w 0
 ```
 
+### Error: "ModuleNotFoundError: No module named 'app.config'"
+
+**Causa:** El PYTHONPATH no incluye el directorio raíz del proyecto.
+
+**Solución:** Ya está configurado en `railway.json` con `PYTHONPATH=.`. Si aún tienes este error:
+1. Verifica que tu código tiene todos los archivos `__init__.py` en las carpetas
+2. Verifica que `railway.json` está en el repositorio
+3. Haz un nuevo despliegue después del commit
+
 ### Error: "Application failed to start"
 
 **Verifica:**
 1. Que todas las variables obligatorias están configuradas
 2. Los logs de Railway para ver el error específico
 3. Que el archivo `firebase-credentials.json` es válido
+4. Que `railway.json` y `Procfile` están en el repositorio
 
 ### CORS Errors en el frontend
 
