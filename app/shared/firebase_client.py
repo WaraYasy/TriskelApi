@@ -4,6 +4,8 @@ Cliente de Firebase Firestore
 Gestor centralizado para conectarse a Firebase.
 Usa patrón Singleton para tener una sola conexión.
 """
+import os
+import json
 import firebase_admin
 from firebase_admin import credentials, firestore
 from .settings import settings
@@ -34,8 +36,22 @@ class FirebaseManager:
             return  # Ya está inicializado, no hacer nada
 
         try:
-            # Cargar archivo de credenciales
-            cred = credentials.Certificate(settings.firebase_credentials_path)
+            # Opción 1: Credenciales desde JSON string (Railway/Producción)
+            if settings.firebase_credentials_json:
+                print("🔑 Cargando credenciales de Firebase desde variable de entorno JSON")
+                creds_dict = json.loads(settings.firebase_credentials_json)
+                cred = credentials.Certificate(creds_dict)
+
+            # Opción 2: Credenciales desde archivo (Local/Desarrollo)
+            elif os.path.exists(settings.firebase_credentials_path):
+                print(f"🔑 Cargando credenciales de Firebase desde archivo: {settings.firebase_credentials_path}")
+                cred = credentials.Certificate(settings.firebase_credentials_path)
+
+            else:
+                raise ValueError(
+                    "❌ No se encontraron credenciales de Firebase. "
+                    "Configura FIREBASE_CREDENTIALS_JSON o FIREBASE_CREDENTIALS_PATH"
+                )
 
             # Inicializar Firebase
             firebase_admin.initialize_app(cred)

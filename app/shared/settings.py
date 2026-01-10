@@ -19,6 +19,7 @@ class Settings(BaseSettings):
 
     # Firebase
     firebase_credentials_path: str = "config/firebase-credentials.json"
+    firebase_credentials_json: Optional[str] = None  # Para Railway/Producción
 
     # MariaDB (preparado para futuro uso)
     mariadb_host: Optional[str] = None
