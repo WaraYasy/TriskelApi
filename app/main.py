@@ -16,6 +16,7 @@ from app.infrastructure.database.firebase_client import firebase_manager
 from app.core.logger import logger
 from app.domain.players.api import router as players_router
 from app.domain.games.api import router as games_router
+from app.domain.events.api import router as events_router
 from app.domain.web import flask_app  # ⭐ Flask app
 from app.middleware.auth import auth_middleware
 
@@ -39,6 +40,10 @@ app = FastAPI(
         {
             "name": "Games",
             "description": "Gestión de partidas y estadísticas"
+        },
+        {
+            "name": "Events",
+            "description": "Eventos de gameplay y telemetría"
         }
     ]
 )
@@ -154,9 +159,9 @@ def startup_event():
 # Registrar routers de dominios (FastAPI REST API)
 app.include_router(players_router)
 app.include_router(games_router)
+app.include_router(events_router)
 
 # TODO: Añadir routers adicionales cuando estén implementados:
-# app.include_router(events_router)
 # app.include_router(sessions_router)
 # app.include_router(auth_router)
 
