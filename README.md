@@ -4,6 +4,13 @@ API REST y Dashboard Web para el videojuego **Triskel: La Balada del Último Gua
 
 Desarrollado por **Mandrágora** para Colegio Hogwarts de Magia y Hechicería.
 
+## 📖 Guías Rápidas
+
+- 🚀 **[Desplegar en Railway](docs/RAILWAY_DEPLOYMENT.md)** - Guía completa de despliegue en producción
+- 🎮 **[Integrar con Unity](docs/UNITY_INTEGRATION.md)** - Conecta tu juego Unity con la API
+- 🔐 **[Claves de Seguridad](docs/SECURITY_KEYS.md)** - Diferencia entre SECRET_KEY y API_KEY
+- 📚 **[Documentación Completa](docs/README.md)** - Índice de toda la documentación
+
 ---
 
 ## 🏗️ Arquitectura
@@ -47,16 +54,22 @@ Coloca tu archivo de credenciales en:
 config/firebase-credentials.json
 ```
 
-### **5. Variables de Entorno (Opcional)**
-Crea un archivo `.env`:
+### **5. Variables de Entorno**
+
+Para **desarrollo local**, copia `.env.example` a `.env`:
 ```bash
-APP_NAME="Triskel-API"
-DEBUG=True
-PORT=8000
-LOG_LEVEL="INFO"
-CORS_ORIGINS="*"
-FIREBASE_CREDENTIALS_PATH="config/firebase-credentials.json"
+cp .env.example .env
 ```
+
+Variables **obligatorias** para desarrollo:
+```bash
+SECRET_KEY=triskel_secret_key_desarrollo_local_change_in_production
+API_KEY=triskel_admin_api_key_desarrollo_local_change_in_production
+```
+
+Las credenciales de Firebase se cargan automáticamente desde `config/firebase-credentials.json` en desarrollo.
+
+**Nota:** Para desplegar en **Railway/Producción**, consulta la [Guía de Despliegue](docs/RAILWAY_DEPLOYMENT.md).
 
 ---
 
@@ -230,9 +243,14 @@ touch app/domain/nuevo_dominio/{__init__,api,service,models,schemas,ports}.py
 
 ## 📚 Documentación
 
+### Guías de Despliegue e Integración
+- 🚀 **[Railway Deployment](docs/RAILWAY_DEPLOYMENT.md)** - Desplegar API en Railway (Variables, CORS, Troubleshooting)
+- 🎮 **[Unity Integration](docs/UNITY_INTEGRATION.md)** - Conectar Unity con la API (Nativo y WebGL)
+- 📚 **[Docs Index](docs/README.md)** - Índice completo de documentación
+
+### Arquitectura y Desarrollo
 - [REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md) - Resumen de arquitectura
 - [app/domain/web/README.md](app/domain/web/README.md) - Documentación del dashboard
-- [docs/UNITY_INTEGRATION.md](docs/UNITY_INTEGRATION.md) - Integración con Unity
 
 ---
 
