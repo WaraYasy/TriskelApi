@@ -11,6 +11,7 @@ from ..ports import IPlayerRepository
 from ..models import Player
 from ..schemas import PlayerCreate, PlayerUpdate
 from app.shared.firebase_client import get_firestore_client
+from app.shared.logger import logger
 
 
 class FirestorePlayerRepository(IPlayerRepository):
@@ -45,7 +46,7 @@ class FirestorePlayerRepository(IPlayerRepository):
         doc_ref = self.collection.document(player.player_id)
         doc_ref.set(player.to_dict())
 
-        print(f"✅ Jugador creado: {player.player_id} - {player.username}")
+        logger.info(f"Jugador creado: {player.player_id} - {player.username}")
         return player
 
     def get_by_id(self, player_id: str) -> Optional[Player]:
@@ -83,38 +84,50 @@ class FirestorePlayerRepository(IPlayerRepository):
         return players
 
     def update(self, player_id: str, player_update: PlayerUpdate) -> Optional[Player]:
-        """Actualiza un jugador existente"""
-        doc_ref = self.collection.document(player_id)
-        doc = doc_ref.get()
+        """
+        Actualiza un jugador existente de forma eficiente.
 
-        if not doc.exists:
-            return None
-
-        # Obtener solo los campos que no son None
+        Solo actualiza los campos que no son None en player_update.
+        """
+        # Obtener solo los campos que tienen valor (exclude_none=True)
         update_data = player_update.model_dump(exclude_none=True)
 
         if not update_data:
             # No hay nada que actualizar, retornar el jugador actual
             return self.get_by_id(player_id)
 
-        # Actualizar en Firestore
-        doc_ref.update(update_data)
+        # Firestore update() falla si el documento no existe
+        # Es más eficiente que verificar existencia primero
+        try:
+            doc_ref = self.collection.document(player_id)
+            doc_ref.update(update_data)
 
-        print(f"✅ Jugador actualizado: {player_id}")
+            logger.info(f"Jugador actualizado: {player_id} - {list(update_data.keys())}")
 
-        # Retornar el jugador actualizado
-        return self.get_by_id(player_id)
+            # Retornar el jugador actualizado
+            return self.get_by_id(player_id)
+
+        except Exception as e:
+            # Si el documento no existe, update() lanza excepción
+            logger.warning(f"Error actualizando jugador {player_id}: {e}")
+            return None
 
     def delete(self, player_id: str) -> bool:
-        """Elimina un jugador"""
+        """
+        Elimina un jugador de Firestore.
+
+        Firestore permite eliminar documentos que no existen sin error,
+        así que verificamos existencia primero para retornar el valor correcto.
+        """
         doc_ref = self.collection.document(player_id)
         doc = doc_ref.get()
 
         if not doc.exists:
+            logger.warning(f"Intento de eliminar jugador inexistente: {player_id}")
             return False
 
         doc_ref.delete()
-        print(f"✅ Jugador eliminado: {player_id}")
+        logger.info(f"Jugador eliminado: {player_id}")
         return True
 
     def exists(self, player_id: str) -> bool:

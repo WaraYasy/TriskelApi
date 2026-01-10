@@ -1,11 +1,14 @@
 """
 Middleware de autenticación
 
-Valida player_id + player_token en headers para proteger endpoints.
+Soporta DOS tipos de autenticación:
+1. Player Token: Para jugadores (solo acceden a sus propios datos)
+2. API Key: Para administración (acceso completo)
 """
-from fastapi import Request, HTTPException
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from app.domain.players.adapters.firestore_repository import FirestorePlayerRepository
+from app.shared.settings import settings
 
 
 # Rutas que NO requieren autenticación
@@ -25,16 +28,21 @@ CREATION_ROUTES = [
 
 async def auth_middleware(request: Request, call_next):
     """
-    Middleware que valida player_id + player_token en los headers
+    Middleware que valida autenticación de dos formas:
 
-    El juego debe incluir:
-    - Header "X-Player-ID": el UUID del jugador
-    - Header "X-Player-Token": el token secreto del jugador
+    1. API KEY (admin):
+       - Header "X-API-Key": la clave de administración
+       - Acceso completo a todos los endpoints
+
+    2. PLAYER TOKEN (jugadores):
+       - Header "X-Player-ID": el UUID del jugador
+       - Header "X-Player-Token": el token secreto del jugador
+       - Solo accede a sus propios datos
     """
     path = request.url.path
 
     # Rutas públicas (sin autenticación)
-    if path in PUBLIC_ROUTES or path.startswith("/docs") or path.startswith("/openapi"):
+    if path in PUBLIC_ROUTES or path.startswith("/docs") or path.startswith("/openapi") or path.startswith("/web"):
         return await call_next(request)
 
     # POST /v1/players (crear jugador) no requiere autenticación
@@ -43,6 +51,21 @@ async def auth_middleware(request: Request, call_next):
 
     # El resto de rutas v1 requieren autenticación
     if path.startswith("/v1/"):
+        # OPCIÓN 1: Autenticación con API Key (admin)
+        api_key = request.headers.get("X-API-Key")
+        if api_key:
+            if api_key != settings.api_key:
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": "API Key inválida"}
+                )
+
+            # API Key válida - marcar como admin
+            request.state.is_admin = True
+            request.state.player_id = None
+            return await call_next(request)
+
+        # OPCIÓN 2: Autenticación con Player Token (jugador)
         player_id = request.headers.get("X-Player-ID")
         player_token = request.headers.get("X-Player-Token")
 
@@ -51,7 +74,7 @@ async def auth_middleware(request: Request, call_next):
             return JSONResponse(
                 status_code=401,
                 content={
-                    "detail": "Headers de autenticación requeridos: X-Player-ID y X-Player-Token"
+                    "detail": "Autenticación requerida. Usa X-API-Key (admin) o X-Player-ID + X-Player-Token (jugador)"
                 }
             )
 
@@ -73,6 +96,7 @@ async def auth_middleware(request: Request, call_next):
                 )
 
             # Autenticación exitosa - agregar player_id al request state
+            request.state.is_admin = False
             request.state.player_id = player_id
             request.state.player = player
 

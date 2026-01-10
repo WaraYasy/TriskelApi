@@ -130,62 +130,69 @@ class PlayerService:
         if not player:
             return None
 
-        # Incrementar contadores de partidas
+        # 1. CONTADORES DE PARTIDAS
         player.games_played += 1
         if game.status == "completed":
             player.games_completed += 1
 
-        # Sumar tiempo total de juego
+        # 2. TIEMPO TOTAL DE JUEGO
         player.total_playtime_seconds += game.total_time_seconds
 
-        # Acumular muertes totales
+        # 3. MUERTES TOTALES
         player.stats.total_deaths += game.metrics.total_deaths
 
-        # Analizar elecciones morales de esta partida
+        # 4. ANÁLISIS DE ELECCIONES MORALES
+        # Mapeo de decisiones: {nivel: {acción_buena: nombre, acción_mala: nombre}}
+        moral_choices_map = {
+            "senda_ebano": {"good": "sanar", "bad": "forzar"},
+            "fortaleza_gigantes": {"good": "construir", "bad": "destruir"},
+            "aquelarre_sombras": {"good": "revelar", "bad": "ocultar"}
+        }
+
         good_choices = 0
         bad_choices = 0
 
-        # Senda del Ébano: sanar (bueno) vs forzar (malo)
-        if game.choices.senda_ebano == "sanar":
-            good_choices += 1
-        elif game.choices.senda_ebano == "forzar":
-            bad_choices += 1
+        # Analizar cada nivel
+        for level, choices in moral_choices_map.items():
+            # Obtener la decisión del jugador para este nivel
+            player_choice = getattr(game.choices, level, None)
 
-        # Fortaleza de Gigantes: construir (bueno) vs destruir (malo)
-        if game.choices.fortaleza_gigantes == "construir":
-            good_choices += 1
-        elif game.choices.fortaleza_gigantes == "destruir":
-            bad_choices += 1
+            if player_choice == choices["good"]:
+                good_choices += 1
+            elif player_choice == choices["bad"]:
+                bad_choices += 1
+            # Si es None, el jugador no tomó decisión en este nivel
 
-        # Aquelarre de Sombras: revelar (bueno) vs ocultar (malo)
-        if game.choices.aquelarre_sombras == "revelar":
-            good_choices += 1
-        elif game.choices.aquelarre_sombras == "ocultar":
-            bad_choices += 1
-
-        # Acumular en el total de elecciones
+        # Acumular en el total histórico
         player.stats.total_good_choices += good_choices
         player.stats.total_bad_choices += bad_choices
 
-        # Calcular alineación moral: (buenas - malas) / total
-        # Resultado: -1.0 (completamente malo) a +1.0 (completamente bueno)
+        # 5. CALCULAR ALINEACIÓN MORAL
+        # Fórmula: (decisiones_buenas - decisiones_malas) / total_decisiones
+        # Rango: -1.0 (completamente malo) a +1.0 (completamente bueno)
         total_choices = player.stats.total_good_choices + player.stats.total_bad_choices
+
         if total_choices > 0:
             player.stats.moral_alignment = (
                 (player.stats.total_good_choices - player.stats.total_bad_choices) / total_choices
             )
+        # Si total_choices == 0, moral_alignment se queda en 0.0 (neutral)
 
-        # Actualizar reliquia favorita (simplificación: usar la última obtenida)
-        if game.relics:
+        # 6. RELIQUIA FAVORITA (TODO: mejorar lógica para contar la más usada)
+        # Por ahora: simplificación - usar la última obtenida
+        if game.relics and len(game.relics) > 0:
             player.stats.favorite_relic = game.relics[-1]
 
-        # Actualizar mejor speedrun (solo si completó el juego)
+        # 7. MEJOR SPEEDRUN (solo si completó el juego)
         if game.status == "completed":
             current_best = player.stats.best_speedrun_seconds
+
+            # Si no tiene record o superó el record actual
             if current_best is None or game.total_time_seconds < current_best:
                 player.stats.best_speedrun_seconds = game.total_time_seconds
 
-        # Preparar datos de actualización
+        # 8. GUARDAR CAMBIOS
+        # Usar PlayerUpdate para actualizar solo los campos modificados
         update_data = PlayerUpdate(
             total_playtime_seconds=player.total_playtime_seconds,
             games_played=player.games_played,
@@ -193,5 +200,4 @@ class PlayerService:
             stats=player.stats
         )
 
-        # Guardar y retornar
         return self.repository.update(player_id, update_data)
