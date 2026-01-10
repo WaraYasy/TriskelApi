@@ -2,8 +2,16 @@
 API REST para Games
 
 Endpoints de FastAPI para gestionar partidas.
+
+Reglas de acceso:
+- POST /v1/games: Jugador autenticado (crear partida propia)
+- GET /v1/games/{id}: Solo si es tu partida o con API Key
+- GET /v1/games/player/{player_id}: Solo si es tu ID o con API Key
+- PATCH /v1/games/{id}: Solo si es tu partida o con API Key
+- POST /v1/games/{id}/level/*: Solo si es tu partida o con API Key
+- DELETE /v1/games/{id}: Solo si es tu partida o con API Key
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
 
 from .ports import IGameRepository
@@ -20,6 +28,69 @@ from ..players.adapters.firestore_repository import FirestorePlayerRepository
 
 # Router de FastAPI
 router = APIRouter(prefix="/v1/games", tags=["Games"])
+
+
+# ==================== HELPERS ====================
+
+def check_game_access(request: Request, game: Game, service: GameService) -> None:
+    """
+    Verifica que el usuario tenga permisos para acceder a la partida especificada.
+
+    Reglas:
+    - Admin (API Key): puede acceder a cualquier partida
+    - Jugador autenticado: solo puede acceder a sus propias partidas
+
+    Args:
+        request: Request de FastAPI con estado de autenticación
+        game: Partida a la que se quiere acceder
+        service: Servicio de games (no usado pero mantenido para consistencia)
+
+    Raises:
+        HTTPException 403: Si no tiene permisos
+    """
+    is_admin = getattr(request.state, "is_admin", False)
+    authenticated_player_id = getattr(request.state, "player_id", None)
+
+    # Admin puede acceder a cualquier partida
+    if is_admin:
+        return
+
+    # Jugador solo puede acceder a sus propias partidas
+    if game.player_id != authenticated_player_id:
+        raise HTTPException(
+            status_code=403,
+            detail="No tienes permisos para acceder a esta partida"
+        )
+
+
+def check_player_games_access(request: Request, target_player_id: str) -> None:
+    """
+    Verifica que el usuario tenga permisos para ver las partidas de un jugador.
+
+    Reglas:
+    - Admin (API Key): puede ver partidas de cualquier jugador
+    - Jugador autenticado: solo puede ver sus propias partidas
+
+    Args:
+        request: Request de FastAPI con estado de autenticación
+        target_player_id: ID del jugador cuyas partidas se quieren ver
+
+    Raises:
+        HTTPException 403: Si no tiene permisos
+    """
+    is_admin = getattr(request.state, "is_admin", False)
+    authenticated_player_id = getattr(request.state, "player_id", None)
+
+    # Admin puede ver partidas de cualquier jugador
+    if is_admin:
+        return
+
+    # Jugador solo puede ver sus propias partidas
+    if authenticated_player_id != target_player_id:
+        raise HTTPException(
+            status_code=403,
+            detail="No tienes permisos para ver las partidas de este jugador"
+        )
 
 
 # ==================== DEPENDENCY INJECTION ====================
@@ -65,6 +136,7 @@ def get_game_service(
 @router.post("", response_model=Game, status_code=201)
 def create_game(
     game_data: GameCreate,
+    request: Request,
     service: GameService = Depends(get_game_service)
 ):
     """
@@ -73,18 +145,31 @@ def create_game(
     Reglas:
     - El jugador debe existir
     - No puede tener otra partida activa
+    - Solo puedes crear partidas para ti mismo (a menos que seas admin)
 
     Args:
         game_data: Datos de la partida (solo player_id)
+        request: Request de FastAPI
         service: Servicio inyectado
 
     Returns:
         Game: Partida creada
 
     Raises:
+        HTTPException 403: Si intentas crear partida para otro jugador
         HTTPException 404: Si el jugador no existe
         HTTPException 409: Si ya tiene partida activa
     """
+    # Verificar que el jugador autenticado puede crear partida para este player_id
+    is_admin = getattr(request.state, "is_admin", False)
+    authenticated_player_id = getattr(request.state, "player_id", None)
+
+    if not is_admin and game_data.player_id != authenticated_player_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Solo puedes crear partidas para ti mismo"
+        )
+
     try:
         return service.create_game(game_data)
     except ValueError as e:
@@ -98,19 +183,24 @@ def create_game(
 @router.get("/{game_id}", response_model=Game)
 def get_game(
     game_id: str,
+    request: Request,
     service: GameService = Depends(get_game_service)
 ):
     """
     Obtener una partida por ID.
 
+    Solo puedes ver tus propias partidas, a menos que uses API Key (admin).
+
     Args:
         game_id: ID de la partida
+        request: Request de FastAPI
         service: Servicio inyectado
 
     Returns:
         Game: Partida completa
 
     Raises:
+        HTTPException 403: Si intentas ver la partida de otro jugador
         HTTPException 404: Si la partida no existe
     """
     game = service.get_game(game_id)
@@ -118,26 +208,39 @@ def get_game(
     if not game:
         raise HTTPException(status_code=404, detail="Partida no encontrada")
 
+    # Verificar permisos (admin o propia partida)
+    check_game_access(request, game, service)
+
     return game
 
 
 @router.get("/player/{player_id}", response_model=List[Game])
 def get_player_games(
     player_id: str,
+    request: Request,
     limit: int = 100,
     service: GameService = Depends(get_game_service)
 ):
     """
     Obtener todas las partidas de un jugador.
 
+    Solo puedes ver tus propias partidas, a menos que uses API Key (admin).
+
     Args:
         player_id: ID del jugador
+        request: Request de FastAPI
         limit: Máximo número de partidas a retornar
         service: Servicio inyectado
 
     Returns:
         List[Game]: Lista de partidas
+
+    Raises:
+        HTTPException 403: Si intentas ver partidas de otro jugador
     """
+    # Verificar permisos (admin o propio jugador)
+    check_player_games_access(request, player_id)
+
     return service.get_player_games(player_id, limit=limit)
 
 
@@ -145,58 +248,81 @@ def get_player_games(
 def update_game(
     game_id: str,
     game_update: GameUpdate,
+    request: Request,
     service: GameService = Depends(get_game_service)
 ):
     """
     Actualizar una partida.
 
+    Solo puedes actualizar tus propias partidas, a menos que uses API Key (admin).
+
     Args:
         game_id: ID de la partida
         game_update: Campos a actualizar
+        request: Request de FastAPI
         service: Servicio inyectado
 
     Returns:
         Game: Partida actualizada
 
     Raises:
+        HTTPException 403: Si intentas actualizar la partida de otro jugador
         HTTPException 404: Si la partida no existe
     """
-    game = service.update_game(game_id, game_update)
+    # Primero obtener la partida para verificar permisos
+    game = service.get_game(game_id)
 
     if not game:
         raise HTTPException(status_code=404, detail="Partida no encontrada")
 
-    return game
+    # Verificar permisos (admin o propia partida)
+    check_game_access(request, game, service)
+
+    # Proceder con la actualización
+    updated_game = service.update_game(game_id, game_update)
+
+    return updated_game
 
 
 @router.post("/{game_id}/level/start", response_model=Game)
 def start_level(
     game_id: str,
     level_data: LevelStart,
+    request: Request,
     service: GameService = Depends(get_game_service)
 ):
     """
     Registrar inicio de un nivel.
 
+    Solo puedes iniciar niveles en tus propias partidas, a menos que uses API Key (admin).
+
     Args:
         game_id: ID de la partida
         level_data: Datos del nivel a iniciar
+        request: Request de FastAPI
         service: Servicio inyectado
 
     Returns:
         Game: Partida actualizada
 
     Raises:
+        HTTPException 403: Si intentas modificar la partida de otro jugador
         HTTPException 404: Si la partida no existe
         HTTPException 400: Si la partida no está activa
     """
+    # Primero obtener la partida para verificar permisos
+    game = service.get_game(game_id)
+
+    if not game:
+        raise HTTPException(status_code=404, detail="Partida no encontrada")
+
+    # Verificar permisos (admin o propia partida)
+    check_game_access(request, game, service)
+
+    # Proceder con iniciar el nivel
     try:
-        game = service.start_level(game_id, level_data)
-
-        if not game:
-            raise HTTPException(status_code=404, detail="Partida no encontrada")
-
-        return game
+        updated_game = service.start_level(game_id, level_data)
+        return updated_game
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -205,10 +331,13 @@ def start_level(
 def complete_level(
     game_id: str,
     level_data: LevelComplete,
+    request: Request,
     service: GameService = Depends(get_game_service)
 ):
     """
     Registrar completado de un nivel.
+
+    Solo puedes completar niveles en tus propias partidas, a menos que uses API Key (admin).
 
     Actualiza:
     - Niveles completados
@@ -220,22 +349,30 @@ def complete_level(
     Args:
         game_id: ID de la partida
         level_data: Datos del nivel completado
+        request: Request de FastAPI
         service: Servicio inyectado
 
     Returns:
         Game: Partida actualizada
 
     Raises:
+        HTTPException 403: Si intentas modificar la partida de otro jugador
         HTTPException 404: Si la partida no existe
         HTTPException 400: Si la partida no está activa
     """
+    # Primero obtener la partida para verificar permisos
+    game = service.get_game(game_id)
+
+    if not game:
+        raise HTTPException(status_code=404, detail="Partida no encontrada")
+
+    # Verificar permisos (admin o propia partida)
+    check_game_access(request, game, service)
+
+    # Proceder con completar el nivel
     try:
-        game = service.complete_level(game_id, level_data)
-
-        if not game:
-            raise HTTPException(status_code=404, detail="Partida no encontrada")
-
-        return game
+        updated_game = service.complete_level(game_id, level_data)
+        return updated_game
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -243,24 +380,36 @@ def complete_level(
 @router.delete("/{game_id}")
 def delete_game(
     game_id: str,
+    request: Request,
     service: GameService = Depends(get_game_service)
 ):
     """
     Eliminar una partida.
 
+    Solo puedes eliminar tus propias partidas, a menos que uses API Key (admin).
+
     Args:
         game_id: ID de la partida
+        request: Request de FastAPI
         service: Servicio inyectado
 
     Returns:
         dict: Mensaje de confirmación
 
     Raises:
+        HTTPException 403: Si intentas eliminar la partida de otro jugador
         HTTPException 404: Si la partida no existe
     """
-    deleted = service.delete_game(game_id)
+    # Primero obtener la partida para verificar permisos
+    game = service.get_game(game_id)
 
-    if not deleted:
+    if not game:
         raise HTTPException(status_code=404, detail="Partida no encontrada")
+
+    # Verificar permisos (admin o propia partida)
+    check_game_access(request, game, service)
+
+    # Proceder con la eliminación
+    service.delete_game(game_id)
 
     return {"message": "Partida eliminada correctamente"}
