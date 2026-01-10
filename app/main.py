@@ -113,10 +113,20 @@ def custom_openapi():
 app.openapi = custom_openapi
 
 
-# CORS - Permitir peticiones desde cualquier origen (ajustar en producción)
+# CORS - Configuración automática según entorno
+cors_origins = settings.cors_origins
+# Si cors_origins es "*", no lo separamos por comas
+if cors_origins == "*":
+    allowed_origins = ["*"]
+elif cors_origins:
+    allowed_origins = [origin.strip() for origin in cors_origins.split(",")]
+else:
+    # Sin CORS configurado en producción - no permitir ningún origen
+    allowed_origins = []
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins.split(","),
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

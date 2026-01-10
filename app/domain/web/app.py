@@ -37,10 +37,11 @@ def create_flask_app():
         static_folder=static_dir
     )
 
-    # Configuración básica
+    # Configuración básica (desde settings)
+    from app.config.settings import settings as app_settings
     app.config.update(
-        SECRET_KEY='triskel-secret-key-change-in-production',  # TODO: Mover a settings
-        DEBUG=True  # TODO: Leer desde settings
+        SECRET_KEY=app_settings.secret_key,  # Desde variables de entorno
+        DEBUG=app_settings.debug  # Detectado automáticamente según entorno
     )
 
     # Registrar blueprints

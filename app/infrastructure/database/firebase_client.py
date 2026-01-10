@@ -6,9 +6,11 @@ Usa patrón Singleton para tener una sola conexión.
 """
 import os
 import json
+import base64
 import firebase_admin
 from firebase_admin import credentials, firestore
 from app.config.settings import settings
+from app.core.logger import logger
 from typing import Optional
 
 
@@ -36,21 +38,34 @@ class FirebaseManager:
             return  # Ya está inicializado, no hacer nada
 
         try:
-            # Opción 1: Credenciales desde JSON string (Railway/Producción)
-            if settings.firebase_credentials_json:
-                print("🔑 Cargando credenciales de Firebase desde variable de entorno JSON")
+            # Opción 1: Credenciales desde Base64 (RECOMENDADO para Railway/Producción)
+            if settings.firebase_credentials_base64:
+                logger.info("Cargando credenciales de Firebase desde Base64")
+                try:
+                    # Decodificar base64 a JSON string
+                    decoded_bytes = base64.b64decode(settings.firebase_credentials_base64)
+                    decoded_str = decoded_bytes.decode('utf-8')
+                    creds_dict = json.loads(decoded_str)
+                    cred = credentials.Certificate(creds_dict)
+                    logger.info("Credenciales Base64 decodificadas correctamente")
+                except Exception as e:
+                    raise ValueError(f"Error decodificando FIREBASE_CREDENTIALS_BASE64: {e}")
+
+            # Opción 2: Credenciales desde JSON string (Alternativa)
+            elif settings.firebase_credentials_json:
+                logger.info("Cargando credenciales de Firebase desde JSON string")
                 creds_dict = json.loads(settings.firebase_credentials_json)
                 cred = credentials.Certificate(creds_dict)
 
-            # Opción 2: Credenciales desde archivo (Local/Desarrollo)
+            # Opción 3: Credenciales desde archivo (Local/Desarrollo)
             elif os.path.exists(settings.firebase_credentials_path):
-                print(f"🔑 Cargando credenciales de Firebase desde archivo: {settings.firebase_credentials_path}")
+                logger.info(f"Cargando credenciales de Firebase desde archivo: {settings.firebase_credentials_path}")
                 cred = credentials.Certificate(settings.firebase_credentials_path)
 
             else:
                 raise ValueError(
-                    "❌ No se encontraron credenciales de Firebase. "
-                    "Configura FIREBASE_CREDENTIALS_JSON o FIREBASE_CREDENTIALS_PATH"
+                    "No se encontraron credenciales de Firebase. "
+                    "Configura FIREBASE_CREDENTIALS_BASE64, FIREBASE_CREDENTIALS_JSON o FIREBASE_CREDENTIALS_PATH"
                 )
 
             # Inicializar Firebase
@@ -60,10 +75,10 @@ class FirebaseManager:
             self._db = firestore.client()
 
             self._initialized = True
-            print("✅ Firebase conectado correctamente")
+            logger.info("Firebase conectado correctamente")
 
         except Exception as e:
-            print(f"❌ Error conectando a Firebase: {e}")
+            logger.error(f"Error conectando a Firebase: {e}")
             raise
 
     def get_db(self) -> firestore.Client:
