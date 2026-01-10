@@ -8,6 +8,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.wsgi import WSGIMiddleware
+from fastapi.openapi.utils import get_openapi
 
 # Imports desde la nueva arquitectura
 from app.shared.settings import settings
@@ -23,8 +24,94 @@ app = FastAPI(
     title=settings.app_name,
     debug=settings.debug,
     description="API REST para el videojuego Triskel: La Balada del Último Guardián",
-    version="2.0.0"
+
+    version="2.0.0",
+    # Esquemas de seguridad para Swagger UI
+    swagger_ui_init_oauth={
+        "usePkceWithAuthorizationCodeGrant": True,
+    },
+    # Definir esquemas de seguridad
+    openapi_tags=[
+        {
+            "name": "Players",
+            "description": "Gestión de jugadores y perfiles"
+        },
+        {
+            "name": "Games",
+            "description": "Gestión de partidas y estadísticas"
+        }
+    ]
 )
+
+# Personalizar esquema OpenAPI para mostrar esquemas de seguridad
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+
+    # Agregar esquemas de seguridad
+    openapi_schema["components"]["securitySchemes"] = {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-API-Key",
+            "description": "API Key para administradores (acceso total)"
+        },
+        "PlayerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "Player credentials",
+            "description": "Autenticación de jugador: requiere headers X-Player-ID y X-Player-Token"
+        }
+    }
+
+    # Marcar endpoints protegidos con candaditos
+    for path, path_item in openapi_schema["paths"].items():
+        # Endpoints públicos (sin autenticación)
+        public_endpoints = [
+            ("/", "get"),
+            ("/health", "get"),
+            ("/v1/players", "post"),  # Crear jugador es público
+        ]
+
+        for method, operation in path_item.items():
+            if method not in ["get", "post", "put", "patch", "delete"]:
+                continue
+
+            # Si es endpoint público, skip
+            if (path, method) in public_endpoints:
+                continue
+
+            # Determinar qué tipo de autenticación requiere
+            if path == "/v1/players" and method == "get":
+                # GET /v1/players (listar todos) - solo admin
+                operation["security"] = [{"ApiKeyAuth": []}]
+                operation["summary"] = operation.get("summary", "") + " 🔑"
+
+            elif path.startswith("/v1/"):
+                # Todos los demás endpoints v1 - admin O jugador
+                operation["security"] = [
+                    {"ApiKeyAuth": []},  # Admin puede acceder
+                    {"PlayerAuth": []}   # O jugador autenticado
+                ]
+
+                # Marcar si es solo del propio jugador
+                if "/me" in path or "{player_id}" in path:
+                    if "summary" in operation:
+                        operation["summary"] += " 🔒"
+
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+
+app.openapi = custom_openapi
+
 
 # CORS - Permitir peticiones desde cualquier origen (ajustar en producción)
 app.add_middleware(
