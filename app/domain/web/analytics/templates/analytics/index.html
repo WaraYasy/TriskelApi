@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Triskel Dashboard{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>
+            <i class="bi bi-graph-up"></i> Analytics Dashboard
+        </h2>
+        <p class="text-muted">Métricas y visualizaciones del juego en tiempo real</p>
+    </div>
+</div>
+
+<!-- Métricas globales -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-people"></i> Jugadores
+                </h5>
+                <h2 class="card-text">{{ metrics.total_players }}</h2>
+                <small>Total registrados</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-controller"></i> Partidas
+                </h5>
+                <h2 class="card-text">{{ metrics.total_games }}</h2>
+                <small>Total jugadas</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-clock"></i> Tiempo Promedio
+                </h5>
+                <h2 class="card-text">{{ metrics.avg_playtime }}h</h2>
+                <small>Por partida</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-trophy"></i> Completado
+                </h5>
+                <h2 class="card-text">{{ metrics.completion_rate }}%</h2>
+                <small>Tasa de completado</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navegación de secciones -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="btn-group" role="group">
+            <a href="{{ url_for('analytics.players') }}" class="btn btn-outline-primary">
+                <i class="bi bi-people"></i> Análisis de Jugadores
+            </a>
+            <a href="{{ url_for('analytics.games') }}" class="btn btn-outline-success">
+                <i class="bi bi-controller"></i> Análisis de Partidas
+            </a>
+            <a href="{{ url_for('analytics.choices') }}" class="btn btn-outline-info">
+                <i class="bi bi-signpost-split"></i> Decisiones Morales
+            </a>
+            <a href="{{ url_for('analytics.export') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-download"></i> Exportar Datos
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>
+                    <i class="bi bi-bar-chart"></i> Distribución de Decisiones Morales
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- TODO: Insertar gráfico de Plotly aquí -->
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Gráfico en construcción. Mostrará la distribución de
+                    decisiones buenas vs malas por nivel.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>
+                    <i class="bi bi-pie-chart"></i> Alineación Moral de Jugadores
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- TODO: Insertar gráfico de Plotly aquí -->
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Gráfico en construcción. Mostrará la distribución de
+                    jugadores por alineación moral.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>
+                    <i class="bi bi-activity"></i> Muertes por Nivel
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- TODO: Insertar gráfico de Plotly aquí -->
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    Gráfico en construcción. Mostrará el promedio de muertes
+                    por cada nivel del juego.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Nota de desarrollo -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <strong><i class="bi bi-wrench"></i> En Desarrollo:</strong>
+            Este dashboard está en construcción. Las visualizaciones se generarán
+            con Plotly cuando se implementen las consultas a la API.
+        </div>
+    </div>
+</div>
+{% endblock %}

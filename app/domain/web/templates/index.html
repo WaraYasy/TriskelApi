@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Triskel{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="jumbotron bg-light p-5 rounded">
+            <h1 class="display-4">
+                <i class="bi bi-controller"></i> Bienvenido al Dashboard de Triskel
+            </h1>
+            <p class="lead">
+                Sistema de análisis y administración del videojuego
+                <strong>Triskel: La Balada del Último Guardián</strong>
+            </p>
+            <hr class="my-4">
+            <p>
+                Selecciona una sección del menú superior para comenzar:
+            </p>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <!-- Card Analytics -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-graph-up text-primary"></i> Analytics
+                </h5>
+                <p class="card-text">
+                    Dashboard de métricas y visualizaciones del juego.
+                    Analiza decisiones morales, tiempo de juego y más.
+                </p>
+                <a href="{{ url_for('analytics.index') }}" class="btn btn-primary">
+                    Ir a Analytics
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Admin (futuro) -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-gear text-secondary"></i> Admin
+                    <span class="badge bg-secondary">Próximamente</span>
+                </h5>
+                <p class="card-text">
+                    Panel de administración para gestionar jugadores,
+                    moderar contenido y configurar el sistema.
+                </p>
+                <button class="btn btn-secondary" disabled>
+                    Próximamente
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Public (futuro) -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-globe text-info"></i> Público
+                    <span class="badge bg-secondary">Próximamente</span>
+                </h5>
+                <p class="card-text">
+                    Landing page del juego con rankings públicos,
+                    guías y documentación para la comunidad.
+                </p>
+                <button class="btn btn-secondary" disabled>
+                    Próximamente
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info adicional -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h5 class="alert-heading">
+                <i class="bi bi-info-circle"></i> Información del Proyecto
+            </h5>
+            <hr>
+            <ul>
+                <li><strong>Videojuego:</strong> Triskel: La Balada del Último Guardián</li>
+                <li><strong>Género:</strong> RPG de Aventura Narrativa (Top-Down 2D)</li>
+                <li><strong>Desarrollador:</strong> Mandrágora</li>
+                <li><strong>API:</strong> <a href="/docs" target="_blank">Documentación Swagger</a></li>
+                <li><strong>Arquitectura:</strong> Hexagonal con dominios verticales</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

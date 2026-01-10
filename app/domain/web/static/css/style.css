@@ -1,0 +1,159 @@
+/*
+ * Triskel Dashboard - Custom Styles
+ * Estilos personalizados para el dashboard web
+ */
+
+/* Variables de colores del tema */
+:root {
+    --triskel-primary: #4a90e2;
+    --triskel-secondary: #6c757d;
+    --triskel-success: #28a745;
+    --triskel-danger: #dc3545;
+    --triskel-warning: #ffc107;
+    --triskel-info: #17a2b8;
+    --triskel-dark: #1a1a1a;
+}
+
+/* Estilos generales */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #f8f9fa;
+}
+
+main {
+    flex: 1;
+}
+
+/* Navbar personalizado */
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.3rem;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    transition: all 0.3s ease;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+/* Cards con efecto hover */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Métricas (cards de colores) */
+.card.bg-primary,
+.card.bg-success,
+.card.bg-info,
+.card.bg-warning {
+    border-radius: 10px;
+}
+
+.card.bg-warning {
+    color: #333 !important;
+}
+
+.card.bg-warning .card-title,
+.card.bg-warning .card-text,
+.card.bg-warning small {
+    color: #333 !important;
+}
+
+/* Gráficos de Plotly */
+.plotly-chart {
+    width: 100%;
+    min-height: 400px;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+/* Badges */
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35em 0.65em;
+}
+
+/* Botones */
+.btn-group .btn {
+    margin-right: 5px;
+}
+
+.btn-group .btn:last-child {
+    margin-right: 0;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 1.1rem;
+    }
+
+    .card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Loading spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 2rem;
+    height: 2rem;
+    border: 0.25rem solid rgba(0,0,0,0.1);
+    border-top-color: var(--triskel-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Alerts personalizados */
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+/* Tables */
+.table {
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: var(--triskel-dark);
+    color: white;
+    border: none;
+}
