@@ -15,8 +15,8 @@ pydantic-settings==2.1.0
 
 # ==================== Base de Datos ====================
 firebase-admin==6.4.0            # Firestore (NoSQL)
-# sqlalchemy==2.0.25             # MariaDB (SQL) - TODO: Descomentar cuando se implemente
-# pymysql==1.1.0                 # Driver para MariaDB
+sqlalchemy==2.0.25               # MariaDB (SQL)
+pymysql==1.1.0                   # Driver para MariaDB
 
 # ==================== Dashboard Web (Flask) ====================
 flask==3.0.0                     # Framework web
