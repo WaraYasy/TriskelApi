@@ -1,0 +1,721 @@
+{
+	"info": {
+		"_postman_id": "triskel-players-api-v1",
+		"name": "Triskel API - Players",
+		"description": "# Triskel API - Gestión de Jugadores\n\n## Descripción\nColección completa de endpoints para la gestión de jugadores (players) en la API de Triskel: La Balada del Último Guardián.\n\n## Base URL\n```\nhttp://localhost:8000\n```\n\n## Tipos de Autenticación\n\n### 1. Público (Sin autenticación)\n- **POST /v1/players** - Crear un nuevo jugador\n\n### 2. Autenticación de Jugador\nRequiere headers:\n- `X-Player-ID`: ID del jugador\n- `X-Player-Token`: Token secreto del jugador\n\nEndpoints:\n- **GET /v1/players/me** - Ver mi perfil\n- **GET /v1/players/{id}** - Ver jugador por ID (solo tu propio ID)\n- **PATCH /v1/players/{id}** - Actualizar jugador (solo tu propio ID)\n- **DELETE /v1/players/{id}** - Eliminar jugador (solo tu propio ID)\n\n### 3. Autenticación de Admin\nRequiere header:\n- `X-API-Key`: Clave de API de administrador\n\nPermite acceso total a todos los endpoints.\n\n## Variables de Colección\n\nAsegúrate de configurar las siguientes variables antes de usar:\n- `baseUrl`: URL base de la API (default: http://localhost:8000)\n- `apiKey`: Clave de API para acceso administrativo\n- `playerId`: ID del jugador (se auto-completa al crear jugador)\n- `playerToken`: Token del jugador (se auto-completa al crear jugador)\n\n## Flujo de Trabajo Recomendado\n\n1. **Crear un jugador** usando `POST /v1/players`\n   - Las variables `playerId` y `playerToken` se guardarán automáticamente\n2. **Ver tu perfil** con `GET /v1/players/me`\n3. **Actualizar datos** con `PATCH /v1/players/{id}`\n4. **Listar todos** (admin) con `GET /v1/players`\n\n## Documentación Completa\nPara más información, visita: http://localhost:8000/docs\n\n---\n\n**Versión:** 2.0.0  \n**Autor:** Equipo Triskel  \n**Última actualización:** 2026-01-10",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Public Endpoints",
+			"description": "Endpoints públicos que no requieren autenticación",
+			"item": [
+				{
+					"name": "Create Player",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Test: Verificar que la respuesta sea exitosa",
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Test: Verificar estructura de respuesta",
+									"pm.test(\"Response has required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('player_id');",
+									"    pm.expect(jsonData).to.have.property('username');",
+									"    pm.expect(jsonData).to.have.property('player_token');",
+									"});",
+									"",
+									"// Guardar player_id y player_token en variables de colección",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"playerId\", jsonData.player_id);",
+									"    pm.collectionVariables.set(\"playerToken\", jsonData.player_token);",
+									"    console.log(\"✅ Player created successfully!\");",
+									"    console.log(\"Player ID: \" + jsonData.player_id);",
+									"    console.log(\"Player Token: \" + jsonData.player_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"jugador_test\",\n  \"email\": \"jugador@triskel.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/players",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"players"
+							]
+						},
+						"description": "# Crear un nuevo jugador\n\n## Descripción\nCrea una nueva cuenta de jugador en el sistema. Este es un endpoint **público** y no requiere autenticación.\n\n## Request Body\n```json\n{\n  \"username\": \"string\",  // Requerido: 3-20 caracteres\n  \"email\": \"string\"      // Opcional: email del jugador\n}\n```\n\n## Response (201 Created)\n```json\n{\n  \"player_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"username\": \"jugador_test\",\n  \"player_token\": \"abc-def-token-secret\"\n}\n```\n\n## Importante\n- El `player_token` devuelto debe guardarse de forma segura\n- Se usa junto con `player_id` para autenticación en futuros requests\n- El token es único e irrecuperable si se pierde\n\n## Errores Posibles\n- **400 Bad Request**: Username ya existe o datos inválidos\n- **422 Unprocessable Entity**: Formato de datos incorrecto"
+					},
+					"response": [
+						{
+							"name": "Success Example",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"username\": \"jugador_test\",\n  \"email\": \"jugador@triskel.com\"\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/v1/players",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"v1",
+										"players"
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"player_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"username\": \"jugador_test\",\n  \"player_token\": \"abc-def-token-secret-uuid\"\n}"
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Player Authentication",
+			"description": "Endpoints que requieren autenticación de jugador (X-Player-ID + X-Player-Token)",
+			"item": [
+				{
+					"name": "Get My Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has player data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('player_id');",
+									"    pm.expect(jsonData).to.have.property('username');",
+									"    pm.expect(jsonData).to.have.property('stats');",
+									"    pm.expect(jsonData).to.have.property('games_played');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}",
+								"description": "ID del jugador autenticado"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}",
+								"description": "Token secreto del jugador"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/players/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"players",
+								"me"
+							]
+						},
+						"description": "# Obtener mi perfil\n\n## Descripción\nDevuelve el perfil completo del jugador autenticado actualmente.\n\n## Autenticación Requerida\n**Headers:**\n- `X-Player-ID`: ID del jugador\n- `X-Player-Token`: Token del jugador\n\n## Response (200 OK)\n```json\n{\n  \"player_id\": \"uuid\",\n  \"username\": \"string\",\n  \"email\": \"string\",\n  \"player_token\": \"string\",\n  \"created_at\": \"datetime\",\n  \"last_login\": \"datetime\",\n  \"total_playtime_seconds\": 0,\n  \"games_played\": 0,\n  \"games_completed\": 0,\n  \"stats\": {\n    \"total_good_choices\": 0,\n    \"total_bad_choices\": 0,\n    \"total_deaths\": 0,\n    \"favorite_relic\": null,\n    \"best_speedrun_seconds\": null,\n    \"moral_alignment\": 0.0\n  }\n}\n```\n\n## Errores Posibles\n- **401 Unauthorized**: Headers de autenticación faltantes o inválidos\n- **404 Not Found**: Jugador no encontrado"
+					},
+					"response": [
+						{
+							"name": "Success Example",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-Player-ID",
+										"value": "{{playerId}}"
+									},
+									{
+										"key": "X-Player-Token",
+										"value": "{{playerToken}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/v1/players/me",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"v1",
+										"players",
+										"me"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"player_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"username\": \"jugador_test\",\n  \"email\": \"jugador@triskel.com\",\n  \"player_token\": \"abc-def-token-secret\",\n  \"created_at\": \"2026-01-10T10:00:00Z\",\n  \"last_login\": \"2026-01-10T15:30:00Z\",\n  \"total_playtime_seconds\": 3600,\n  \"games_played\": 5,\n  \"games_completed\": 2,\n  \"stats\": {\n    \"total_good_choices\": 15,\n    \"total_bad_choices\": 5,\n    \"total_deaths\": 10,\n    \"favorite_relic\": \"lirio\",\n    \"best_speedrun_seconds\": 1800,\n    \"moral_alignment\": 0.5\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Player by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Player ID matches requested ID\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var requestedId = pm.collectionVariables.get(\"playerId\");",
+									"    pm.expect(jsonData.player_id).to.equal(requestedId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}",
+								"description": "ID del jugador autenticado"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}",
+								"description": "Token secreto del jugador"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/players/{{playerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"players",
+								"{{playerId}}"
+							]
+						},
+						"description": "# Obtener jugador por ID\n\n## Descripción\nDevuelve los datos completos de un jugador específico.\n\n## Autenticación y Permisos\n\n### Como Jugador:\n- **Solo puedes ver tu propio perfil**\n- Requiere: `X-Player-ID` + `X-Player-Token`\n- El ID en la URL debe coincidir con tu `X-Player-ID`\n\n### Como Admin:\n- Puedes ver cualquier jugador\n- Requiere: `X-API-Key`\n\n## Path Parameters\n- `player_id`: ID del jugador a consultar\n\n## Response (200 OK)\n```json\n{\n  \"player_id\": \"uuid\",\n  \"username\": \"string\",\n  \"email\": \"string\",\n  \"player_token\": \"string\",\n  \"created_at\": \"datetime\",\n  \"last_login\": \"datetime\",\n  \"total_playtime_seconds\": 0,\n  \"games_played\": 0,\n  \"games_completed\": 0,\n  \"stats\": {...}\n}\n```\n\n## Errores Posibles\n- **401 Unauthorized**: Headers de autenticación inválidos\n- **403 Forbidden**: Intentando ver el perfil de otro jugador\n- **404 Not Found**: Jugador no existe"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Player",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Player data was updated\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('player_id');",
+									"    pm.expect(jsonData).to.have.property('username');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}",
+								"description": "ID del jugador autenticado"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}",
+								"description": "Token secreto del jugador"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"total_playtime_seconds\": 7200,\n  \"games_played\": 10,\n  \"games_completed\": 5\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/players/{{playerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"players",
+								"{{playerId}}"
+							]
+						},
+						"description": "# Actualizar jugador\n\n## Descripción\nActualiza los datos de un jugador. Solo se actualizan los campos enviados (actualización parcial).\n\n## Autenticación y Permisos\n\n### Como Jugador:\n- **Solo puedes actualizar tu propio perfil**\n- Requiere: `X-Player-ID` + `X-Player-Token`\n- El ID en la URL debe coincidir con tu `X-Player-ID`\n\n### Como Admin:\n- Puedes actualizar cualquier jugador\n- Requiere: `X-API-Key`\n\n## Path Parameters\n- `player_id`: ID del jugador a actualizar\n\n## Request Body (Todos los campos son opcionales)\n```json\n{\n  \"username\": \"string\",               // 3-20 caracteres\n  \"email\": \"string\",                   // Email opcional\n  \"total_playtime_seconds\": 0,        // Tiempo total de juego\n  \"games_played\": 0,                   // Partidas jugadas\n  \"games_completed\": 0,                // Partidas completadas\n  \"stats\": {\n    \"total_good_choices\": 0,\n    \"total_bad_choices\": 0,\n    \"total_deaths\": 0,\n    \"favorite_relic\": \"lirio\",         // lirio | hacha | manto\n    \"best_speedrun_seconds\": 0,\n    \"moral_alignment\": 0.5             // -1.0 a 1.0\n  }\n}\n```\n\n## Response (200 OK)\nDevuelve el jugador completo actualizado.\n\n## Errores Posibles\n- **401 Unauthorized**: Headers de autenticación inválidos\n- **403 Forbidden**: Intentando actualizar otro jugador\n- **404 Not Found**: Jugador no existe\n- **422 Unprocessable Entity**: Datos inválidos"
+					},
+					"response": [
+						{
+							"name": "Success Example",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "X-Player-ID",
+										"value": "{{playerId}}"
+									},
+									{
+										"key": "X-Player-Token",
+										"value": "{{playerToken}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"total_playtime_seconds\": 7200,\n  \"games_played\": 10\n}"
+								},
+								"url": {
+									"raw": "{{baseUrl}}/v1/players/{{playerId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"v1",
+										"players",
+										"{{playerId}}"
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n  \"player_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n  \"username\": \"jugador_test\",\n  \"email\": \"jugador@triskel.com\",\n  \"player_token\": \"abc-def-token-secret\",\n  \"created_at\": \"2026-01-10T10:00:00Z\",\n  \"last_login\": \"2026-01-10T15:30:00Z\",\n  \"total_playtime_seconds\": 7200,\n  \"games_played\": 10,\n  \"games_completed\": 2,\n  \"stats\": {\n    \"total_good_choices\": 15,\n    \"total_bad_choices\": 5,\n    \"total_deaths\": 10,\n    \"favorite_relic\": \"lirio\",\n    \"best_speedrun_seconds\": 1800,\n    \"moral_alignment\": 0.5\n  }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Player",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Deletion confirmed\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData.message).to.include('eliminado');",
+									"});",
+									"",
+									"// Limpiar variables de colección después de eliminar",
+									"console.log(\"⚠️ Player deleted. Consider clearing playerId and playerToken variables.\");"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}",
+								"description": "ID del jugador autenticado"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}",
+								"description": "Token secreto del jugador"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/players/{{playerId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"players",
+								"{{playerId}}"
+							]
+						},
+						"description": "# Eliminar jugador\n\n## Descripción\nElimina permanentemente un jugador del sistema.\n\n## ⚠️ ADVERTENCIA\nEsta operación es **irreversible**. Todos los datos del jugador serán eliminados permanentemente.\n\n## Autenticación y Permisos\n\n### Como Jugador:\n- **Solo puedes eliminar tu propia cuenta**\n- Requiere: `X-Player-ID` + `X-Player-Token`\n- El ID en la URL debe coincidir con tu `X-Player-ID`\n\n### Como Admin:\n- Puedes eliminar cualquier jugador\n- Requiere: `X-API-Key`\n\n## Path Parameters\n- `player_id`: ID del jugador a eliminar\n\n## Response (200 OK)\n```json\n{\n  \"message\": \"Jugador eliminado correctamente\"\n}\n```\n\n## Errores Posibles\n- **401 Unauthorized**: Headers de autenticación inválidos\n- **403 Forbidden**: Intentando eliminar otro jugador\n- **404 Not Found**: Jugador no existe"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Admin Only",
+			"description": "Endpoints que requieren autenticación de administrador (X-API-Key)",
+			"item": [
+				{
+					"name": "List All Players",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Players have required fields\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.length > 0) {",
+									"        var firstPlayer = jsonData[0];",
+									"        pm.expect(firstPlayer).to.have.property('player_id');",
+									"        pm.expect(firstPlayer).to.have.property('username');",
+									"        pm.expect(firstPlayer).to.have.property('stats');",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}",
+								"description": "Clave de API de administrador"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/players?limit=100",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"players"
+							],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100",
+									"description": "Máximo número de jugadores a retornar (default: 100)"
+								}
+							]
+						},
+						"description": "# Listar todos los jugadores\n\n## Descripción\nDevuelve una lista de todos los jugadores registrados en el sistema.\n\n## ⚠️ SOLO ADMINISTRADORES\nEste endpoint **solo** está disponible para administradores con una API Key válida.\n\n## Autenticación Requerida\n**Header:**\n- `X-API-Key`: Clave de API de administrador\n\n## Query Parameters\n- `limit` (opcional): Número máximo de jugadores a retornar\n  - Default: 100\n  - Ejemplo: `?limit=50`\n\n## Response (200 OK)\n```json\n[\n  {\n    \"player_id\": \"uuid\",\n    \"username\": \"string\",\n    \"email\": \"string\",\n    \"player_token\": \"string\",\n    \"created_at\": \"datetime\",\n    \"last_login\": \"datetime\",\n    \"total_playtime_seconds\": 0,\n    \"games_played\": 0,\n    \"games_completed\": 0,\n    \"stats\": {...}\n  },\n  ...\n]\n```\n\n## Casos de Uso\n- Dashboard de administración\n- Análisis de estadísticas globales\n- Moderación de usuarios\n- Exportación de datos\n\n## Errores Posibles\n- **401 Unauthorized**: API Key faltante\n- **403 Forbidden**: API Key inválida o acceso denegado"
+					},
+					"response": [
+						{
+							"name": "Success Example",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "X-API-Key",
+										"value": "{{apiKey}}"
+									}
+								],
+								"url": {
+									"raw": "{{baseUrl}}/v1/players?limit=100",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"v1",
+										"players"
+									],
+									"query": [
+										{
+											"key": "limit",
+											"value": "100"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "[\n  {\n    \"player_id\": \"123e4567-e89b-12d3-a456-426614174000\",\n    \"username\": \"jugador1\",\n    \"email\": \"jugador1@triskel.com\",\n    \"player_token\": \"token-secret-1\",\n    \"created_at\": \"2026-01-10T10:00:00Z\",\n    \"last_login\": \"2026-01-10T15:30:00Z\",\n    \"total_playtime_seconds\": 3600,\n    \"games_played\": 5,\n    \"games_completed\": 2,\n    \"stats\": {\n      \"total_good_choices\": 15,\n      \"total_bad_choices\": 5,\n      \"total_deaths\": 10,\n      \"favorite_relic\": \"lirio\",\n      \"best_speedrun_seconds\": 1800,\n      \"moral_alignment\": 0.5\n    }\n  },\n  {\n    \"player_id\": \"223e4567-e89b-12d3-a456-426614174111\",\n    \"username\": \"jugador2\",\n    \"email\": \"jugador2@triskel.com\",\n    \"player_token\": \"token-secret-2\",\n    \"created_at\": \"2026-01-09T14:00:00Z\",\n    \"last_login\": \"2026-01-10T12:00:00Z\",\n    \"total_playtime_seconds\": 1800,\n    \"games_played\": 3,\n    \"games_completed\": 1,\n    \"stats\": {\n      \"total_good_choices\": 8,\n      \"total_bad_choices\": 2,\n      \"total_deaths\": 5,\n      \"favorite_relic\": \"hacha\",\n      \"best_speedrun_seconds\": 2400,\n      \"moral_alignment\": 0.6\n    }\n  }\n]"
+						}
+					]
+				},
+				{
+					"name": "Get Any Player by ID (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has player data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('player_id');",
+									"    pm.expect(jsonData).to.have.property('username');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}",
+								"description": "Clave de API de administrador"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/players/:playerId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"players",
+								":playerId"
+							],
+							"variable": [
+								{
+									"key": "playerId",
+									"value": "{{playerId}}",
+									"description": "ID del jugador a consultar (puede ser cualquier ID)"
+								}
+							]
+						},
+						"description": "# Obtener cualquier jugador por ID (Admin)\n\n## Descripción\nComo administrador, puedes consultar el perfil de **cualquier jugador** usando su ID.\n\n## Autenticación Requerida\n**Header:**\n- `X-API-Key`: Clave de API de administrador\n\n## Path Parameters\n- `player_id`: ID del jugador a consultar\n\n## Response (200 OK)\nDevuelve los datos completos del jugador.\n\n## Errores Posibles\n- **401 Unauthorized**: API Key faltante\n- **403 Forbidden**: API Key inválida\n- **404 Not Found**: Jugador no existe"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Any Player (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}",
+								"description": "Clave de API de administrador"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"total_playtime_seconds\": 10000,\n  \"games_completed\": 20\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/players/:playerId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"players",
+								":playerId"
+							],
+							"variable": [
+								{
+									"key": "playerId",
+									"value": "{{playerId}}",
+									"description": "ID del jugador a actualizar"
+								}
+							]
+						},
+						"description": "# Actualizar cualquier jugador (Admin)\n\n## Descripción\nComo administrador, puedes actualizar el perfil de **cualquier jugador**.\n\n## Autenticación Requerida\n**Header:**\n- `X-API-Key`: Clave de API de administrador\n\n## Path Parameters\n- `player_id`: ID del jugador a actualizar\n\n## Request Body\nVer endpoint \"Update Player\" para campos disponibles.\n\n## Casos de Uso\n- Corregir estadísticas incorrectas\n- Actualizar datos de jugadores en nombre de soporte\n- Operaciones de mantenimiento\n\n## Errores Posibles\n- **401 Unauthorized**: API Key faltante\n- **403 Forbidden**: API Key inválida\n- **404 Not Found**: Jugador no existe"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Any Player (Admin)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}",
+								"description": "Clave de API de administrador"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/players/:playerId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"v1",
+								"players",
+								":playerId"
+							],
+							"variable": [
+								{
+									"key": "playerId",
+									"value": "{{playerId}}",
+									"description": "ID del jugador a eliminar"
+								}
+							]
+						},
+						"description": "# Eliminar cualquier jugador (Admin)\n\n## Descripción\nComo administrador, puedes eliminar **cualquier jugador** del sistema.\n\n## ⚠️ ADVERTENCIA\nEsta operación es **irreversible** y eliminará permanentemente todos los datos del jugador.\n\n## Autenticación Requerida\n**Header:**\n- `X-API-Key`: Clave de API de administrador\n\n## Path Parameters\n- `player_id`: ID del jugador a eliminar\n\n## Response (200 OK)\n```json\n{\n  \"message\": \"Jugador eliminado correctamente\"\n}\n```\n\n## Casos de Uso\n- Moderación (eliminar cuentas que violan reglas)\n- Cumplimiento de GDPR (derecho al olvido)\n- Limpieza de cuentas de prueba\n\n## Errores Posibles\n- **401 Unauthorized**: API Key faltante\n- **403 Forbidden**: API Key inválida\n- **404 Not Found**: Jugador no existe"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Pre-request script global",
+					"console.log('📡 Request to:', pm.request.url.toString());"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Test script global",
+					"console.log('✅ Response status:', pm.response.code, pm.response.status);"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "apiKey",
+			"value": "triskel_admin_api_key_desarrollo_2024",
+			"type": "string"
+		},
+		{
+			"key": "playerId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "playerToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
