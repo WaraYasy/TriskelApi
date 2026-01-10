@@ -11,9 +11,9 @@ from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.openapi.utils import get_openapi
 
 # Imports desde la nueva arquitectura
-from app.shared.settings import settings
-from app.shared.firebase_client import firebase_manager
-from app.shared.logger import logger
+from app.config.settings import settings
+from app.infrastructure.database.firebase_client import firebase_manager
+from app.core.logger import logger
 from app.domain.players.api import router as players_router
 from app.domain.games.api import router as games_router
 from app.domain.web import flask_app  # ⭐ Flask app

@@ -8,7 +8,7 @@ Soporta DOS tipos de autenticación:
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from app.domain.players.adapters.firestore_repository import FirestorePlayerRepository
-from app.shared.settings import settings
+from app.config.settings import settings
 
 
 # Rutas que NO requieren autenticación

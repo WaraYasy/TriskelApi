@@ -8,7 +8,7 @@ import os
 import json
 import firebase_admin
 from firebase_admin import credentials, firestore
-from .settings import settings
+from app.config.settings import settings
 from typing import Optional
 
 

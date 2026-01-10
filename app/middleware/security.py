@@ -7,7 +7,7 @@ Proporciona dependencies para validar autenticación en endpoints.
 from typing import Optional, Annotated
 from fastapi import HTTPException, Security, Depends
 from fastapi.security import APIKeyHeader
-from app.shared.settings import settings
+from app.config.settings import settings
 from app.domain.players.models import Player
 
 

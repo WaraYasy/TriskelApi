@@ -9,7 +9,7 @@ from google.cloud.firestore_v1 import Client
 from ..ports import IGameRepository
 from ..models import Game
 from ..schemas import GameCreate, GameUpdate, LevelStart, LevelComplete
-from app.shared.firebase_client import get_firestore_client
+from app.infrastructure.database.firebase_client import get_firestore_client
 
 
 class FirestoreGameRepository(IGameRepository):

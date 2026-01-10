@@ -7,7 +7,7 @@ Muestra mensajes en consola con formato claro.
 import logging
 import sys
 from typing import Any, Dict
-from .settings import settings
+from app.config.settings import settings
 
 
 class StructuredLogger:

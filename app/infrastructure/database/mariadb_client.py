@@ -10,7 +10,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Optional, Generator
-from .settings import settings
+from app.config.settings import settings
 
 
 # Base para crear modelos de tablas SQL

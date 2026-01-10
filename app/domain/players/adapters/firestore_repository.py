@@ -10,8 +10,8 @@ from google.cloud.firestore_v1 import Client
 from ..ports import IPlayerRepository
 from ..models import Player
 from ..schemas import PlayerCreate, PlayerUpdate
-from app.shared.firebase_client import get_firestore_client
-from app.shared.logger import logger
+from app.infrastructure.database.firebase_client import get_firestore_client
+from app.core.logger import logger
 
 
 class FirestorePlayerRepository(IPlayerRepository):
