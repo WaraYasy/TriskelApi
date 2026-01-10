@@ -1,16 +1,137 @@
 """
 Service para Events
 
-TODO: Implementar lógica de negocio de eventos.
-
-Responsabilidades:
-- Validar que game_id y player_id existen antes de crear evento
-- Validar tipos de eventos permitidos
-- Validar estructura de datos según tipo de evento
-- Delegar persistencia al repository
-
-Ejemplo de validación:
-- Si event_type="player_death", data debe tener: position{x,y}, cause
-- Si event_type="npc_interaction", data debe tener: npc_id, interaction_type
+Lógica de negocio de eventos de gameplay.
 """
-pass
+from typing import List, Optional
+from datetime import datetime
+
+from .models import GameEvent
+from .schemas import EventCreate, EventBatchCreate
+from .repository import EventRepository
+
+# Importar repositories de otros dominios para validación
+from ..games.adapters.firestore_repository import FirestoreGameRepository
+from ..players.adapters.firestore_repository import FirestorePlayerRepository
+
+
+class EventService:
+    """
+    Servicio de eventos de gameplay.
+
+    Responsabilidades:
+    - Validar que game_id y player_id existen
+    - Delegar persistencia al repository
+    - Coordinar operaciones complejas
+    """
+
+    def __init__(self, repository: EventRepository):
+        """
+        Inicializa el servicio.
+
+        Args:
+            repository: Repositorio de eventos
+        """
+        self.repository = repository
+        self.game_repo = FirestoreGameRepository()
+        self.player_repo = FirestorePlayerRepository()
+
+    def create_event(self, event_data: EventCreate) -> GameEvent:
+        """
+        Crea un nuevo evento.
+
+        Validaciones:
+        - El jugador debe existir
+        - La partida debe existir (opcional: podemos hacerlo más permisivo)
+
+        Args:
+            event_data: Datos del evento
+
+        Returns:
+            GameEvent: Evento creado
+
+        Raises:
+            ValueError: Si el jugador o partida no existen
+        """
+        # Validar que el jugador existe
+        player = self.player_repo.get_by_id(event_data.player_id)
+        if not player:
+            raise ValueError(f"Jugador {event_data.player_id} no encontrado")
+
+        # Validar que la partida existe (opcional)
+        # Comentado por ahora para permitir eventos sin partida activa
+        # game = self.game_repo.get_by_id(event_data.game_id)
+        # if not game:
+        #     raise ValueError(f"Partida {event_data.game_id} no encontrada")
+
+        # Crear el evento
+        return self.repository.create(event_data)
+
+    def create_batch(self, batch_data: EventBatchCreate) -> List[GameEvent]:
+        """
+        Crea múltiples eventos en batch.
+
+        Optimización: valida jugadores únicos una sola vez.
+
+        Args:
+            batch_data: Datos del batch de eventos
+
+        Returns:
+            List[GameEvent]: Lista de eventos creados
+
+        Raises:
+            ValueError: Si algún jugador no existe
+        """
+        # Extraer player_ids únicos
+        player_ids = set(e.player_id for e in batch_data.events)
+
+        # Validar que todos los jugadores existen
+        for player_id in player_ids:
+            player = self.player_repo.get_by_id(player_id)
+            if not player:
+                raise ValueError(f"Jugador {player_id} no encontrado")
+
+        # Crear todos los eventos
+        return self.repository.create_batch(batch_data.events)
+
+    def get_event(self, event_id: str) -> Optional[GameEvent]:
+        """Obtiene un evento por ID"""
+        return self.repository.get_by_id(event_id)
+
+    def get_game_events(self, game_id: str, limit: int = 1000) -> List[GameEvent]:
+        """Obtiene todos los eventos de una partida"""
+        return self.repository.get_by_game(game_id, limit)
+
+    def get_player_events(self, player_id: str, limit: int = 1000) -> List[GameEvent]:
+        """Obtiene todos los eventos de un jugador"""
+        return self.repository.get_by_player(player_id, limit)
+
+    def get_events_by_type(
+        self,
+        event_type: str,
+        game_id: Optional[str] = None,
+        limit: int = 1000
+    ) -> List[GameEvent]:
+        """Obtiene eventos filtrados por tipo"""
+        return self.repository.get_by_type(event_type, game_id, limit)
+
+    def query_events(
+        self,
+        game_id: Optional[str] = None,
+        player_id: Optional[str] = None,
+        event_type: Optional[str] = None,
+        level: Optional[str] = None,
+        start_time: Optional[datetime] = None,
+        end_time: Optional[datetime] = None,
+        limit: int = 1000
+    ) -> List[GameEvent]:
+        """Búsqueda de eventos con filtros múltiples"""
+        return self.repository.query_events(
+            game_id=game_id,
+            player_id=player_id,
+            event_type=event_type,
+            level=level,
+            start_time=start_time,
+            end_time=end_time,
+            limit=limit
+        )
