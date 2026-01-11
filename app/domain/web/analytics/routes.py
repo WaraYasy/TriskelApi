@@ -8,10 +8,12 @@ Rutas:
 - GET /dashboard/players   → Análisis detallado de jugadores
 - GET /dashboard/games     → Análisis de partidas y progresión
 - GET /dashboard/choices   → Análisis de decisiones morales
+- GET /dashboard/events    → Análisis de eventos de gameplay
 - GET /dashboard/export    → Exportar datos a CSV
 """
 from flask import Blueprint, render_template, jsonify, request, send_file
 from .service import AnalyticsService
+from app.config.settings import settings
 
 # Crear blueprint
 analytics_bp = Blueprint(
@@ -20,9 +22,11 @@ analytics_bp = Blueprint(
     template_folder='templates'
 )
 
-# Instanciar servicio
-# TODO: Usar dependency injection cuando esté implementado
-analytics_service = AnalyticsService()
+# Instanciar servicio con API Key
+analytics_service = AnalyticsService(
+    api_base_url="http://localhost:8000",
+    api_key=settings.api_key
+)
 
 
 @analytics_bp.route('/')
@@ -37,17 +41,22 @@ def index():
     - Distribución de decisiones morales
     - Gráficos con Plotly
     """
-    # TODO: Implementar obtención de métricas
-    metrics = {
-        'total_players': 0,
-        'total_games': 0,
-        'avg_playtime': 0,
-        'completion_rate': 0
-    }
+    # Obtener datos de la API
+    players = analytics_service.get_all_players()
+    games = analytics_service.get_all_games()
+
+    # Calcular métricas
+    metrics = analytics_service.calculate_global_metrics(players, games)
+
+    # Generar gráficos
+    moral_chart = analytics_service.create_moral_choices_chart(games)
+    deaths_chart = analytics_service.create_deaths_per_level_chart(games)
 
     return render_template(
         'analytics/index.html',
-        metrics=metrics
+        metrics=metrics,
+        moral_chart=moral_chart,
+        deaths_chart=deaths_chart
     )
 
 
@@ -62,12 +71,16 @@ def players():
     - Distribución de alineación moral
     - Tiempo de juego por jugador
     """
-    # TODO: Implementar
-    players_data = []
+    # Obtener datos
+    players_data = analytics_service.get_all_players()
+
+    # Generar gráfico de distribución de tiempo
+    playtime_chart = analytics_service.create_playtime_distribution(players_data)
 
     return render_template(
         'analytics/players.html',
-        players=players_data
+        players=players_data,
+        playtime_chart=playtime_chart
     )
 
 
@@ -82,12 +95,16 @@ def games():
     - Muertes por nivel
     - Tasa de completado
     """
-    # TODO: Implementar
-    games_data = []
+    # Obtener datos
+    games_data = analytics_service.get_all_games()
+
+    # Generar gráfico de muertes por nivel
+    deaths_chart = analytics_service.create_deaths_per_level_chart(games_data)
 
     return render_template(
         'analytics/games.html',
-        games=games_data
+        games=games_data,
+        deaths_chart=deaths_chart
     )
 
 
@@ -102,12 +119,49 @@ def choices():
     - Correlación con completado del juego
     - Gráficos de barras con Plotly
     """
-    # TODO: Implementar
-    choices_data = {}
+    # Obtener datos
+    games_data = analytics_service.get_all_games()
+
+    # Generar gráfico de decisiones morales
+    moral_chart = analytics_service.create_moral_choices_chart(games_data)
 
     return render_template(
         'analytics/choices.html',
-        choices=choices_data
+        moral_chart=moral_chart
+    )
+
+
+@analytics_bp.route('/events')
+def events():
+    """
+    Análisis de eventos de gameplay.
+
+    Muestra:
+    - Total de eventos registrados
+    - Distribución por tipo de evento
+    - Eventos por nivel
+    - Timeline de eventos
+    """
+    # Obtener eventos de todos los jugadores
+    players = analytics_service.get_all_players()
+    all_events = []
+
+    for player in players:
+        try:
+            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
+            response.raise_for_status()
+            events_data = response.json()
+            all_events.extend(events_data)
+        except Exception as e:
+            print(f"Error obteniendo eventos del jugador {player['player_id']}: {e}")
+
+    # Generar gráfico de eventos por tipo
+    events_chart = analytics_service.create_events_by_type_chart(all_events)
+
+    return render_template(
+        'analytics/events.html',
+        total_events=len(all_events),
+        events_chart=events_chart
     )
 
 
@@ -126,12 +180,39 @@ def export():
     export_type = request.args.get('type', 'players')
     export_format = request.args.get('format', 'csv')
 
-    # TODO: Implementar exportación
-    return jsonify({
-        'message': 'TODO: Implementar exportación',
-        'type': export_type,
-        'format': export_format
-    })
+    # Obtener datos según el tipo
+    if export_type == 'players':
+        data = analytics_service.get_all_players()
+        filename = 'players'
+    elif export_type == 'games':
+        data = analytics_service.get_all_games()
+        filename = 'games'
+    elif export_type == 'events':
+        # Obtener todos los eventos
+        players = analytics_service.get_all_players()
+        data = []
+        for player in players:
+            try:
+                response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
+                response.raise_for_status()
+                data.extend(response.json())
+            except:
+                pass
+        filename = 'events'
+    else:
+        return jsonify({'error': 'Tipo de exportación no válido'}), 400
+
+    if export_format == 'csv':
+        # Exportar a CSV
+        filepath = analytics_service.export_to_csv(data, filename)
+        if filepath:
+            return send_file(filepath, as_attachment=True, download_name=f'{filename}.csv')
+        else:
+            return jsonify({'error': 'Error al exportar datos'}), 500
+    elif export_format == 'json':
+        return jsonify(data)
+    else:
+        return jsonify({'error': 'Formato no válido'}), 400
 
 
 @analytics_bp.route('/api/metrics')
@@ -144,9 +225,8 @@ def api_metrics():
     Returns:
         JSON: Métricas actualizadas
     """
-    # TODO: Implementar
-    return jsonify({
-        'total_players': 0,
-        'total_games': 0,
-        'avg_playtime': 0
-    })
+    players = analytics_service.get_all_players()
+    games = analytics_service.get_all_games()
+    metrics = analytics_service.calculate_global_metrics(players, games)
+
+    return jsonify(metrics)
