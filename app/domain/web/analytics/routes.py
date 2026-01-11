@@ -48,15 +48,30 @@ def index():
     # Calcular métricas
     metrics = analytics_service.calculate_global_metrics(players, games)
 
+    # Obtener total de eventos
+    all_events = []
+    for player in players:
+        try:
+            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
+            response.raise_for_status()
+            events_data = response.json()
+            all_events.extend(events_data)
+        except Exception as e:
+            pass
+
+    metrics['total_events'] = len(all_events)
+
     # Generar gráficos
     moral_chart = analytics_service.create_moral_choices_chart(games)
     deaths_chart = analytics_service.create_deaths_per_level_chart(games)
+    alignment_chart = analytics_service.create_moral_alignment_chart(players)
 
     return render_template(
         'analytics/index.html',
         metrics=metrics,
         moral_chart=moral_chart,
-        deaths_chart=deaths_chart
+        deaths_chart=deaths_chart,
+        alignment_chart=alignment_chart
     )
 
 
@@ -213,6 +228,49 @@ def export():
         return jsonify(data)
     else:
         return jsonify({'error': 'Formato no válido'}), 400
+
+
+@analytics_bp.route('/advanced')
+def advanced():
+    """
+    Dashboard avanzado con métricas adicionales.
+
+    Muestra:
+    - Reliquias más obtenidas
+    - Tasa de completado por nivel
+    - Tiempo promedio por nivel
+    - Estadísticas detalladas
+    """
+    # Obtener datos
+    games_data = analytics_service.get_all_games()
+    players_data = analytics_service.get_all_players()
+
+    # Generar gráficos adicionales
+    relics_chart = analytics_service.create_relics_distribution_chart(games_data)
+    completion_chart = analytics_service.create_level_completion_chart(games_data)
+    playtime_chart = analytics_service.create_playtime_per_level_chart(games_data)
+
+    # Calcular métricas adicionales
+    total_relics = sum(len(g.get('relics', [])) for g in games_data)
+    total_deaths = sum(g.get('metrics', {}).get('total_deaths', 0) for g in games_data)
+    avg_completion = sum(g.get('completion_percentage', 0) for g in games_data) / len(games_data) if games_data else 0
+
+    advanced_metrics = {
+        'total_relics': total_relics,
+        'total_deaths': total_deaths,
+        'avg_completion_percentage': round(avg_completion, 2),
+        'total_games': len(games_data),
+        'total_players': len(players_data)
+    }
+
+    return render_template(
+        'analytics/advanced.html',
+        metrics=advanced_metrics,
+        relics_chart=relics_chart,
+        completion_chart=completion_chart,
+        playtime_chart=playtime_chart,
+        games=games_data
+    )
 
 
 @analytics_bp.route('/api/metrics')

@@ -298,6 +298,194 @@ class AnalyticsService:
 
         return fig.to_html(full_html=False)
 
+    def create_moral_alignment_chart(self, players: List[Dict]) -> str:
+        """
+        Genera gráfico de distribución de alineación moral de jugadores.
+
+        Args:
+            players: Lista de jugadores
+
+        Returns:
+            HTML del gráfico
+        """
+        if not ANALYTICS_AVAILABLE or not players:
+            return "<div>No hay datos disponibles</div>"
+
+        # Clasificar jugadores por alineación moral
+        alignments = []
+        for player in players:
+            moral_alignment = player.get('stats', {}).get('moral_alignment', 0)
+            if moral_alignment > 0.3:
+                category = 'Bueno'
+            elif moral_alignment < -0.3:
+                category = 'Malo'
+            else:
+                category = 'Neutral'
+            alignments.append(category)
+
+        if not alignments:
+            return "<div>No hay jugadores con alineación moral registrada</div>"
+
+        alignment_counts = Counter(alignments)
+
+        df = pd.DataFrame({
+            'Alineación': list(alignment_counts.keys()),
+            'Jugadores': list(alignment_counts.values())
+        })
+
+        # Colores personalizados
+        colors = {'Bueno': '#28a745', 'Neutral': '#ffc107', 'Malo': '#dc3545'}
+        df['color'] = df['Alineación'].map(colors)
+
+        fig = px.pie(
+            df,
+            values='Jugadores',
+            names='Alineación',
+            title='Alineación Moral de Jugadores',
+            color='Alineación',
+            color_discrete_map=colors
+        )
+
+        return fig.to_html(full_html=False)
+
+    def create_relics_distribution_chart(self, games: List[Dict]) -> str:
+        """
+        Genera gráfico de distribución de reliquias obtenidas.
+
+        Args:
+            games: Lista de partidas
+
+        Returns:
+            HTML del gráfico
+        """
+        if not ANALYTICS_AVAILABLE or not games:
+            return "<div>No hay datos disponibles</div>"
+
+        all_relics = []
+        for game in games:
+            relics = game.get('relics', [])
+            all_relics.extend(relics)
+
+        if not all_relics:
+            return "<div>No hay reliquias obtenidas aún</div>"
+
+        relic_counts = Counter(all_relics)
+
+        df = pd.DataFrame({
+            'Reliquia': list(relic_counts.keys()),
+            'Cantidad': list(relic_counts.values())
+        })
+
+        fig = px.bar(
+            df,
+            x='Reliquia',
+            y='Cantidad',
+            title='Reliquias Más Obtenidas',
+            labels={'Cantidad': 'Veces obtenida'},
+            color='Reliquia'
+        )
+
+        return fig.to_html(full_html=False)
+
+    def create_level_completion_chart(self, games: List[Dict]) -> str:
+        """
+        Genera gráfico de tasa de completado por nivel.
+
+        Args:
+            games: Lista de partidas
+
+        Returns:
+            HTML del gráfico
+        """
+        if not ANALYTICS_AVAILABLE or not games:
+            return "<div>No hay datos disponibles</div>"
+
+        level_completions = {}
+        total_games = len(games)
+
+        for game in games:
+            levels_completed = game.get('levels_completed', [])
+            for level in levels_completed:
+                if level not in level_completions:
+                    level_completions[level] = 0
+                level_completions[level] += 1
+
+        if not level_completions:
+            return "<div>No hay niveles completados aún</div>"
+
+        # Calcular porcentaje
+        level_percentages = {
+            level: (count / total_games) * 100
+            for level, count in level_completions.items()
+        }
+
+        df = pd.DataFrame({
+            'Nivel': list(level_percentages.keys()),
+            'Porcentaje Completado': list(level_percentages.values())
+        })
+
+        fig = px.bar(
+            df,
+            x='Nivel',
+            y='Porcentaje Completado',
+            title='Tasa de Completado por Nivel',
+            labels={'Porcentaje Completado': '% de jugadores que completaron'},
+            color='Porcentaje Completado',
+            color_continuous_scale='Viridis'
+        )
+
+        return fig.to_html(full_html=False)
+
+    def create_playtime_per_level_chart(self, games: List[Dict]) -> str:
+        """
+        Genera gráfico de tiempo promedio por nivel.
+
+        Args:
+            games: Lista de partidas
+
+        Returns:
+            HTML del gráfico
+        """
+        if not ANALYTICS_AVAILABLE or not games:
+            return "<div>No hay datos disponibles</div>"
+
+        level_times = {}
+
+        for game in games:
+            metrics = game.get('metrics', {})
+            time_per_level = metrics.get('time_per_level', {})
+
+            for level, time_seconds in time_per_level.items():
+                if level not in level_times:
+                    level_times[level] = []
+                level_times[level].append(time_seconds)
+
+        if not level_times:
+            return "<div>No hay datos de tiempo por nivel</div>"
+
+        # Calcular promedio en minutos
+        avg_times = {
+            level: (sum(times) / len(times)) / 60  # Convertir a minutos
+            for level, times in level_times.items()
+        }
+
+        df = pd.DataFrame({
+            'Nivel': list(avg_times.keys()),
+            'Tiempo Promedio (min)': list(avg_times.values())
+        })
+
+        fig = px.bar(
+            df,
+            x='Nivel',
+            y='Tiempo Promedio (min)',
+            title='Tiempo Promedio por Nivel',
+            labels={'Tiempo Promedio (min)': 'Minutos'},
+            color='Tiempo Promedio (min)',
+            color_continuous_scale='Blues'
+        )
+
+        return fig.to_html(full_html=False)
+
     def export_to_csv(self, data: List[Dict], filename: str) -> str:
         """
         Exporta datos a CSV usando Pandas.
