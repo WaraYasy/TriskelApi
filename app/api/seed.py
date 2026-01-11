@@ -22,7 +22,7 @@ def seed_admin(db: Session = Depends(get_db_session)):
 
         admin_data = AdminUserCreate(
             username="admin",
-            email="admin@triskel.local",
+            email="admin@triskel.com",
             password="Admin123!",
             role="admin"
         )
