@@ -13,10 +13,12 @@ from fastapi.openapi.utils import get_openapi
 # Imports desde la nueva arquitectura
 from app.config.settings import settings
 from app.infrastructure.database.firebase_client import firebase_manager
+from app.infrastructure.database.sql_client import sql_manager
 from app.core.logger import logger
 from app.domain.players.api import router as players_router
 from app.domain.games.api import router as games_router
 from app.domain.events.api import router as events_router
+from app.domain.auth.api import router as auth_router
 from app.domain.web import flask_app  # ⭐ Flask app
 from app.middleware.auth import auth_middleware
 
@@ -44,6 +46,10 @@ app = FastAPI(
         {
             "name": "Events",
             "description": "Eventos de gameplay y telemetría"
+        },
+        {
+            "name": "Auth",
+            "description": "Autenticación JWT para administradores del dashboard"
         }
     ]
 )
@@ -73,6 +79,12 @@ def custom_openapi():
             "scheme": "bearer",
             "bearerFormat": "Player credentials",
             "description": "Autenticación de jugador: requiere headers X-Player-ID y X-Player-Token"
+        },
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "JWT token para administradores del dashboard. Obtener con POST /v1/auth/login"
         }
     }
 
@@ -150,8 +162,12 @@ def startup_event():
     # Inicializar Firebase
     firebase_manager.initialize()
 
-    # TODO: Inicializar MariaDB cuando esté configurado
-    # mariadb_manager.initialize()
+    # Inicializar Base de Datos SQL (para Auth)
+    try:
+        sql_manager.initialize()
+        sql_manager.create_tables()
+    except Exception as e:
+        logger.warning(f"Base de datos SQL no disponible (opcional): {e}")
 
     logger.info("Triskel API lista")
 
@@ -160,10 +176,10 @@ def startup_event():
 app.include_router(players_router)
 app.include_router(games_router)
 app.include_router(events_router)
+app.include_router(auth_router)
 
 # TODO: Añadir routers adicionales cuando estén implementados:
 # app.include_router(sessions_router)
-# app.include_router(auth_router)
 
 # Montar Flask app (Dashboard Web)
 app.mount("/web", WSGIMiddleware(flask_app))
