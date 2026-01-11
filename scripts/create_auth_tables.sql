@@ -3,12 +3,18 @@
 -- ============================================================
 -- Crea las tablas para autenticación de administradores
 --
--- Uso:
---   mysql -u triskel_user -p triskel_db < scripts/create_auth_tables.sql
+-- NOTA: Este script es opcional. Las tablas se crean automáticamente
+-- desde SQLAlchemy cuando ejecutas la API o scripts/seed_admin.py
+--
+-- Sintaxis: MySQL/MariaDB
+-- Para PostgreSQL, las tablas se crean automáticamente desde Python
+--
+-- Uso (solo para MySQL/MariaDB manual):
+--   mysql -u DB_USER -p DB_NAME < scripts/create_auth_tables.sql
 --
 -- ============================================================
 
-USE triskel_db;
+USE triskel_db;  -- Cambiar por tu DB_NAME
 
 -- ============================================================
 -- Tabla: admin_users
