@@ -49,9 +49,9 @@ def create_flask_app():
     from .analytics.routes import analytics_bp
     app.register_blueprint(analytics_bp, url_prefix='/dashboard')
 
-    # TODO: Descomentar cuando estén implementados
-    # from .admin.routes import admin_bp
-    # app.register_blueprint(admin_bp, url_prefix='/admin')
+    # Admin panel
+    from .admin.routes import admin_bp
+    app.register_blueprint(admin_bp, url_prefix='/admin')
 
     # from .public.routes import public_bp
     # app.register_blueprint(public_bp, url_prefix='/public')
