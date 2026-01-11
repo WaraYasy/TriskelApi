@@ -1,87 +1,40 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - Triskel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <h2 class="login-title">Triskel Admin</h2>
+            <p class="login-subtitle">Panel de Administración</p>
 
-{% block title %}Admin Login - Triskel{% endblock %}
-
-{% block content %}
-<div class="min-h-screen flex items-center justify-center bg-gray-900">
-    <div class="max-w-md w-full space-y-8 p-8 bg-gray-800 rounded-lg shadow-xl">
-        <div>
-            <h2 class="text-center text-3xl font-extrabold text-white">
-                Triskel Admin
-            </h2>
-            <p class="mt-2 text-center text-sm text-gray-400">
-                Panel de Administración
-            </p>
-        </div>
-
-        <form class="mt-8 space-y-6" id="loginForm">
-            {% if error %}
-            <div class="rounded-md bg-red-900 p-4">
-                <p class="text-sm text-red-200">{{ error }}</p>
-            </div>
-            {% endif %}
-
-            <div class="rounded-md shadow-sm space-y-4">
-                <div>
-                    <label for="username" class="sr-only">Username</label>
+            <form id="loginForm" class="mt-8 space-y-6">
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
                     <input id="username" name="username" type="text" required
-                           class="appearance-none rounded relative block w-full px-3 py-2 border border-gray-700 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                           placeholder="Username">
+                           class="form-input" placeholder="Username">
                 </div>
-                <div>
-                    <label for="password" class="sr-only">Password</label>
-                    <input id="password" name="password" type="password" required
-                           class="appearance-none rounded relative block w-full px-3 py-2 border border-gray-700 bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                           placeholder="Password">
-                </div>
-            </div>
 
-            <div>
-                <button type="submit" id="loginBtn"
-                        class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input id="password" name="password" type="password" required
+                           class="form-input" placeholder="Password">
+                </div>
+
+                <button type="submit" id="loginBtn" class="btn btn-primary w-full">
                     Login
                 </button>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
-</div>
 
-<script>
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const btn = document.getElementById('loginBtn');
-
-    btn.disabled = true;
-    btn.textContent = 'Logging in...';
-
-    try {
-        const response = await fetch('/v1/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username, password })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            localStorage.setItem('access_token', data.access_token);
-            localStorage.setItem('refresh_token', data.refresh_token);
-            window.location.href = '/web/admin/dashboard';
-        } else {
-            alert(data.detail || 'Login failed');
-            btn.disabled = false;
-            btn.textContent = 'Login';
-        }
-    } catch (error) {
-        alert('Error: ' + error.message);
-        btn.disabled = false;
-        btn.textContent = 'Login';
-    }
-});
-</script>
-{% endblock %}
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+</body>
+</html>

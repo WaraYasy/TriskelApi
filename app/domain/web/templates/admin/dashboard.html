@@ -1,152 +1,64 @@
-{% extends "base.html" %}
-
-{% block title %}Admin Dashboard - Triskel{% endblock %}
-
-{% block content %}
-<div class="min-h-screen bg-gray-900">
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Triskel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+</head>
+<body>
     <!-- Navbar -->
-    <nav class="bg-gray-800 border-b border-gray-700">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex items-center">
-                    <h1 class="text-xl font-bold text-white">Triskel Admin</h1>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-gray-300" id="userInfo">Loading...</span>
-                    <button onclick="logout()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
-                        Logout
-                    </button>
-                </div>
+    <nav class="navbar">
+        <div class="navbar-container">
+            <h1 class="navbar-brand">Triskel Admin</h1>
+            <div class="navbar-actions">
+                <span class="navbar-user" id="userInfo">Loading...</span>
+                <button onclick="logout()" class="btn btn-danger">Logout</button>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div class="px-4 py-6 sm:px-0">
-            <!-- Welcome Card -->
-            <div class="bg-gray-800 rounded-lg shadow-xl p-6 mb-6">
-                <h2 class="text-2xl font-bold text-white mb-4">Bienvenido al Panel de Administración</h2>
-                <div id="adminInfo" class="text-gray-300"></div>
-            </div>
+    <div class="dashboard-container">
+        <!-- Welcome Card -->
+        <div class="card mb-6">
+            <h2 class="text-2xl font-bold text-white mb-4">Bienvenido al Panel de Administración</h2>
+            <div id="adminInfo"></div>
+        </div>
 
-            <!-- Stats Grid -->
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-                <div class="bg-gray-800 rounded-lg shadow p-6">
-                    <div class="text-gray-400 text-sm">Total Players</div>
-                    <div class="text-white text-3xl font-bold" id="totalPlayers">-</div>
-                </div>
-                <div class="bg-gray-800 rounded-lg shadow p-6">
-                    <div class="text-gray-400 text-sm">Total Games</div>
-                    <div class="text-white text-3xl font-bold" id="totalGames">-</div>
-                </div>
-                <div class="bg-gray-800 rounded-lg shadow p-6">
-                    <div class="text-gray-400 text-sm">Total Events</div>
-                    <div class="text-white text-3xl font-bold" id="totalEvents">-</div>
-                </div>
-                <div class="bg-gray-800 rounded-lg shadow p-6">
-                    <div class="text-gray-400 text-sm">Your Role</div>
-                    <div class="text-white text-3xl font-bold" id="userRole">-</div>
-                </div>
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Players</div>
+                <div class="stat-value" id="totalPlayers">-</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Games</div>
+                <div class="stat-value" id="totalGames">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Events</div>
+                <div class="stat-value" id="totalEvents">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Your Role</div>
+                <div class="stat-value" id="userRole">-</div>
+            </div>
+        </div>
 
-            <!-- Quick Links -->
-            <div class="bg-gray-800 rounded-lg shadow-xl p-6">
-                <h3 class="text-lg font-semibold text-white mb-4">Quick Links</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <a href="/docs" target="_blank" class="block p-4 bg-indigo-600 text-white rounded hover:bg-indigo-700">
-                        API Documentation
-                    </a>
-                    <a href="/web/dashboard" class="block p-4 bg-purple-600 text-white rounded hover:bg-purple-700">
-                        Analytics Dashboard
-                    </a>
-                </div>
+        <!-- Quick Links -->
+        <div class="card">
+            <h3 class="text-lg font-semibold text-white mb-4">Quick Links</h3>
+            <div class="quick-links">
+                <a href="/docs" target="_blank" class="quick-link">API Documentation</a>
+                <a href="/web/dashboard" class="quick-link secondary">Analytics Dashboard</a>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-async function loadUserInfo() {
-    const token = localStorage.getItem('access_token');
-    if (!token) {
-        window.location.href = '/web/admin/login';
-        return;
-    }
-
-    try {
-        const response = await fetch('/v1/auth/me', {
-            headers: {
-                'Authorization': 'Bearer ' + token
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error('Unauthorized');
-        }
-
-        const user = await response.json();
-        document.getElementById('userInfo').textContent = user.username + ' (' + user.email + ')';
-        document.getElementById('userRole').textContent = user.role;
-        document.getElementById('adminInfo').innerHTML = `
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <p class="text-sm text-gray-400">Username</p>
-                    <p class="text-lg font-semibold text-white">${user.username}</p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-400">Email</p>
-                    <p class="text-lg font-semibold text-white">${user.email}</p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-400">Role</p>
-                    <p class="text-lg font-semibold text-white">${user.role}</p>
-                </div>
-                <div>
-                    <p class="text-sm text-gray-400">Status</p>
-                    <p class="text-lg font-semibold ${user.is_active ? 'text-green-400' : 'text-red-400'}">
-                        ${user.is_active ? 'Active' : 'Inactive'}
-                    </p>
-                </div>
-            </div>
-        `;
-
-        loadStats(token);
-    } catch (error) {
-        console.error('Error:', error);
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        window.location.href = '/web/admin/login';
-    }
-}
-
-async function loadStats(token) {
-    // Placeholder - puedes implementar estos endpoints más tarde
-    document.getElementById('totalPlayers').textContent = 'N/A';
-    document.getElementById('totalGames').textContent = 'N/A';
-    document.getElementById('totalEvents').textContent = 'N/A';
-}
-
-function logout() {
-    const token = localStorage.getItem('access_token');
-
-    if (token) {
-        fetch('/v1/auth/logout', {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Bearer ' + token
-            }
-        }).finally(() => {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
-            window.location.href = '/web/admin/login';
-        });
-    } else {
-        window.location.href = '/web/admin/login';
-    }
-}
-
-// Load user info on page load
-loadUserInfo();
-</script>
-{% endblock %}
+    <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
