@@ -1,10 +1,10 @@
 """
-Cliente de MariaDB usando SQLAlchemy
+Cliente de MySQL usando SQLAlchemy
 
-Este archivo prepara la conexión a MariaDB (base de datos SQL).
+Este archivo prepara la conexión a MySQL (base de datos SQL).
 Se usará para Auth (usuarios admin) y logs de auditoría.
 
-NOTA: MariaDB es OPCIONAL. Si no está configurado, la app funcionará igual.
+NOTA: MySQL es OPCIONAL. Si no está configurado, la app funcionará igual.
 """
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -17,13 +17,13 @@ from app.config.settings import settings
 Base = declarative_base()
 
 
-class MariaDBManager:
+class MySQLManager:
     """
-    Gestor de MariaDB (Singleton).
+    Gestor de MySQL (Singleton).
     Maneja la conexión a la base de datos SQL.
     """
 
-    _instance: Optional["MariaDBManager"] = None
+    _instance: Optional["MySQLManager"] = None
     _engine = None
     _session_factory = None
     _initialized: bool = False
@@ -31,24 +31,24 @@ class MariaDBManager:
     def __new__(cls):
         """Solo permite una instancia (Singleton)"""
         if cls._instance is None:
-            cls._instance = super(MariaDBManager, cls).__new__(cls)
+            cls._instance = super(MySQLManager, cls).__new__(cls)
         return cls._instance
 
     def initialize(self) -> None:
-        """Inicializa la conexión a MariaDB"""
+        """Inicializa la conexión a MySQL"""
         if self._initialized:
             return
 
-        # Si no hay configuración de MariaDB, saltar
-        if not settings.mariadb_host:
-            print("⚠️  MariaDB no configurado (opcional)")
+        # Si no hay configuración de MySQL, saltar
+        if not settings.mysql_host:
+            print("⚠️  MySQL no configurado (opcional)")
             return
 
         try:
             # Crear URL de conexión
             db_url = (
-                f"mysql+pymysql://{settings.mariadb_user}:{settings.mariadb_password}"
-                f"@{settings.mariadb_host}:{settings.mariadb_port}/{settings.mariadb_database}"
+                f"mysql+pymysql://{settings.mysql_user}:{settings.mysql_password}"
+                f"@{settings.mysql_host}:{settings.mysql_port}/{settings.mysql_database}"
             )
 
             # Crear motor de conexión
@@ -62,10 +62,10 @@ class MariaDBManager:
             self._session_factory = sessionmaker(bind=self._engine)
 
             self._initialized = True
-            print("✅ MariaDB conectado correctamente")
+            print("✅ MySQL conectado correctamente")
 
         except Exception as e:
-            print(f"❌ Error conectando a MariaDB: {e}")
+            print(f"❌ Error conectando a MySQL: {e}")
             raise
 
     def get_session(self) -> Session:
@@ -77,7 +77,7 @@ class MariaDBManager:
             self.initialize()
 
         if not self._session_factory:
-            raise RuntimeError("MariaDB no está configurado")
+            raise RuntimeError("MySQL no está configurado")
 
         return self._session_factory()
 
@@ -87,14 +87,14 @@ class MariaDBManager:
         Solo se debe llamar una vez al configurar la BD.
         """
         if not self._engine:
-            raise RuntimeError("MariaDB no está inicializado")
+            raise RuntimeError("MySQL no está inicializado")
 
         Base.metadata.create_all(bind=self._engine)
-        print("✅ Tablas creadas en MariaDB")
+        print("✅ Tablas creadas en MySQL")
 
 
 # Instancia única compartida
-mariadb_manager = MariaDBManager()
+mysql_manager = MySQLManager()
 
 
 def get_db_session() -> Generator[Session, None, None]:
@@ -108,7 +108,7 @@ def get_db_session() -> Generator[Session, None, None]:
             users = db.query(AdminUser).all()
             return users
     """
-    session = mariadb_manager.get_session()
+    session = mysql_manager.get_session()
     try:
         yield session
     finally:
