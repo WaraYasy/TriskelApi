@@ -1,0 +1,201 @@
+/* Analytics Dashboard Styles */
+
+/* Override Bootstrap colors */
+.analytics-container {
+    background: #0a0e1a;
+    min-height: 100vh;
+    padding: 2rem;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+
+.analytics-header {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #2d3748;
+}
+
+.analytics-header h2 {
+    color: #ffffff;
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    letter-spacing: -0.02em;
+}
+
+.analytics-header p {
+    color: #a0aec0;
+    font-size: 1.0625rem;
+    font-weight: 400;
+}
+
+/* Stats Cards */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card-analytics {
+    background: #1a1f2e;
+    border: 1px solid #2d3748;
+    border-radius: 0.875rem;
+    padding: 1.75rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card-analytics:hover {
+    transform: translateY(-4px);
+    border-color: #10b981;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(16, 185, 129, 0.1);
+}
+
+.stat-card-analytics h5 {
+    color: #a0aec0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.stat-card-analytics h2 {
+    color: #ffffff;
+    font-size: 2.75rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.stat-card-analytics small {
+    color: #718096;
+    font-size: 0.875rem;
+    font-weight: 400;
+}
+
+.stat-card-analytics i {
+    color: #10b981;
+    font-size: 1.125rem;
+}
+
+/* Navigation Buttons */
+.analytics-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.875rem;
+    margin-bottom: 3rem;
+}
+
+.analytics-nav .btn {
+    background: #1a1f2e;
+    border: 1px solid #2d3748;
+    color: #a0aec0;
+    padding: 0.875rem 1.5rem;
+    border-radius: 0.625rem;
+    text-decoration: none;
+    font-size: 0.9375rem;
+    font-weight: 500;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.analytics-nav .btn:hover {
+    background: #10b981;
+    border-color: #10b981;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(16, 185, 129, 0.2);
+}
+
+.analytics-nav .btn span {
+    font-size: 1.125rem;
+}
+
+/* Chart Cards */
+.chart-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.chart-card-analytics {
+    background: #1a1f2e;
+    border: 1px solid #2d3748;
+    border-radius: 0.875rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.chart-card-analytics:hover {
+    border-color: #10b981;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+}
+
+.chart-card-analytics .card-header {
+    background: #151a25;
+    border-bottom: 1px solid #2d3748;
+    padding: 1.5rem 1.75rem;
+}
+
+.chart-card-analytics .card-header h5 {
+    color: #ffffff;
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.chart-card-analytics .card-header i {
+    color: #10b981;
+    font-size: 1.25rem;
+}
+
+.chart-card-analytics .card-body {
+    padding: 2rem 1.75rem;
+    background: #1a1f2e;
+    min-height: 350px;
+}
+
+/* Plotly chart styling */
+.chart-card-analytics .plotly {
+    background: transparent !important;
+}
+
+.chart-card-analytics .plotly .bg {
+    fill: transparent !important;
+}
+
+/* Full width chart */
+.chart-full {
+    grid-column: 1 / -1;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+        grid-template-columns: 1fr;
+    }
+
+    .analytics-nav {
+        flex-direction: column;
+    }
+
+    .analytics-nav .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
