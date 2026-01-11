@@ -1,40 +1,84 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - Triskel</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Acceso al Códice - Triskel Admin</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
 </head>
-<body>
+
+<body class="login-body">
     <div class="login-container">
         <div class="login-card">
-            <h2 class="login-title">Triskel Admin</h2>
-            <p class="login-subtitle">Panel de Administración</p>
+            <!-- Logo/Symbol -->
+            <div class="login-symbol">✦</div>
 
-            <form id="loginForm" class="mt-8 space-y-6">
+            <!-- Header -->
+            <div class="login-header">
+                <h1 class="login-brand">Mandrágora</h1>
+                <h2 class="login-title">Acceso al Códice</h2>
+                <p class="login-subtitle">Panel de Administración de Triskel</p>
+            </div>
+
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="login-form">
                 <div class="form-group">
-                    <label for="username" class="form-label">Username</label>
-                    <input id="username" name="username" type="text" required
-                           class="form-input" placeholder="Username">
+                    <label for="username" class="form-label">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <path d="M8 8a3 3 0 100-6 3 3 0 000 6zM14 14a6 6 0 10-12 0" stroke="currentColor"
+                                stroke-width="1.5" stroke-linecap="round" />
+                        </svg>
+                        Usuario
+                    </label>
+                    <input id="username" name="username" type="text" required class="form-input"
+                        placeholder="Nombre de usuario" autocomplete="username">
                 </div>
 
                 <div class="form-group">
-                    <label for="password" class="form-label">Password</label>
-                    <input id="password" name="password" type="password" required
-                           class="form-input" placeholder="Password">
+                    <label for="password" class="form-label">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                            <rect x="3" y="7" width="10" height="7" rx="1" stroke="currentColor" stroke-width="1.5" />
+                            <path d="M5 7V5a3 3 0 016 0v2" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" />
+                        </svg>
+                        Contraseña
+                    </label>
+                    <input id="password" name="password" type="password" required class="form-input"
+                        placeholder="••••••••" autocomplete="current-password">
                 </div>
 
-                <button type="submit" id="loginBtn" class="btn btn-primary w-full">
-                    Login
+                <button type="submit" id="loginBtn" class="btn btn-primary btn-login-submit">
+                    <span id="loginBtnText">Entrar</span>
+                    <svg id="loginBtnIcon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 1L15 8L8 15M15 8H1" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                            stroke-linejoin="round" />
+                    </svg>
+                    <div id="loginSpinner" class="spinner" style="display: none;"></div>
                 </button>
             </form>
+
+            <!-- Footer Links -->
+            <div class="login-footer">
+                <a href="/web/" class="login-link">← Volver al inicio</a>
+            </div>
         </div>
+
+        <!-- Background Decoration -->
+        <div class="login-bg-decoration"></div>
     </div>
 
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
     <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </body>
+
 </html>

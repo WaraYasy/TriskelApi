@@ -1,100 +1,102 @@
-{% extends "base.html" %}
-
-{% block title %}Dashboard - Triskel{% endblock %}
-
-{% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="jumbotron bg-light p-5 rounded">
-            <h1 class="display-4">
-                <i class="bi bi-controller"></i> Bienvenido al Dashboard de Triskel
-            </h1>
-            <p class="lead">
-                Sistema de análisis y administración del videojuego
-                <strong>Triskel: La Balada del Último Guardián</strong>
-            </p>
-            <hr class="my-4">
-            <p>
-                Selecciona una sección del menú superior para comenzar:
-            </p>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRISKEL - La Balada del Último Guardián</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="public-body">
+    <!-- Header con logo -->
+    <header class="public-header">
+        <div class="header-brand">
+            <span class="brand-icon">✦</span>
+            <span class="brand-name">Mandrágora</span>
         </div>
-    </div>
-</div>
+        <a href="/web/admin/login" class="btn-login">
+            <span>Acceso Admin</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M8 1L15 8L8 15M15 8H1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </a>
+    </header>
 
-<div class="row mt-4">
-    <!-- Card Analytics -->
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-graph-up text-primary"></i> Analytics
-                </h5>
-                <p class="card-text">
-                    Dashboard de métricas y visualizaciones del juego.
-                    Analiza decisiones morales, tiempo de juego y más.
-                </p>
-                <a href="{{ url_for('analytics.index') }}" class="btn btn-primary">
-                    Ir a Analytics
-                </a>
+    <!-- Hero Section -->
+    <main class="public-main">
+        <div class="hero-section">
+            <div class="hero-symbol">✦</div>
+            <h1 class="hero-title">TRISKEL</h1>
+            <p class="hero-subtitle">La Balada del Último Guardián</p>
+            <div class="hero-divider"></div>
+        </div>
+
+        <!-- Global Stats -->
+        <section class="stats-section">
+            <h2 class="section-title">Métricas del Bosque</h2>
+            <div class="stats-grid-public">
+                <div class="stat-card-public">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-value" id="totalPlayers">-</div>
+                    <div class="stat-label">Guardianes Activos</div>
+                    <div class="stat-change positive" id="playersChange">+0%</div>
+                </div>
+
+                <div class="stat-card-public">
+                    <div class="stat-icon">⚖️</div>
+                    <div class="stat-value" id="totalDecisions">-</div>
+                    <div class="stat-label">Decisiones Tomadas</div>
+                    <div class="stat-sublabel">Media por jugador</div>
+                </div>
+
+                <div class="stat-card-public">
+                    <div class="stat-icon">🏺</div>
+                    <div class="stat-value" id="totalRelics">-</div>
+                    <div class="stat-label">Reliquias Totales</div>
+                    <div class="stat-change" id="relicsChange">-2.4%</div>
+                </div>
+
+                <div class="stat-card-public">
+                    <div class="stat-icon">🌲</div>
+                    <div class="stat-value" id="forestHealth">-</div>
+                    <div class="stat-label">Bosque Restaurado</div>
+                    <div class="stat-progress">
+                        <div class="stat-progress-bar" id="forestProgress"></div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <!-- Card Admin (futuro) -->
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-gear text-secondary"></i> Admin
-                    <span class="badge bg-secondary">Próximamente</span>
-                </h5>
-                <p class="card-text">
-                    Panel de administración para gestionar jugadores,
-                    moderar contenido y configurar el sistema.
+        <!-- Quick Info -->
+        <section class="info-section">
+            <div class="info-card">
+                <h3 class="info-title">Sobre el Juego</h3>
+                <p class="info-text">
+                    RPG de aventura narrativa donde tus decisiones morales moldean el destino del bosque sagrado.
+                    Explora, combate y descubre los secretos del último guardián.
                 </p>
-                <button class="btn btn-secondary" disabled>
-                    Próximamente
-                </button>
             </div>
-        </div>
-    </div>
-
-    <!-- Card Public (futuro) -->
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-globe text-info"></i> Público
-                    <span class="badge bg-secondary">Próximamente</span>
-                </h5>
-                <p class="card-text">
-                    Landing page del juego con rankings públicos,
-                    guías y documentación para la comunidad.
+            <div class="info-card">
+                <h3 class="info-title">Desarrollado por</h3>
+                <p class="info-text">
+                    <strong>Mandrágora</strong> - Estudio independiente dedicado a crear experiencias narrativas inmersivas.
                 </p>
-                <button class="btn btn-secondary" disabled>
-                    Próximamente
-                </button>
             </div>
-        </div>
-    </div>
-</div>
+        </section>
+    </main>
 
-<!-- Info adicional -->
-<div class="row mt-5">
-    <div class="col-12">
-        <div class="alert alert-info">
-            <h5 class="alert-heading">
-                <i class="bi bi-info-circle"></i> Información del Proyecto
-            </h5>
-            <hr>
-            <ul>
-                <li><strong>Videojuego:</strong> Triskel: La Balada del Último Guardián</li>
-                <li><strong>Género:</strong> RPG de Aventura Narrativa (Top-Down 2D)</li>
-                <li><strong>Desarrollador:</strong> Mandrágora</li>
-                <li><strong>API:</strong> <a href="/docs" target="_blank">Documentación Swagger</a></li>
-                <li><strong>Arquitectura:</strong> Hexagonal con dominios verticales</li>
-            </ul>
+    <!-- Footer -->
+    <footer class="public-footer">
+        <p>Triskel: La Balada del Último Guardián © 2026 - Mandrágora</p>
+        <div class="footer-links">
+            <a href="/docs" target="_blank">API Docs</a>
+            <a href="/web/dashboard">Analytics</a>
         </div>
-    </div>
-</div>
-{% endblock %}
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/public.js') }}"></script>
+</body>
+</html>

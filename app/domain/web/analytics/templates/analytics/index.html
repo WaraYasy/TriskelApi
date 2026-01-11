@@ -63,6 +63,57 @@
     </div>
 </div>
 
+<!-- Segunda fila de métricas -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-x-circle"></i> Muertes
+                </h5>
+                <h2 class="card-text">{{ metrics.total_deaths }}</h2>
+                <small>Total en el juego</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-dark">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-lightning"></i> Eventos
+                </h5>
+                <h2 class="card-text">{{ metrics.total_events }}</h2>
+                <small>Eventos registrados</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-secondary">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-heart-half"></i> Muertes/Partida
+                </h5>
+                <h2 class="card-text">{{ metrics.avg_deaths }}</h2>
+                <small>Promedio</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-check-circle"></i> Completadas
+                </h5>
+                <h2 class="card-text">{{ metrics.completed_games }}</h2>
+                <small>Partidas terminadas</small>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Navegación de secciones -->
 <div class="row mb-4">
     <div class="col-12">
@@ -75,6 +126,12 @@
             </a>
             <a href="{{ url_for('analytics.choices') }}" class="btn btn-outline-info">
                 <i class="bi bi-signpost-split"></i> Decisiones Morales
+            </a>
+            <a href="{{ url_for('analytics.events') }}" class="btn btn-outline-warning">
+                <i class="bi bi-lightning"></i> Eventos
+            </a>
+            <a href="{{ url_for('analytics.advanced') }}" class="btn btn-outline-danger">
+                <i class="bi bi-speedometer2"></i> Métricas Avanzadas
             </a>
             <a href="{{ url_for('analytics.export') }}" class="btn btn-outline-secondary">
                 <i class="bi bi-download"></i> Exportar Datos
@@ -93,12 +150,7 @@
                 </h5>
             </div>
             <div class="card-body">
-                <!-- TODO: Insertar gráfico de Plotly aquí -->
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i>
-                    Gráfico en construcción. Mostrará la distribución de
-                    decisiones buenas vs malas por nivel.
-                </div>
+                {{ moral_chart|safe }}
             </div>
         </div>
     </div>
@@ -111,12 +163,7 @@
                 </h5>
             </div>
             <div class="card-body">
-                <!-- TODO: Insertar gráfico de Plotly aquí -->
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i>
-                    Gráfico en construcción. Mostrará la distribución de
-                    jugadores por alineación moral.
-                </div>
+                {{ alignment_chart|safe }}
             </div>
         </div>
     </div>
@@ -131,25 +178,10 @@
                 </h5>
             </div>
             <div class="card-body">
-                <!-- TODO: Insertar gráfico de Plotly aquí -->
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i>
-                    Gráfico en construcción. Mostrará el promedio de muertes
-                    por cada nivel del juego.
-                </div>
+                {{ deaths_chart|safe }}
             </div>
         </div>
     </div>
 </div>
 
-<!-- Nota de desarrollo -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="alert alert-warning">
-            <strong><i class="bi bi-wrench"></i> En Desarrollo:</strong>
-            Este dashboard está en construcción. Las visualizaciones se generarán
-            con Plotly cuando se implementen las consultas a la API.
-        </div>
-    </div>
-</div>
 {% endblock %}
