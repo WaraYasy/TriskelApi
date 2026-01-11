@@ -27,6 +27,11 @@ plotly==5.18.0                   # Visualizaciones interactivas
 # ==================== Configuración ====================
 python-dotenv==1.0.0             # Variables de entorno
 
+# ==================== Autenticación y Seguridad ====================
+python-jose[cryptography]==3.3.0   # JWT token handling
+passlib[bcrypt]==1.7.4             # Password hashing con bcrypt
+python-multipart==0.0.6            # Form data parsing para login
+
 # ==================== Producción ====================
 gunicorn==21.2.0                 # WSGI server (producción)
 
