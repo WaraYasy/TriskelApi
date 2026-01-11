@@ -1,13 +1,15 @@
 """
 Modelos SQLAlchemy para Auth
 
-Define las tablas de MySQL para:
+Define las tablas SQL para:
 - AdminUser: Usuarios administradores del sistema
 - AuditLog: Logs de auditoría de acciones administrativas
+
+Compatible con PostgreSQL, MySQL, MariaDB.
 """
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey
 from sqlalchemy.sql import func
-from app.infrastructure.database.mysql_client import Base
+from app.infrastructure.database.sql_client import Base
 
 
 class AdminUser(Base):

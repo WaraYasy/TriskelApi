@@ -1,10 +1,11 @@
 """
-Cliente de MySQL usando SQLAlchemy
+Cliente de Base de Datos SQL usando SQLAlchemy
 
-Este archivo prepara la conexión a MySQL (base de datos SQL).
+Este archivo prepara la conexión a la base de datos SQL relacional
+(PostgreSQL, MySQL, MariaDB, etc.).
 Se usará para Auth (usuarios admin) y logs de auditoría.
 
-NOTA: MySQL es OPCIONAL. Si no está configurado, la app funcionará igual.
+NOTA: La base de datos SQL es OPCIONAL. Si no está configurada, la app funcionará igual.
 """
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
@@ -17,13 +18,14 @@ from app.config.settings import settings
 Base = declarative_base()
 
 
-class MySQLManager:
+class SQLManager:
     """
-    Gestor de MySQL (Singleton).
-    Maneja la conexión a la base de datos SQL.
+    Gestor de Base de Datos SQL (Singleton).
+    Maneja la conexión a la base de datos SQL relacional.
+    Soporta PostgreSQL, MySQL, MariaDB, etc.
     """
 
-    _instance: Optional["MySQLManager"] = None
+    _instance: Optional["SQLManager"] = None
     _engine = None
     _session_factory = None
     _initialized: bool = False
@@ -31,24 +33,24 @@ class MySQLManager:
     def __new__(cls):
         """Solo permite una instancia (Singleton)"""
         if cls._instance is None:
-            cls._instance = super(MySQLManager, cls).__new__(cls)
+            cls._instance = super(SQLManager, cls).__new__(cls)
         return cls._instance
 
     def initialize(self) -> None:
-        """Inicializa la conexión a MySQL"""
+        """Inicializa la conexión a la base de datos SQL"""
         if self._initialized:
             return
 
-        # Si no hay configuración de MySQL, saltar
-        if not settings.mysql_host:
-            print("⚠️  MySQL no configurado (opcional)")
+        # Si no hay configuración de base de datos, saltar
+        if not settings.db_host:
+            print("⚠️  Base de datos SQL no configurada (opcional)")
             return
 
         try:
-            # Crear URL de conexión
+            # Crear URL de conexión para PostgreSQL
             db_url = (
-                f"mysql+pymysql://{settings.mysql_user}:{settings.mysql_password}"
-                f"@{settings.mysql_host}:{settings.mysql_port}/{settings.mysql_database}"
+                f"postgresql+psycopg2://{settings.db_user}:{settings.db_password}"
+                f"@{settings.db_host}:{settings.db_port}/{settings.db_name}"
             )
 
             # Crear motor de conexión
@@ -62,10 +64,10 @@ class MySQLManager:
             self._session_factory = sessionmaker(bind=self._engine)
 
             self._initialized = True
-            print("✅ MySQL conectado correctamente")
+            print("✅ Base de datos SQL conectada correctamente")
 
         except Exception as e:
-            print(f"❌ Error conectando a MySQL: {e}")
+            print(f"❌ Error conectando a la base de datos SQL: {e}")
             raise
 
     def get_session(self) -> Session:
@@ -77,7 +79,7 @@ class MySQLManager:
             self.initialize()
 
         if not self._session_factory:
-            raise RuntimeError("MySQL no está configurado")
+            raise RuntimeError("Base de datos SQL no está configurada")
 
         return self._session_factory()
 
@@ -87,14 +89,14 @@ class MySQLManager:
         Solo se debe llamar una vez al configurar la BD.
         """
         if not self._engine:
-            raise RuntimeError("MySQL no está inicializado")
+            raise RuntimeError("Base de datos SQL no está inicializada")
 
         Base.metadata.create_all(bind=self._engine)
-        print("✅ Tablas creadas en MySQL")
+        print("✅ Tablas creadas en la base de datos SQL")
 
 
 # Instancia única compartida
-mysql_manager = MySQLManager()
+sql_manager = SQLManager()
 
 
 def get_db_session() -> Generator[Session, None, None]:
@@ -108,7 +110,7 @@ def get_db_session() -> Generator[Session, None, None]:
             users = db.query(AdminUser).all()
             return users
     """
-    session = mysql_manager.get_session()
+    session = sql_manager.get_session()
     try:
         yield session
     finally:

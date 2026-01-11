@@ -1,7 +1,8 @@
 """
-Adaptador MySQL para Auth
+Adaptador SQL para Auth
 
-Implementación CONCRETA del repositorio usando SQLAlchemy + MySQL.
+Implementación CONCRETA del repositorio usando SQLAlchemy + Base de Datos SQL.
+Soporta PostgreSQL, MySQL, MariaDB, etc.
 Implementa la interfaz IAuthRepository.
 """
 from typing import Optional, List, Dict, Any
@@ -14,11 +15,12 @@ from ..models import AdminUser, AuditLog
 from app.core.logger import logger
 
 
-class MySQLAuthRepository(IAuthRepository):
+class SQLAuthRepository(IAuthRepository):
     """
-    Repositorio de Auth usando MySQL con SQLAlchemy.
+    Repositorio de Auth usando Base de Datos SQL con SQLAlchemy.
 
     Esta es la implementación real que habla con la base de datos.
+    Soporta PostgreSQL, MySQL, MariaDB, etc.
     Implementa todos los métodos definidos en IAuthRepository.
     """
 

@@ -34,8 +34,8 @@ from .schemas import (
     AuditLogResponse,
     AuditLogListResponse,
 )
-from .adapters.mysql_repository import MySQLAuthRepository
-from app.infrastructure.database.mysql_client import get_db_session
+from .adapters.sql_repository import SQLAuthRepository
+from app.infrastructure.database.sql_client import get_db_session
 from sqlalchemy.orm import Session
 
 
@@ -49,8 +49,8 @@ def get_auth_repository(db: Session = Depends(get_db_session)) -> IAuthRepositor
     """
     Dependency que provee el repositorio de Auth.
 
-    Retorna la implementación concreta (MySQL).
-    Si queremos cambiar a otra BD, solo cambiamos esto.
+    Retorna la implementación concreta (SQL genérico).
+    Si queremos cambiar a otra BD, solo cambiamos las credenciales.
 
     Args:
         db: Sesión de SQLAlchemy inyectada
@@ -58,7 +58,7 @@ def get_auth_repository(db: Session = Depends(get_db_session)) -> IAuthRepositor
     Returns:
         IAuthRepository: Implementación del repositorio
     """
-    return MySQLAuthRepository(session=db)
+    return SQLAuthRepository(session=db)
 
 
 def get_auth_service(
