@@ -19,6 +19,7 @@ from app.domain.players.api import router as players_router
 from app.domain.games.api import router as games_router
 from app.domain.events.api import router as events_router
 from app.domain.auth.api import router as auth_router
+from app.api.seed import router as seed_router
 from app.domain.web import flask_app  # ⭐ Flask app
 from app.middleware.auth import auth_middleware
 
@@ -177,6 +178,7 @@ app.include_router(players_router)
 app.include_router(games_router)
 app.include_router(events_router)
 app.include_router(auth_router)
+# app.include_router(seed_router)  # DESHABILITADO por seguridad - solo usar en desarrollo
 
 # TODO: Añadir routers adicionales cuando estén implementados:
 # app.include_router(sessions_router)
