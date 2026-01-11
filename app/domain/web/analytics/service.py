@@ -54,6 +54,33 @@ class AnalyticsService:
         else:
             self.client = None
 
+    def _get_dark_layout(self):
+        """
+        Retorna configuración de layout oscuro para gráficos de Plotly.
+        """
+        return {
+            'paper_bgcolor': 'rgba(0,0,0,0)',
+            'plot_bgcolor': 'rgba(0,0,0,0)',
+            'font': {'color': '#a0aec0', 'family': 'Inter, sans-serif'},
+            'xaxis': {
+                'gridcolor': '#2d3748',
+                'color': '#a0aec0',
+                'showline': False,
+                'zeroline': False
+            },
+            'yaxis': {
+                'gridcolor': '#2d3748',
+                'color': '#a0aec0',
+                'showline': False,
+                'zeroline': False
+            },
+            'legend': {
+                'font': {'color': '#a0aec0'},
+                'bgcolor': 'rgba(0,0,0,0)'
+            },
+            'margin': {'t': 40, 'r': 20, 'b': 40, 'l': 60}
+        }
+
     def get_all_players(self) -> List[Dict[str, Any]]:
         """
         Obtiene todos los jugadores desde la API.
@@ -113,9 +140,12 @@ class AnalyticsService:
             return {
                 'total_players': len(players),
                 'total_games': len(games),
+                'completed_games': 0,
                 'avg_playtime': 0,
                 'completion_rate': 0,
                 'avg_deaths': 0,
+                'total_deaths': 0,
+                'total_relics': 0,
                 'total_events': 0
             }
 
@@ -140,6 +170,12 @@ class AnalyticsService:
 
         avg_deaths = total_deaths / len(games) if games else 0
 
+        # Total de reliquias obtenidas
+        total_relics = 0
+        for game in games:
+            relics = game.get('relics', [])
+            total_relics += len(relics)
+
         return {
             'total_players': len(players),
             'total_games': len(games),
@@ -147,7 +183,8 @@ class AnalyticsService:
             'avg_playtime': round(avg_playtime, 2),
             'completion_rate': round(len(completed_games) / len(games) * 100, 2) if games else 0,
             'avg_deaths': round(avg_deaths, 2),
-            'total_deaths': total_deaths
+            'total_deaths': total_deaths,
+            'total_relics': total_relics
         }
 
     def create_moral_choices_chart(self, games: List[Dict]) -> str:
@@ -187,12 +224,15 @@ class AnalyticsService:
             x='Nivel',
             y='count',
             color='Decisión',
-            title='Distribución de Decisiones Morales por Nivel',
             labels={'count': 'Cantidad de jugadores'},
-            barmode='group'
+            barmode='group',
+            color_discrete_map={'good': '#10b981', 'bad': '#ef4444', 'neutral': '#6b7280'}
         )
+        
+        fig.update_layout(self._get_dark_layout())
+        fig.update_layout(showlegend=True, title=None)
 
-        return fig.to_html(full_html=False)
+        return fig.to_html(full_html=False, config={'displayModeBar': False})
 
     def create_playtime_distribution(self, players: List[Dict]) -> str:
         """
@@ -261,11 +301,14 @@ class AnalyticsService:
             df,
             x='Nivel',
             y='Muertes promedio',
-            title='Muertes Promedio por Nivel',
-            labels={'Muertes promedio': 'Promedio de muertes'}
+            labels={'Muertes promedio': 'Promedio de muertes'},
+            color_discrete_sequence=['#10b981']
         )
+        
+        fig.update_layout(self._get_dark_layout())
+        fig.update_layout(title=None)
 
-        return fig.to_html(full_html=False)
+        return fig.to_html(full_html=False, config={'displayModeBar': False})
 
     def create_events_by_type_chart(self, events: List[Dict]) -> str:
         """
@@ -293,10 +336,14 @@ class AnalyticsService:
             df,
             values='Cantidad',
             names='Tipo de evento',
-            title='Distribución de Eventos por Tipo'
+            color_discrete_sequence=['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
         )
 
-        return fig.to_html(full_html=False)
+        fig.update_layout(self._get_dark_layout())
+        fig.update_layout(title=None, showlegend=True)
+        fig.update_traces(textfont_color='#ffffff')
+
+        return fig.to_html(full_html=False, config={'displayModeBar': False})
 
     def create_moral_alignment_chart(self, players: List[Dict]) -> str:
         """
@@ -334,19 +381,22 @@ class AnalyticsService:
         })
 
         # Colores personalizados
-        colors = {'Bueno': '#28a745', 'Neutral': '#ffc107', 'Malo': '#dc3545'}
+        colors = {'Bueno': '#10b981', 'Neutral': '#6b7280', 'Malo': '#ef4444'}
         df['color'] = df['Alineación'].map(colors)
 
         fig = px.pie(
             df,
             values='Jugadores',
             names='Alineación',
-            title='Alineación Moral de Jugadores',
             color='Alineación',
             color_discrete_map=colors
         )
+        
+        fig.update_layout(self._get_dark_layout())
+        fig.update_layout(title=None, showlegend=True)
+        fig.update_traces(textfont_color='#ffffff')
 
-        return fig.to_html(full_html=False)
+        return fig.to_html(full_html=False, config={'displayModeBar': False})
 
     def create_relics_distribution_chart(self, games: List[Dict]) -> str:
         """
@@ -380,12 +430,15 @@ class AnalyticsService:
             df,
             x='Reliquia',
             y='Cantidad',
-            title='Reliquias Más Obtenidas',
             labels={'Cantidad': 'Veces obtenida'},
-            color='Reliquia'
+            color='Reliquia',
+            color_discrete_sequence=['#10b981', '#3b82f6', '#f59e0b']
         )
 
-        return fig.to_html(full_html=False)
+        fig.update_layout(self._get_dark_layout())
+        fig.update_layout(title=None, showlegend=False)
+
+        return fig.to_html(full_html=False, config={'displayModeBar': False})
 
     def create_level_completion_chart(self, games: List[Dict]) -> str:
         """
@@ -428,13 +481,15 @@ class AnalyticsService:
             df,
             x='Nivel',
             y='Porcentaje Completado',
-            title='Tasa de Completado por Nivel',
             labels={'Porcentaje Completado': '% de jugadores que completaron'},
             color='Porcentaje Completado',
             color_continuous_scale='Viridis'
         )
 
-        return fig.to_html(full_html=False)
+        fig.update_layout(self._get_dark_layout())
+        fig.update_layout(title=None)
+
+        return fig.to_html(full_html=False, config={'displayModeBar': False})
 
     def create_playtime_per_level_chart(self, games: List[Dict]) -> str:
         """
@@ -478,13 +533,15 @@ class AnalyticsService:
             df,
             x='Nivel',
             y='Tiempo Promedio (min)',
-            title='Tiempo Promedio por Nivel',
             labels={'Tiempo Promedio (min)': 'Minutos'},
             color='Tiempo Promedio (min)',
             color_continuous_scale='Blues'
         )
 
-        return fig.to_html(full_html=False)
+        fig.update_layout(self._get_dark_layout())
+        fig.update_layout(title=None)
+
+        return fig.to_html(full_html=False, config={'displayModeBar': False})
 
     def export_to_csv(self, data: List[Dict], filename: str) -> str:
         """
