@@ -1,187 +1,155 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="es">
 
-{% block title %}Analytics - Triskel Dashboard{% endblock %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Triskel Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/analytics.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+</head>
 
-{% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2>
-            <i class="bi bi-graph-up"></i> Analytics Dashboard
-        </h2>
-        <p class="text-muted">Métricas y visualizaciones del juego en tiempo real</p>
-    </div>
-</div>
+<body style="background: #0a0e1a; font-family: 'Inter', sans-serif; margin: 0; padding: 0;">
+    <div class="analytics-container">
+        <!-- Header -->
+        <div class="analytics-header">
+            <h2>📊 Analytics Dashboard</h2>
+            <p>Métricas y visualizaciones del juego en tiempo real</p>
+        </div>
 
-<!-- Métricas globales -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-primary">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-people"></i> Jugadores
-                </h5>
-                <h2 class="card-text">{{ metrics.total_players }}</h2>
+        <!-- Métricas globales - Primera fila -->
+        <div class="stats-row">
+            <div class="stat-card-analytics">
+                <h5><i>👥</i> Jugadores</h5>
+                <h2>{{ metrics.total_players }}</h2>
                 <small>Total registrados</small>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="card text-white bg-success">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-controller"></i> Partidas
-                </h5>
-                <h2 class="card-text">{{ metrics.total_games }}</h2>
+            <div class="stat-card-analytics">
+                <h5><i>🎮</i> Partidas</h5>
+                <h2>{{ metrics.total_games }}</h2>
                 <small>Total jugadas</small>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="card text-white bg-info">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-clock"></i> Tiempo Promedio
-                </h5>
-                <h2 class="card-text">{{ metrics.avg_playtime }}h</h2>
+            <div class="stat-card-analytics">
+                <h5><i>⏱️</i> Tiempo Promedio</h5>
+                <h2>{{ "%.1f"|format(metrics.avg_playtime / 3600) }}h</h2>
                 <small>Por partida</small>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="card text-white bg-warning">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-trophy"></i> Completado
-                </h5>
-                <h2 class="card-text">{{ metrics.completion_rate }}%</h2>
+            <div class="stat-card-analytics">
+                <h5><i>🏆</i> Completado</h5>
+                <h2>{{ metrics.completion_rate }}%</h2>
                 <small>Tasa de completado</small>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Segunda fila de métricas -->
-<div class="row mb-4">
-    <div class="col-md-3">
-        <div class="card text-white bg-danger">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-x-circle"></i> Muertes
-                </h5>
-                <h2 class="card-text">{{ metrics.total_deaths }}</h2>
+        <!-- Segunda fila de métricas -->
+        <div class="stats-row">
+            <div class="stat-card-analytics">
+                <h5><i>💀</i> Muertes</h5>
+                <h2>{{ metrics.total_deaths }}</h2>
                 <small>Total en el juego</small>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="card text-white bg-dark">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-lightning"></i> Eventos
-                </h5>
-                <h2 class="card-text">{{ metrics.total_events }}</h2>
+            <div class="stat-card-analytics">
+                <h5><i>⚡</i> Eventos</h5>
+                <h2>{{ metrics.total_events }}</h2>
                 <small>Eventos registrados</small>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="card text-white bg-secondary">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-heart-half"></i> Muertes/Partida
-                </h5>
-                <h2 class="card-text">{{ metrics.avg_deaths }}</h2>
+            <div class="stat-card-analytics">
+                <h5><i>💔</i> Muertes/Partida</h5>
+                <h2>{{ "%.1f"|format(metrics.avg_deaths) }}</h2>
                 <small>Promedio</small>
             </div>
-        </div>
-    </div>
 
-    <div class="col-md-3">
-        <div class="card text-white bg-success">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="bi bi-check-circle"></i> Completadas
-                </h5>
-                <h2 class="card-text">{{ metrics.completed_games }}</h2>
+            <div class="stat-card-analytics">
+                <h5><i>✅</i> Completadas</h5>
+                <h2>{{ metrics.completed_games }}</h2>
                 <small>Partidas terminadas</small>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- Navegación de secciones -->
-<div class="row mb-4">
-    <div class="col-12">
-        <div class="btn-group" role="group">
-            <a href="{{ url_for('analytics.players') }}" class="btn btn-outline-primary">
-                <i class="bi bi-people"></i> Análisis de Jugadores
+        <!-- Navegación de secciones -->
+        <div class="analytics-nav">
+            <a href="{{ url_for('analytics.players') }}" class="btn">
+                <span>👥</span> Análisis de Jugadores
             </a>
-            <a href="{{ url_for('analytics.games') }}" class="btn btn-outline-success">
-                <i class="bi bi-controller"></i> Análisis de Partidas
+            <a href="{{ url_for('analytics.games') }}" class="btn">
+                <span>🎮</span> Análisis de Partidas
             </a>
-            <a href="{{ url_for('analytics.choices') }}" class="btn btn-outline-info">
-                <i class="bi bi-signpost-split"></i> Decisiones Morales
+            <a href="{{ url_for('analytics.choices') }}" class="btn">
+                <span>⚖️</span> Decisiones Morales
             </a>
-            <a href="{{ url_for('analytics.events') }}" class="btn btn-outline-warning">
-                <i class="bi bi-lightning"></i> Eventos
+            <a href="{{ url_for('analytics.events') }}" class="btn">
+                <span>⚡</span> Eventos
             </a>
-            <a href="{{ url_for('analytics.advanced') }}" class="btn btn-outline-danger">
-                <i class="bi bi-speedometer2"></i> Métricas Avanzadas
+            <a href="{{ url_for('analytics.advanced') }}" class="btn">
+                <span>📈</span> Métricas Avanzadas
             </a>
-            <a href="{{ url_for('analytics.export') }}" class="btn btn-outline-secondary">
-                <i class="bi bi-download"></i> Exportar Datos
+            <a href="{{ url_for('analytics.export') }}?type=players&format=csv" class="btn">
+                <span>💾</span> Exportar Datos
+            </a>
+            <a href="/web/" class="btn">
+                <span>🏠</span> Volver al Inicio
             </a>
         </div>
-    </div>
-</div>
 
-<!-- Gráficos -->
-<div class="row">
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>
-                    <i class="bi bi-bar-chart"></i> Distribución de Decisiones Morales
-                </h5>
+        <!-- Gráficos -->
+        <div class="chart-container">
+            <div class="chart-card-analytics">
+                <div class="card-header">
+                    <h5><i>📊</i> Distribución de Decisiones Morales</h5>
+                </div>
+                <div class="card-body">
+                    {{ moral_chart|safe }}
+                </div>
             </div>
-            <div class="card-body">
-                {{ moral_chart|safe }}
+
+            <div class="chart-card-analytics">
+                <div class="card-header">
+                    <h5><i>🎯</i> Alineación Moral de Jugadores</h5>
+                </div>
+                <div class="card-body">
+                    {{ alignment_chart|safe }}
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-md-6">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5>
-                    <i class="bi bi-pie-chart"></i> Alineación Moral de Jugadores
-                </h5>
-            </div>
-            <div class="card-body">
-                {{ alignment_chart|safe }}
-            </div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-md-12">
-        <div class="card">
-            <div class="card-header">
-                <h5>
-                    <i class="bi bi-activity"></i> Muertes por Nivel
-                </h5>
-            </div>
-            <div class="card-body">
-                {{ deaths_chart|safe }}
+        <div class="chart-container">
+            <div class="chart-card-analytics chart-full">
+                <div class="card-header">
+                    <h5><i>💀</i> Muertes por Nivel</h5>
+                </div>
+                <div class="card-body">
+                    {{ deaths_chart|safe }}
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-{% endblock %}
+    <script>
+        // Configurar tema oscuro para todos los gráficos de Plotly
+        document.addEventListener('DOMContentLoaded', function () {
+            const plots = document.querySelectorAll('.plotly');
+            plots.forEach(plot => {
+                if (plot && plot.layout) {
+                    Plotly.relayout(plot, {
+                        paper_bgcolor: 'transparent',
+                        plot_bgcolor: 'transparent',
+                        font: { color: '#a0aec0' },
+                        xaxis: { gridcolor: '#2d3748', color: '#a0aec0' },
+                        yaxis: { gridcolor: '#2d3748', color: '#a0aec0' }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

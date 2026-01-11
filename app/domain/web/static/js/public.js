@@ -30,7 +30,8 @@ async function loadPublicMetrics() {
             progressBar.style.width = `${metrics.completion_rate}%`;
         }
 
-        // Calcular cambios (simulado por ahora)
+        // TODO: Calcular cambios reales comparando con datos históricos
+        // Por ahora están hardcodeados - se necesita endpoint de métricas históricas
         updateChange('playersChange', '+12.5%', true);
         updateChange('relicsChange', '-2.4%', false);
 
