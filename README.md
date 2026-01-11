@@ -18,7 +18,7 @@ Desarrollado por **Mandrágora** para Colegio Hogwarts de Magia y Hechicería.
 - **FastAPI** - API REST para el juego (Unity/Godot)
 - **Flask** - Dashboard web para analytics
 - **Firebase Firestore** - Base de datos NoSQL
-- **MariaDB** - Base de datos SQL (autenticación admin - futuro)
+- **MySQL** - Base de datos SQL (autenticación admin - futuro)
 - **Arquitectura Hexagonal** - Ports & Adapters para desacoplamiento
 
 ---
@@ -116,13 +116,24 @@ PATCH  /v1/games/{id}                   → Actualizar partida
 DELETE /v1/games/{id}                   → Eliminar partida
 ```
 
+#### **Events**
+```
+POST   /v1/events                              → Crear evento
+POST   /v1/events/batch                        → Crear eventos en lote
+GET    /v1/events/game/{game_id}               → Eventos de una partida
+GET    /v1/events/player/{player_id}           → Eventos de un jugador
+GET    /v1/events/game/{game_id}/type/{type}   → Eventos filtrados por tipo
+```
+
 ### **Dashboard Web (Flask)**
 ```
 http://localhost:8000/web/                  → Landing page
-http://localhost:8000/web/dashboard/        → Dashboard principal
+http://localhost:8000/web/dashboard/        → Dashboard principal con gráficos
 http://localhost:8000/web/dashboard/players → Análisis de jugadores
 http://localhost:8000/web/dashboard/games   → Análisis de partidas
 http://localhost:8000/web/dashboard/choices → Decisiones morales
+http://localhost:8000/web/dashboard/events  → Análisis de eventos
+http://localhost:8000/web/dashboard/export  → Exportar datos (CSV/JSON)
 ```
 
 ---
@@ -166,7 +177,7 @@ app/
 │   │   └── adapters/
 │   │       └── firestore_repository.py
 │   ├── games/                # Partidas (hexagonal)
-│   ├── events/               # Eventos (preparado)
+│   ├── events/               # Eventos (implementado)
 │   ├── sessions/             # Sesiones (preparado)
 │   ├── auth/                 # Autenticación (preparado)
 │   └── web/                  # Dashboard Flask
@@ -218,6 +229,50 @@ curl -X POST http://localhost:8000/v1/games/<game_id>/level/complete \
     "deaths": 3,
     "choice": "sanar",
     "relic": "lirio"
+  }'
+```
+
+#### Crear Evento
+```bash
+curl -X POST http://localhost:8000/v1/events \
+  -H "Content-Type: application/json" \
+  -H "X-Player-ID: <player_id>" \
+  -H "X-Player-Token: <player_token>" \
+  -d '{
+    "game_id": "<game_id>",
+    "player_id": "<player_id>",
+    "event_type": "player_death",
+    "level": "senda_ebano",
+    "data": {
+      "position": {"x": 150.5, "y": 200.3},
+      "cause": "fall"
+    }
+  }'
+```
+
+#### Crear Eventos en Lote
+```bash
+curl -X POST http://localhost:8000/v1/events/batch \
+  -H "Content-Type: application/json" \
+  -H "X-Player-ID: <player_id>" \
+  -H "X-Player-Token: <player_token>" \
+  -d '{
+    "events": [
+      {
+        "game_id": "<game_id>",
+        "player_id": "<player_id>",
+        "event_type": "player_death",
+        "level": "senda_ebano",
+        "data": {"position": {"x": 150.5, "y": 200.3}, "cause": "fall"}
+      },
+      {
+        "game_id": "<game_id>",
+        "player_id": "<player_id>",
+        "event_type": "checkpoint_reached",
+        "level": "senda_ebano",
+        "data": {"checkpoint_id": "checkpoint_1"}
+      }
+    ]
   }'
 ```
 
@@ -274,17 +329,17 @@ touch app/domain/nuevo_dominio/{__init__,api,service,models,schemas,ports}.py
 ### **Implementado ✅**
 - ✅ Arquitectura hexagonal
 - ✅ Dominio Players (completo)
-- ✅ Dominio Games (completo)
-- ✅ Dashboard web (UI base)
+- ✅ Dominio Games (completo con seguridad)
+- ✅ Dominio Events (completo con seguridad)
+- ✅ Dashboard web con Analytics (gráficos Plotly)
+- ✅ Exportación de datos (CSV/JSON)
 - ✅ Autenticación simple
 - ✅ Logging estructurado
 - ✅ Documentación Swagger
 
 ### **Por Implementar 📝**
-- 📝 Dominio Events
 - 📝 Dominio Sessions
-- 📝 Dominio Auth (MariaDB)
-- 📝 Analytics funcional (gráficos)
+- 📝 Dominio Auth (MySQL)
 - 📝 Leaderboards
 - 📝 Tests automatizados
 
