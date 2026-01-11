@@ -1,12 +1,14 @@
 """
 Middleware de autenticación
 
-Soporta DOS tipos de autenticación:
-1. Player Token: Para jugadores (solo acceden a sus propios datos)
-2. API Key: Para administración (acceso completo)
+Soporta TRES tipos de autenticación:
+1. JWT Token: Para administradores del dashboard (Bearer token)
+2. API Key: Para administración programática (acceso completo)
+3. Player Token: Para jugadores (solo acceden a sus propios datos)
 """
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from jose import JWTError, jwt
 from app.domain.players.adapters.firestore_repository import FirestorePlayerRepository
 from app.config.settings import settings
 
@@ -18,6 +20,8 @@ PUBLIC_ROUTES = [
     "/docs",
     "/openapi.json",
     "/redoc",
+    "/v1/auth/login",      # Login público
+    "/v1/auth/refresh",    # Refresh público
 ]
 
 # Rutas que permiten crear jugadores sin autenticación
@@ -28,13 +32,17 @@ CREATION_ROUTES = [
 
 async def auth_middleware(request: Request, call_next):
     """
-    Middleware que valida autenticación de dos formas:
+    Middleware que valida autenticación de tres formas:
 
-    1. API KEY (admin):
+    1. JWT TOKEN (admin dashboard):
+       - Header "Authorization: Bearer <token>"
+       - Acceso completo a endpoints de admin según permisos del rol
+
+    2. API KEY (admin programmatic):
        - Header "X-API-Key": la clave de administración
        - Acceso completo a todos los endpoints
 
-    2. PLAYER TOKEN (jugadores):
+    3. PLAYER TOKEN (jugadores):
        - Header "X-Player-ID": el UUID del jugador
        - Header "X-Player-Token": el token secreto del jugador
        - Solo accede a sus propios datos
@@ -51,7 +59,43 @@ async def auth_middleware(request: Request, call_next):
 
     # El resto de rutas v1 requieren autenticación
     if path.startswith("/v1/"):
-        # OPCIÓN 1: Autenticación con API Key (admin)
+        # OPCIÓN 1: Autenticación con JWT Token (admin dashboard)
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.replace("Bearer ", "")
+
+            try:
+                # Decodificar y validar JWT
+                payload = jwt.decode(
+                    token,
+                    settings.jwt_secret_key,
+                    algorithms=[settings.jwt_algorithm]
+                )
+
+                # Verificar que sea access token
+                if payload.get("type") == "access":
+                    # JWT válido - marcar como admin con datos del token
+                    request.state.is_admin = True
+                    request.state.player_id = None
+                    request.state.admin_user = {
+                        "id": payload["user_id"],
+                        "username": payload["username"],
+                        "role": payload["role"]
+                    }
+                    return await call_next(request)
+                else:
+                    return JSONResponse(
+                        status_code=401,
+                        content={"detail": "Token inválido. Usa access token, no refresh token"}
+                    )
+
+            except JWTError:
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": "JWT inválido o expirado"}
+                )
+
+        # OPCIÓN 2: Autenticación con API Key (admin programmatic)
         api_key = request.headers.get("X-API-Key")
         if api_key:
             if api_key != settings.api_key:
@@ -65,7 +109,7 @@ async def auth_middleware(request: Request, call_next):
             request.state.player_id = None
             return await call_next(request)
 
-        # OPCIÓN 2: Autenticación con Player Token (jugador)
+        # OPCIÓN 3: Autenticación con Player Token (jugador)
         player_id = request.headers.get("X-Player-ID")
         player_token = request.headers.get("X-Player-Token")
 
@@ -74,7 +118,7 @@ async def auth_middleware(request: Request, call_next):
             return JSONResponse(
                 status_code=401,
                 content={
-                    "detail": "Autenticación requerida. Usa X-API-Key (admin) o X-Player-ID + X-Player-Token (jugador)"
+                    "detail": "Autenticación requerida. Usa Authorization: Bearer <JWT> (admin), X-API-Key (admin), o X-Player-ID + X-Player-Token (jugador)"
                 }
             )
 
