@@ -7,6 +7,7 @@
     <title>Migraciones - Mandrágora Admin</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-admin.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
@@ -197,105 +198,6 @@
             </div>
         </section>
     </main>
-
-    <style>
-        .migrations-section {
-            padding: 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 60vh;
-        }
-
-        .placeholder-container {
-            max-width: 600px;
-            text-align: center;
-            padding: 3rem;
-        }
-
-        .placeholder-icon {
-            color: #34d399;
-            margin-bottom: 2rem;
-            opacity: 0.3;
-        }
-
-        .placeholder-container h2 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #e5e7eb;
-            margin-bottom: 1rem;
-        }
-
-        .placeholder-container > p {
-            font-size: 1.1rem;
-            color: #9ca3af;
-            margin-bottom: 0.5rem;
-        }
-
-        .placeholder-description {
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: 2rem;
-        }
-
-        .placeholder-features {
-            background: linear-gradient(135deg, rgba(31, 41, 55, 0.8) 0%, rgba(17, 24, 39, 0.9) 100%);
-            border: 1px solid rgba(75, 85, 99, 0.3);
-            border-radius: 1rem;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            text-align: left;
-        }
-
-        .placeholder-features h3 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #e5e7eb;
-            margin-bottom: 1.5rem;
-            text-align: center;
-        }
-
-        .placeholder-features ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .placeholder-features li {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.75rem 0;
-            color: #9ca3af;
-            font-size: 0.95rem;
-        }
-
-        .placeholder-features li svg {
-            color: #34d399;
-            flex-shrink: 0;
-        }
-
-        .btn-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            border: none;
-            padding: 0.875rem 1.75rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .btn-back:hover {
-            background: linear-gradient(135deg, #059669 0%, #047857 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3);
-        }
-    </style>
 
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 </body>

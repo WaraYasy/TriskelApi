@@ -142,3 +142,88 @@ body {
     font-size: 0.875rem;
     font-weight: 500;
 }
+
+/* Base Layout Styles */
+.base-body {
+    background: #0a0e1a;
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    color: #ffffff;
+}
+
+.base-nav {
+    background: #1a1f2e;
+    border-bottom: 1px solid #2d3748;
+    padding: 1rem 2rem;
+}
+
+.base-nav-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.base-nav-brand {
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 1.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.base-nav-links {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+}
+
+.base-nav-link {
+    color: #a0aec0;
+    text-decoration: none;
+    font-size: 0.9375rem;
+    transition: color 0.3s;
+}
+
+.base-nav-link:hover {
+    color: #10b981 !important;
+}
+
+.base-main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.base-footer {
+    background: #1a1f2e;
+    border-top: 1px solid #2d3748;
+    text-align: center;
+    padding: 2rem;
+    margin-top: 4rem;
+}
+
+.base-footer-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.base-footer-text {
+    margin: 0;
+    color: #a0aec0;
+    font-size: 0.9375rem;
+}
+
+.base-footer-version {
+    color: #718096;
+    font-size: 0.8125rem;
+}
+
+/* Spinner hidden by default */
+.spinner-hidden {
+    display: none;
+}

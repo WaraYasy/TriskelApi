@@ -15,26 +15,21 @@
     {% block extra_css %}{% endblock %}
 </head>
 
-<body style="background: #0a0e1a; font-family: 'Inter', sans-serif; margin: 0; padding: 0; color: #ffffff;">
+<body class="base-body">
     <!-- Navbar -->
-    <nav style="background: #1a1f2e; border-bottom: 1px solid #2d3748; padding: 1rem 2rem;">
-        <div
-            style="max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
-            <a href="/web/"
-                style="color: #ffffff; text-decoration: none; font-size: 1.25rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+    <nav class="base-nav">
+        <div class="base-nav-container">
+            <a href="/web/" class="base-nav-brand">
                 <span>🎮</span> Triskel Dashboard
             </a>
-            <div style="display: flex; gap: 2rem; align-items: center;">
-                <a href="{{ url_for('analytics.index') }}"
-                    style="color: #a0aec0; text-decoration: none; font-size: 0.9375rem; transition: color 0.3s;">
+            <div class="base-nav-links">
+                <a href="{{ url_for('analytics.index') }}" class="base-nav-link">
                     📊 Analytics
                 </a>
-                <a href="/web/admin/login"
-                    style="color: #a0aec0; text-decoration: none; font-size: 0.9375rem; transition: color 0.3s;">
+                <a href="/web/admin/login" class="base-nav-link">
                     ⚙️ Admin
                 </a>
-                <a href="/docs" target="_blank"
-                    style="color: #a0aec0; text-decoration: none; font-size: 0.9375rem; transition: color 0.3s;">
+                <a href="/docs" target="_blank" class="base-nav-link">
                     📖 API Docs
                 </a>
             </div>
@@ -42,18 +37,17 @@
     </nav>
 
     <!-- Contenido principal -->
-    <main style="max-width: 1400px; margin: 0 auto; padding: 2rem;">
+    <main class="base-main">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer
-        style="background: #1a1f2e; border-top: 1px solid #2d3748; text-align: center; padding: 2rem; margin-top: 4rem;">
-        <div style="max-width: 1400px; margin: 0 auto;">
-            <p style="margin: 0; color: #a0aec0; font-size: 0.9375rem;">
+    <footer class="base-footer">
+        <div class="base-footer-container">
+            <p class="base-footer-text">
                 Triskel: La Balada del Último Guardián © 2026 - Mandrágora
             </p>
-            <small style="color: #718096; font-size: 0.8125rem;">Dashboard v2.0.0</small>
+            <small class="base-footer-version">Dashboard v2.0.0</small>
         </div>
     </footer>
 
@@ -64,13 +58,6 @@
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 
     {% block extra_js %}{% endblock %}
-
-    <style>
-        /* Hover effects para nav links */
-        nav a:hover {
-            color: #10b981 !important;
-        }
-    </style>
 </body>
 
 </html>
