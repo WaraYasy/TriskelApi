@@ -118,8 +118,8 @@ class StructuredLogger:
         log_dir = settings.log_directory
 
         # 1. Handler con rotación por TAMAÑO
-        # Crea archivos como: app.log, app.log.1, app.log.2, etc.
-        size_based_file = os.path.join(log_dir, "app.log")
+        # Crea archivos como: triskel.log, triskel.log.1, triskel.log.2, etc.
+        size_based_file = os.path.join(log_dir, "triskel.log")
         max_bytes = settings.log_max_file_size_mb * 1024 * 1024  # MB a bytes
 
         rotating_handler = RotatingFileHandler(
@@ -131,8 +131,8 @@ class StructuredLogger:
         rotating_handler.setLevel(level)
 
         # 2. Handler con rotación por TIEMPO
-        # Crea archivos como: app.2025-01-13.log, app.2025-01-14.log, etc.
-        time_based_file = os.path.join(log_dir, "app")
+        # Crea archivos como: triskel.2026-01-13.log, triskel.2026-01-14.log, etc.
+        time_based_file = os.path.join(log_dir, "triskel")
 
         timed_handler = TimedRotatingFileHandler(
             filename=time_based_file,
@@ -141,11 +141,11 @@ class StructuredLogger:
             backupCount=settings.log_rotation_days,
             encoding='utf-8'
         )
-        timed_handler.suffix = "%Y-%m-%d.log"
+        timed_handler.suffix = ".%Y-%m-%d.log"
         timed_handler.setLevel(level)
 
         # 3. Handler solo para ERRORES (útil para monitoreo)
-        error_file = os.path.join(log_dir, "errors.log")
+        error_file = os.path.join(log_dir, "triskel-errors.log")
         error_handler = RotatingFileHandler(
             filename=error_file,
             maxBytes=max_bytes,

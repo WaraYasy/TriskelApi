@@ -87,6 +87,32 @@ class Settings(BaseSettings):
         # Defaults por entorno
         return "DEBUG" if self.environment == "development" else "INFO"
 
+    # Directorio donde se guardarán los logs
+    log_directory: str = "logs"
+
+    # Formato de logs: "json" para producción, "text" para desarrollo
+    @property
+    def log_format(self) -> str:
+        env_format = os.getenv("LOG_FORMAT", "")
+        if env_format:
+            return env_format.lower()
+        # JSON en producción, texto en desarrollo
+        return "json" if self.environment == "production" else "text"
+
+    # Rotación por tamaño: tamaño máximo de cada archivo de log (en MB)
+    log_max_file_size_mb: int = 10
+
+    # Número de archivos de backup a mantener
+    log_backup_count: int = 5
+
+    # Rotación por tiempo: días antes de rotar el archivo
+    log_rotation_days: int = 7
+
+    # Activar logs a archivo (además de consola)
+    @property
+    def log_to_file(self) -> bool:
+        return os.getenv("LOG_TO_FILE", "true").lower() == "true"
+
     class Config:
         env_file = ".env"
         case_sensitive = False
