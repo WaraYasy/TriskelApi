@@ -17,6 +17,8 @@ Estructura de endpoints:
 """
 from flask import Flask, render_template
 import os
+from app.config.settings import settings as app_settings
+from .analytics.routes import analytics_bp
 
 
 def create_flask_app():
@@ -38,7 +40,6 @@ def create_flask_app():
     )
 
     # Configuración básica (desde settings)
-    from app.config.settings import settings as app_settings
     app.config.update(
         SECRET_KEY=app_settings.secret_key,  # Desde variables de entorno
         DEBUG=app_settings.debug  # Detectado automáticamente según entorno
@@ -46,7 +47,6 @@ def create_flask_app():
 
     # Registrar blueprints
     # Dashboard principal (analytics)
-    from .analytics.routes import analytics_bp
     app.register_blueprint(analytics_bp, url_prefix='/dashboard')
 
     # Admin panel

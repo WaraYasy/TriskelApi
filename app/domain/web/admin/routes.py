@@ -2,8 +2,62 @@ from flask import Blueprint, render_template, Response, request, jsonify
 from datetime import datetime
 import csv
 import io
+import json
 
 admin_bp = Blueprint('admin', __name__, template_folder='../templates/admin')
+
+
+def _create_export_audit_log(
+    data_type: str,
+    filename: str = None,
+    ip_address: str = None,
+    user_agent: str = None,
+    success: bool = True,
+    error_message: str = None
+):
+    """
+    Crea un registro de auditoría para exportaciones.
+    Si la base de datos SQL no está disponible, solo registra en logs.
+    """
+    from app.infrastructure.database.sql_client import get_db_session
+    from app.domain.auth.adapters.sql_repository import AuthSQLRepository
+    from app.core.logger import logger
+
+    try:
+        # Intentar obtener sesión SQL
+        session = get_db_session()
+        if not session:
+            logger.warning("Base de datos SQL no disponible, no se puede registrar audit log")
+            return
+
+        # Crear repositorio y registrar
+        repository = AuthSQLRepository(session)
+
+        # Crear detalles JSON
+        details = {
+            "data_type": data_type,
+            "format": "csv"
+        }
+        if filename:
+            details["filename"] = filename
+
+        repository.create_audit_log(
+            user_id=None,  # TODO: Obtener del JWT cuando se implemente autenticación en web
+            username="anonymous",  # Será el username real cuando se implemente autenticación
+            action=f"export_{data_type}_csv",
+            resource_type=data_type,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            details=json.dumps(details),
+            success=success,
+            error_message=error_message
+        )
+
+        logger.debug(f"Audit log creado para exportación: {data_type}")
+
+    except Exception as e:
+        # Si falla el audit log, solo logear pero no fallar la exportación
+        logger.warning(f"No se pudo crear audit log: {e}")
 
 
 @admin_bp.route('/login')
@@ -27,10 +81,13 @@ def export_page():
 @admin_bp.route('/export/download', methods=['POST'])
 def export_download():
     """Descarga datos en formato CSV"""
-    from app.infrastructure.firebase import db
+    from app.infrastructure.database.firebase_client import get_firestore_client
     from app.core.logger import logger
 
     try:
+        # Obtener cliente de Firestore
+        db = get_firestore_client()
+
         # Obtener el tipo de datos a exportar del formulario
         data_type = request.form.get('data_type', 'players')
 
@@ -145,10 +202,30 @@ def export_download():
         )
 
         logger.info(f"Datos exportados: {data_type}", filename=filename)
+
+        # Registrar en audit log
+        _create_export_audit_log(
+            data_type=data_type,
+            filename=filename,
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent')
+        )
+
         return response
 
     except Exception as e:
         logger.error("Error al exportar datos", error=str(e), data_type=data_type)
+
+        # Registrar error en audit log
+        _create_export_audit_log(
+            data_type=data_type,
+            filename=None,
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent'),
+            success=False,
+            error_message=str(e)
+        )
+
         return jsonify({'error': str(e)}), 500
 
 
