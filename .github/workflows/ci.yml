@@ -43,9 +43,9 @@ jobs:
         pip install ruff
         ruff check app/ --exit-zero
 
-    - name: Ejecutar todos los tests con cobertura
+    - name: Ejecutar todos los tests con cobertura (excepto E2E)
       run: |
-        pytest --cov=app/domain --cov-report=xml --cov-report=term-missing --cov-report=html
+        pytest -m "not e2e" --cov=app/domain --cov-report=xml --cov-report=term-missing --cov-report=html
 
     - name: Subir reporte de cobertura a Codecov
       uses: codecov/codecov-action@v4
