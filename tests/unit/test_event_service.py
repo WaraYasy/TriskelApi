@@ -14,14 +14,19 @@ from app.domain.events.schemas import EventCreate, EventBatchCreate
 @pytest.fixture
 def mock_event_service_setup(mock_event_repository, sample_player):
     """Setup completo del EventService con mocks"""
-    service = EventService(mock_event_repository)
-
     # Mock player repository
-    service.player_repo = MagicMock()
-    service.player_repo.get_by_id.return_value = sample_player
+    mock_player_repo = MagicMock()
+    mock_player_repo.get_by_id.return_value = sample_player
 
     # Mock game repository
-    service.game_repo = MagicMock()
+    mock_game_repo = MagicMock()
+
+    # Crear servicio con dependencias mockeadas
+    service = EventService(
+        repository=mock_event_repository,
+        game_repo=mock_game_repo,
+        player_repo=mock_player_repo,
+    )
 
     return service
 
@@ -55,9 +60,12 @@ class TestEventServiceCreate:
     @pytest.mark.edge_case
     def test_create_event_player_not_found(self, mock_event_repository, player_id, game_id):
         """Rechazar evento si jugador no existe"""
-        service = EventService(mock_event_repository)
-        service.player_repo = MagicMock()
-        service.player_repo.get_by_id.return_value = None  # Jugador no existe
+        # Crear mocks
+        mock_player_repo = MagicMock()
+        mock_player_repo.get_by_id.return_value = None  # Jugador no existe
+        mock_game_repo = MagicMock()
+
+        service = EventService(mock_event_repository, mock_game_repo, mock_player_repo)
 
         # Ejecutar y verificar
         event_data = EventCreate(
@@ -111,9 +119,12 @@ class TestEventServiceBatch:
     @pytest.mark.edge_case
     def test_create_batch_validates_unique_players(self, mock_event_repository, sample_player):
         """Validar jugadores únicos solo una vez en batch"""
-        service = EventService(mock_event_repository)
-        service.player_repo = MagicMock()
-        service.player_repo.get_by_id.return_value = sample_player
+        # Crear mocks
+        mock_player_repo = MagicMock()
+        mock_player_repo.get_by_id.return_value = sample_player
+        mock_game_repo = MagicMock()
+
+        service = EventService(mock_event_repository, mock_game_repo, mock_player_repo)
 
         # 3 eventos del mismo jugador
         batch_data = EventBatchCreate(
@@ -154,7 +165,7 @@ class TestEventServiceQuery:
         """Obtener evento por ID"""
         mock_event_repository.get_by_id.return_value = sample_event
 
-        service = EventService(mock_event_repository)
+        service = EventService(mock_event_repository, MagicMock(), MagicMock())
         result = service.get_event(sample_event.event_id)
 
         assert result == sample_event
@@ -163,7 +174,7 @@ class TestEventServiceQuery:
         """Obtener eventos de una partida"""
         mock_event_repository.get_by_game.return_value = [sample_event]
 
-        service = EventService(mock_event_repository)
+        service = EventService(mock_event_repository, MagicMock(), MagicMock())
         result = service.get_game_events(game_id)
 
         assert len(result) == 1
@@ -173,7 +184,7 @@ class TestEventServiceQuery:
         """Obtener eventos de un jugador"""
         mock_event_repository.get_by_player.return_value = [sample_event]
 
-        service = EventService(mock_event_repository)
+        service = EventService(mock_event_repository, MagicMock(), MagicMock())
         result = service.get_player_events(player_id)
 
         assert len(result) == 1
@@ -185,7 +196,7 @@ class TestEventServiceQuery:
         """Búsqueda de eventos con filtros múltiples"""
         mock_event_repository.query_events.return_value = [sample_event]
 
-        service = EventService(mock_event_repository)
+        service = EventService(mock_event_repository, MagicMock(), MagicMock())
         result = service.query_events(
             game_id=game_id,
             player_id=player_id,

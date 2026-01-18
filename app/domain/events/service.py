@@ -26,16 +26,23 @@ class EventService:
     - Coordinar operaciones complejas
     """
 
-    def __init__(self, repository: EventRepository):
+    def __init__(
+        self,
+        repository: EventRepository,
+        game_repo: Optional[FirestoreGameRepository] = None,
+        player_repo: Optional[FirestorePlayerRepository] = None,
+    ):
         """
         Inicializa el servicio.
 
         Args:
             repository: Repositorio de eventos
+            game_repo: Repositorio de juegos (opcional, se crea automáticamente si no se provee)
+            player_repo: Repositorio de jugadores (opcional, se crea automáticamente si no se provee)
         """
         self.repository = repository
-        self.game_repo = FirestoreGameRepository()
-        self.player_repo = FirestorePlayerRepository()
+        self.game_repo = game_repo or FirestoreGameRepository()
+        self.player_repo = player_repo or FirestorePlayerRepository()
 
     def create_event(self, event_data: EventCreate) -> GameEvent:
         """
