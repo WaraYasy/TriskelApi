@@ -47,4 +47,5 @@ class AnalyticsService:
         )
         return fig.to_html()
 """
+
 pass

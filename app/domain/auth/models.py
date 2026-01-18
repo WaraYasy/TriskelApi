@@ -7,6 +7,7 @@ Define las tablas SQL para:
 
 Compatible con PostgreSQL, MySQL, MariaDB.
 """
+
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey
 from sqlalchemy.sql import func
 from app.infrastructure.database.sql_client import Base
@@ -23,6 +24,7 @@ class AdminUser(Base):
     - support: Acceso a jugadores/partidas para soporte (sin CRUD admins)
     - viewer: Solo lectura (analytics, sin modificaciones)
     """
+
     __tablename__ = "admin_users"
 
     # Primary Key
@@ -35,18 +37,22 @@ class AdminUser(Base):
 
     # Autorización
     role = Column(
-        String(20),
-        nullable=False,
-        default="viewer",
-        index=True
+        String(20), nullable=False, default="viewer", index=True
     )  # admin | support | viewer
 
     # Estado
     is_active = Column(Boolean, default=True, nullable=False)
 
     # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
     last_login = Column(DateTime(timezone=True), nullable=True)
 
     def __repr__(self):
@@ -66,13 +72,19 @@ class AuditLog(Base):
     NO registra acciones de CRUD normales (view_player, edit_player, etc.)
     según especificación del usuario.
     """
+
     __tablename__ = "audit_logs"
 
     # Primary Key
     id = Column(Integer, primary_key=True, autoincrement=True)
 
     # Usuario que realiza la acción (nullable para acciones del sistema)
-    user_id = Column(Integer, ForeignKey("admin_users.id", ondelete="SET NULL"), nullable=True, index=True)
+    user_id = Column(
+        Integer,
+        ForeignKey("admin_users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     username = Column(String(50), nullable=True)  # Denormalizado para queries rápidas
 
     # Acción realizada
@@ -81,7 +93,7 @@ class AuditLog(Base):
 
     # Recurso afectado (opcional)
     resource_type = Column(String(50), nullable=True)  # player, game, event, admin_user
-    resource_id = Column(String(100), nullable=True)   # ID del recurso
+    resource_id = Column(String(100), nullable=True)  # ID del recurso
 
     # Contexto de la petición
     ip_address = Column(String(50), nullable=True)
@@ -92,7 +104,9 @@ class AuditLog(Base):
     # Ejemplo: {"count": 150, "filters": {}, "format": "csv"}
 
     # Timestamp
-    timestamp = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    timestamp = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False, index=True
+    )
 
     # Resultado
     success = Column(Boolean, default=True, nullable=False)

@@ -14,4 +14,5 @@ Flujo típico:
 2. Unity cierra -> PATCH /v1/sessions/{id}/end (termina sesión)
 3. Si Unity crashea, sesión queda abierta (se puede cerrar automáticamente)
 """
+
 pass

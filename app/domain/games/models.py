@@ -3,6 +3,7 @@ Modelos de dominio para Games
 
 Estas son las entidades de negocio que representan partidas del juego.
 """
+
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
 from datetime import datetime
@@ -16,9 +17,10 @@ class GameChoices(BaseModel):
     Cada nivel tiene una decisión binaria (buena/mala).
     None significa que aún no se ha tomado la decisión.
     """
-    senda_ebano: Optional[str] = None          # forzar (malo) | sanar (bueno)
-    fortaleza_gigantes: Optional[str] = None   # destruir (malo) | construir (bueno)
-    aquelarre_sombras: Optional[str] = None    # ocultar (malo) | revelar (bueno)
+
+    senda_ebano: Optional[str] = None  # forzar (malo) | sanar (bueno)
+    fortaleza_gigantes: Optional[str] = None  # destruir (malo) | construir (bueno)
+    aquelarre_sombras: Optional[str] = None  # ocultar (malo) | revelar (bueno)
 
 
 class GameMetrics(BaseModel):
@@ -27,7 +29,8 @@ class GameMetrics(BaseModel):
 
     Registra desempeño del jugador por nivel y global.
     """
-    total_deaths: int = 0                          # Muertes totales en toda la partida
+
+    total_deaths: int = 0  # Muertes totales en toda la partida
     time_per_level: Dict[str, int] = Field(default_factory=dict)  # Segundos por nivel
     deaths_per_level: Dict[str, int] = Field(default_factory=dict)  # Muertes por nivel
 
@@ -39,6 +42,7 @@ class Game(BaseModel):
     Representa una sesión de juego de un jugador.
     Contiene todo el progreso, decisiones y métricas.
     """
+
     # Identificación
     game_id: str = Field(default_factory=lambda: str(uuid4()))
     player_id: str  # FK al jugador
@@ -76,9 +80,9 @@ class Game(BaseModel):
         """
         data = self.model_dump()
         # Los datetime se guardan tal cual
-        data['started_at'] = self.started_at
+        data["started_at"] = self.started_at
         if self.ended_at:
-            data['ended_at'] = self.ended_at
+            data["ended_at"] = self.ended_at
         return data
 
     @classmethod

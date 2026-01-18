@@ -24,11 +24,15 @@ def seed_admin(db: Session = Depends(get_db_session)):
             username="admin",
             email="admin@triskel.com",
             password="Admin123!",
-            role="admin"
+            role="admin",
         )
 
         user = service.create_admin(admin_data)
-        return {"message": "Admin creado", "username": user["username"], "email": user["email"]}
+        return {
+            "message": "Admin creado",
+            "username": user["username"],
+            "email": user["email"],
+        }
     except HTTPException:
         raise
     except Exception as e:

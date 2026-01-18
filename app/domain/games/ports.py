@@ -3,6 +3,7 @@ Ports (Interfaces) del dominio Games
 
 Define el contrato que debe cumplir cualquier repositorio de Games.
 """
+
 from abc import ABC, abstractmethod
 from typing import Optional, List
 from .models import Game

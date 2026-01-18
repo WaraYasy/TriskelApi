@@ -13,4 +13,5 @@ Métodos sugeridos:
 - end_session(session_id, ended_at) -> GameSession
 - get_active_session(player_id) -> Optional[GameSession]
 """
+
 pass

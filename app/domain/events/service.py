@@ -3,6 +3,7 @@ Service para Events
 
 Lógica de negocio de eventos de gameplay.
 """
+
 from typing import List, Optional
 from datetime import datetime
 
@@ -107,10 +108,7 @@ class EventService:
         return self.repository.get_by_player(player_id, limit)
 
     def get_events_by_type(
-        self,
-        event_type: str,
-        game_id: Optional[str] = None,
-        limit: int = 1000
+        self, event_type: str, game_id: Optional[str] = None, limit: int = 1000
     ) -> List[GameEvent]:
         """Obtiene eventos filtrados por tipo"""
         return self.repository.get_by_type(event_type, game_id, limit)
@@ -123,7 +121,7 @@ class EventService:
         level: Optional[str] = None,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
-        limit: int = 1000
+        limit: int = 1000,
     ) -> List[GameEvent]:
         """Búsqueda de eventos con filtros múltiples"""
         return self.repository.query_events(
@@ -133,5 +131,5 @@ class EventService:
             level=level,
             start_time=start_time,
             end_time=end_time,
-            limit=limit
+            limit=limit,
         )

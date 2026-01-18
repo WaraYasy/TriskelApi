@@ -29,10 +29,13 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # Descomentar si tienes configurado el secret FIREBASE_CREDENTIALS en GitHub
-    # - name: Configurar Firebase credentials
-    #   run: |
-    #     echo '${{ secrets.FIREBASE_CREDENTIALS }}' > config/firebase-credentials.json
+    - name: Configurar variables de entorno para tests
+      run: |
+        echo "SECRET_KEY=test-secret-key-for-ci" >> $GITHUB_ENV
+        echo "API_KEY=test-api-key-for-ci" >> $GITHUB_ENV
+        echo "JWT_SECRET_KEY=test-jwt-secret-key-for-ci" >> $GITHUB_ENV
+        echo "DATABASE_URL=sqlite:///:memory:" >> $GITHUB_ENV
+
 
     - name: Ejecutar linter (opcional)
       continue-on-error: true

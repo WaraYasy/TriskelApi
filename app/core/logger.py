@@ -7,6 +7,7 @@ Sistema avanzado de logging con:
 - Formato texto legible para desarrollo
 - Múltiples handlers (consola + archivo)
 """
+
 import json
 import logging
 import os
@@ -106,8 +107,8 @@ class StructuredLogger:
         else:
             # Formato texto: "2025-01-09 10:30:45 | INFO | triskel-api | Mensaje aquí"
             text_formatter = logging.Formatter(
-                fmt='%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
-                datefmt='%Y-%m-%d %H:%M:%S'
+                fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
             )
             console_handler.setFormatter(text_formatter)
 
@@ -126,7 +127,7 @@ class StructuredLogger:
             filename=size_based_file,
             maxBytes=max_bytes,
             backupCount=settings.log_backup_count,
-            encoding='utf-8'
+            encoding="utf-8",
         )
         rotating_handler.setLevel(level)
 
@@ -136,10 +137,10 @@ class StructuredLogger:
 
         timed_handler = TimedRotatingFileHandler(
             filename=time_based_file,
-            when='midnight',  # Rotar a medianoche
+            when="midnight",  # Rotar a medianoche
             interval=1,  # Cada día
             backupCount=settings.log_rotation_days,
-            encoding='utf-8'
+            encoding="utf-8",
         )
         timed_handler.suffix = ".%Y-%m-%d.log"
         timed_handler.setLevel(level)
@@ -150,14 +151,18 @@ class StructuredLogger:
             filename=error_file,
             maxBytes=max_bytes,
             backupCount=settings.log_backup_count,
-            encoding='utf-8'
+            encoding="utf-8",
         )
         error_handler.setLevel(logging.ERROR)  # Solo ERROR y CRITICAL
 
         # Aplicar formateador a todos los handlers
-        formatter = JSONFormatter() if settings.log_format == "json" else logging.Formatter(
-            fmt='%(asctime)s | %(levelname)-8s | %(name)s | %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+        formatter = (
+            JSONFormatter()
+            if settings.log_format == "json"
+            else logging.Formatter(
+                fmt="%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            )
         )
 
         rotating_handler.setFormatter(formatter)
@@ -175,13 +180,7 @@ class StructuredLogger:
         if settings.log_format == "json" and extra:
             # Crear un record con extra_fields
             record = self.logger.makeRecord(
-                self.logger.name,
-                level,
-                "(unknown file)",
-                0,
-                message,
-                (),
-                None
+                self.logger.name, level, "(unknown file)", 0, message, (), None
             )
             record.extra_fields = extra
             return record

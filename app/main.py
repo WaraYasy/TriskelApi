@@ -4,6 +4,7 @@ Triskel API - Main Application
 Aplicación principal con arquitectura hexagonal por dominios.
 Integra FastAPI para la API REST del juego + Flask para el dashboard web.
 """
+
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +20,6 @@ from app.domain.players.api import router as players_router
 from app.domain.games.api import router as games_router
 from app.domain.events.api import router as events_router
 from app.domain.auth.api import router as auth_router
-from app.api.seed import router as seed_router
 from app.domain.web import flask_app  # ⭐ Flask app
 from app.middleware.auth import auth_middleware
 
@@ -28,7 +28,6 @@ app = FastAPI(
     title=settings.app_name,
     debug=settings.debug,
     description="API REST para el videojuego Triskel: La Balada del Último Guardián",
-
     version="2.0.0",
     # Esquemas de seguridad para Swagger UI
     swagger_ui_init_oauth={
@@ -36,24 +35,16 @@ app = FastAPI(
     },
     # Definir esquemas de seguridad
     openapi_tags=[
-        {
-            "name": "Players",
-            "description": "Gestión de jugadores y perfiles"
-        },
-        {
-            "name": "Games",
-            "description": "Gestión de partidas y estadísticas"
-        },
-        {
-            "name": "Events",
-            "description": "Eventos de gameplay y telemetría"
-        },
+        {"name": "Players", "description": "Gestión de jugadores y perfiles"},
+        {"name": "Games", "description": "Gestión de partidas y estadísticas"},
+        {"name": "Events", "description": "Eventos de gameplay y telemetría"},
         {
             "name": "Auth",
-            "description": "Autenticación JWT para administradores del dashboard"
-        }
-    ]
+            "description": "Autenticación JWT para administradores del dashboard",
+        },
+    ],
 )
+
 
 # Personalizar esquema OpenAPI para mostrar esquemas de seguridad
 def custom_openapi():
@@ -73,20 +64,20 @@ def custom_openapi():
             "type": "apiKey",
             "in": "header",
             "name": "X-API-Key",
-            "description": "API Key para administradores (acceso total)"
+            "description": "API Key para administradores (acceso total)",
         },
         "PlayerAuth": {
             "type": "http",
             "scheme": "bearer",
             "bearerFormat": "Player credentials",
-            "description": "Autenticación de jugador: requiere headers X-Player-ID y X-Player-Token"
+            "description": "Autenticación de jugador: requiere headers X-Player-ID y X-Player-Token",
         },
         "BearerAuth": {
             "type": "http",
             "scheme": "bearer",
             "bearerFormat": "JWT",
-            "description": "JWT token para administradores del dashboard. Obtener con POST /v1/auth/login"
-        }
+            "description": "JWT token para administradores del dashboard. Obtener con POST /v1/auth/login",
+        },
     }
 
     # Marcar endpoints protegidos con candaditos
@@ -116,7 +107,7 @@ def custom_openapi():
                 # Todos los demás endpoints v1 - admin O jugador
                 operation["security"] = [
                     {"ApiKeyAuth": []},  # Admin puede acceder
-                    {"PlayerAuth": []}   # O jugador autenticado
+                    {"PlayerAuth": []},  # O jugador autenticado
                 ]
 
                 # Marcar si es solo del propio jugador
@@ -198,24 +189,18 @@ def read_root():
         "status": "online",
         "api_docs": "/docs",
         "dashboard": "/web/",
-        "analytics": "/web/dashboard/"
+        "analytics": "/web/dashboard/",
     }
 
 
 @app.get("/health")
 def health_check():
     """Health check para monitoreo"""
-    return {
-        "status": "ok",
-        "version": "2.0.0"
-    }
+    return {"status": "ok", "version": "2.0.0"}
 
 
 # Punto de entrada
 if __name__ == "__main__":
     uvicorn.run(
-        "app.main:app",
-        host="0.0.0.0",
-        port=settings.port,
-        reload=settings.debug
+        "app.main:app", host="0.0.0.0", port=settings.port, reload=settings.debug
     )

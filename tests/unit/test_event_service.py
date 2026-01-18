@@ -3,13 +3,12 @@ Tests unitarios para el servicio de Events.
 
 Prueba la lógica de negocio del EventService.
 """
+
 import pytest
-from unittest.mock import Mock, MagicMock
-from datetime import datetime, timezone
+from unittest.mock import MagicMock
 
 from app.domain.events.service import EventService
 from app.domain.events.schemas import EventCreate, EventBatchCreate
-from app.domain.events.models import GameEvent
 
 
 @pytest.fixture
@@ -46,7 +45,7 @@ class TestEventServiceCreate:
             player_id=player_id,
             event_type="player_death",
             level="senda_ebano",
-            data={"cause": "fall"}
+            data={"cause": "fall"},
         )
         result = service.create_event(event_data)
 
@@ -69,7 +68,7 @@ class TestEventServiceCreate:
             game_id=game_id,
             player_id=player_id,
             event_type="player_death",
-            level="senda_ebano"
+            level="senda_ebano",
         )
 
         with pytest.raises(ValueError) as exc_info:
@@ -99,14 +98,14 @@ class TestEventServiceBatch:
                     game_id=game_id,
                     player_id=player_id,
                     event_type="player_death",
-                    level="senda_ebano"
+                    level="senda_ebano",
                 ),
                 EventCreate(
                     game_id=game_id,
                     player_id=player_id,
                     event_type="level_start",
-                    level="fortaleza_gigantes"
-                )
+                    level="fortaleza_gigantes",
+                ),
             ]
         )
         result = service.create_batch(batch_data)
@@ -131,20 +130,20 @@ class TestEventServiceBatch:
                     game_id="game-1",
                     player_id=sample_player.player_id,
                     event_type="player_death",
-                    level="senda_ebano"
+                    level="senda_ebano",
                 ),
                 EventCreate(
                     game_id="game-1",
                     player_id=sample_player.player_id,
                     event_type="level_start",
-                    level="fortaleza_gigantes"
+                    level="fortaleza_gigantes",
                 ),
                 EventCreate(
                     game_id="game-1",
                     player_id=sample_player.player_id,
                     event_type="level_end",
-                    level="fortaleza_gigantes"
-                )
+                    level="fortaleza_gigantes",
+                ),
             ]
         )
 
@@ -199,7 +198,7 @@ class TestEventServiceQuery:
             game_id=game_id,
             player_id=player_id,
             event_type="player_death",
-            level="senda_ebano"
+            level="senda_ebano",
         )
 
         assert len(result) == 1

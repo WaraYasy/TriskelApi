@@ -48,7 +48,7 @@ class TestSchemas:
             "username": "testuser",
             "email": "test@example.com",
             "password": "SecurePass123!",
-            "role": "admin"
+            "role": "admin",
         }
         user = AdminUserCreate(**data)
         assert user.username == "testuser"
@@ -59,16 +59,13 @@ class TestSchemas:
             "username": "testuser",
             "email": "test@example.com",
             "password": "weak",
-            "role": "admin"
+            "role": "admin",
         }
         with pytest.raises(ValueError):
             AdminUserCreate(**data)
 
     def test_change_password_different_passwords(self):
-        data = {
-            "old_password": "OldPass123!",
-            "new_password": "OldPass123!"
-        }
+        data = {"old_password": "OldPass123!", "new_password": "OldPass123!"}
         with pytest.raises(ValueError, match="diferente"):
             ChangePasswordRequest(**data)
 
@@ -98,7 +95,9 @@ class TestAuthService:
         service = AuthService(repository=None)
         token = service.create_access_token(user_id=1, username="admin", role="admin")
 
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
+        )
         assert payload["type"] == "access"
         assert payload["user_id"] == 1
         assert payload["username"] == "admin"
@@ -108,7 +107,9 @@ class TestAuthService:
         service = AuthService(repository=None)
         token = service.create_refresh_token(user_id=1, username="admin")
 
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
+        )
         assert payload["type"] == "refresh"
         assert payload["user_id"] == 1
         assert payload["username"] == "admin"

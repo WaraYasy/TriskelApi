@@ -3,7 +3,8 @@ Schemas (DTOs) para la API de Games
 
 Modelos de entrada y salida para los endpoints de partidas.
 """
-from pydantic import BaseModel, Field, field_validator
+
+from pydantic import BaseModel, field_validator
 from typing import Optional
 from datetime import datetime
 from app.core.validators import validate_level_name, validate_choice, validate_relic
@@ -16,13 +17,12 @@ class GameCreate(BaseModel):
 
     Solo se pide el player_id, todo lo demás se inicializa automáticamente.
     """
+
     player_id: str
 
     class Config:
         json_schema_extra = {
-            "example": {
-                "player_id": "123e4567-e89b-12d3-a456-426614174000"
-            }
+            "example": {"player_id": "123e4567-e89b-12d3-a456-426614174000"}
         }
 
 
@@ -32,6 +32,7 @@ class GameUpdate(BaseModel):
 
     Todos los campos son opcionales.
     """
+
     status: Optional[str] = None
     ended_at: Optional[datetime] = None
     completion_percentage: Optional[float] = None
@@ -39,7 +40,7 @@ class GameUpdate(BaseModel):
     current_level: Optional[str] = None
     boss_defeated: Optional[bool] = None
 
-    @field_validator('status')
+    @field_validator("status")
     @classmethod
     def validate_status(cls, v: Optional[str]) -> Optional[str]:
         """Valida que el status sea uno de los válidos"""
@@ -52,7 +53,7 @@ class GameUpdate(BaseModel):
             )
         return v
 
-    @field_validator('completion_percentage')
+    @field_validator("completion_percentage")
     @classmethod
     def validate_completion(cls, v: Optional[float]) -> Optional[float]:
         """Valida que el porcentaje esté entre 0 y 100"""
@@ -62,7 +63,7 @@ class GameUpdate(BaseModel):
             raise ValueError("El porcentaje de completado debe estar entre 0 y 100")
         return v
 
-    @field_validator('total_time_seconds')
+    @field_validator("total_time_seconds")
     @classmethod
     def validate_total_time(cls, v: Optional[int]) -> Optional[int]:
         """Valida que el tiempo total sea positivo"""
@@ -72,7 +73,7 @@ class GameUpdate(BaseModel):
             raise ValueError("El tiempo total no puede ser negativo")
         return v
 
-    @field_validator('current_level')
+    @field_validator("current_level")
     @classmethod
     def validate_current_level(cls, v: Optional[str]) -> Optional[str]:
         """Valida que el nivel actual sea válido"""
@@ -89,7 +90,7 @@ class GameUpdate(BaseModel):
             "example": {
                 "status": "completed",
                 "completion_percentage": 100.0,
-                "boss_defeated": True
+                "boss_defeated": True,
             }
         }
 
@@ -100,9 +101,10 @@ class LevelStart(BaseModel):
 
     Solo necesita el nombre del nivel.
     """
+
     level: str  # hub_central | senda_ebano | fortaleza_gigantes | aquelarre_sombras | claro_almas
 
-    @field_validator('level')
+    @field_validator("level")
     @classmethod
     def validate_level(cls, v: str) -> str:
         """Valida que el nivel sea uno de los 5 niveles válidos"""
@@ -113,11 +115,7 @@ class LevelStart(BaseModel):
         return v
 
     class Config:
-        json_schema_extra = {
-            "example": {
-                "level": "senda_ebano"
-            }
-        }
+        json_schema_extra = {"example": {"level": "senda_ebano"}}
 
 
 class LevelComplete(BaseModel):
@@ -126,13 +124,14 @@ class LevelComplete(BaseModel):
 
     Incluye métricas, decisión moral (si aplica) y reliquia (si aplica).
     """
-    level: str        # Nombre del nivel completado
-    time_seconds: int  # Tiempo que tardó en completar
-    deaths: int        # Número de muertes en el nivel
-    choice: Optional[str] = None  # Decisión moral (si el nivel tiene)
-    relic: Optional[str] = None   # Reliquia obtenida (si el nivel da una)
 
-    @field_validator('level')
+    level: str  # Nombre del nivel completado
+    time_seconds: int  # Tiempo que tardó en completar
+    deaths: int  # Número de muertes en el nivel
+    choice: Optional[str] = None  # Decisión moral (si el nivel tiene)
+    relic: Optional[str] = None  # Reliquia obtenida (si el nivel da una)
+
+    @field_validator("level")
     @classmethod
     def validate_level(cls, v: str) -> str:
         """Valida que el nivel sea uno de los 5 niveles válidos"""
@@ -142,7 +141,7 @@ class LevelComplete(BaseModel):
             raise ValueError(str(e))
         return v
 
-    @field_validator('time_seconds')
+    @field_validator("time_seconds")
     @classmethod
     def validate_time(cls, v: int) -> int:
         """Valida que el tiempo sea positivo"""
@@ -152,7 +151,7 @@ class LevelComplete(BaseModel):
             raise ValueError("El tiempo no puede ser mayor a 24 horas")
         return v
 
-    @field_validator('deaths')
+    @field_validator("deaths")
     @classmethod
     def validate_deaths(cls, v: int) -> int:
         """Valida que las muertes sean un número válido"""
@@ -162,14 +161,14 @@ class LevelComplete(BaseModel):
             raise ValueError("El número de muertes no puede ser mayor a 9999")
         return v
 
-    @field_validator('choice')
+    @field_validator("choice")
     @classmethod
     def validate_choice_value(cls, v: Optional[str], info) -> Optional[str]:
         """Valida que la decisión moral sea válida para el nivel"""
         if v is None:
             return v
         # Obtener el nivel del contexto de validación
-        level = info.data.get('level')
+        level = info.data.get("level")
         if level:
             try:
                 validate_choice(level, v)
@@ -177,7 +176,7 @@ class LevelComplete(BaseModel):
                 raise ValueError(str(e))
         return v
 
-    @field_validator('relic')
+    @field_validator("relic")
     @classmethod
     def validate_relic_value(cls, v: Optional[str]) -> Optional[str]:
         """Valida que la reliquia sea una de las 3 válidas"""
@@ -196,6 +195,6 @@ class LevelComplete(BaseModel):
                 "time_seconds": 245,
                 "deaths": 3,
                 "choice": "sanar",
-                "relic": "lirio"
+                "relic": "lirio",
             }
         }

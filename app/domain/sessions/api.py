@@ -17,4 +17,5 @@ Ejemplo de uso:
 2. Al cerrar Unity:
    PATCH /v1/sessions/session-123/end
 """
+
 pass

@@ -4,6 +4,7 @@ Validadores comunes de la aplicación
 Funciones simples para validar datos que se usan en múltiples lugares.
 Lanzan ValidationException si algo no es válido.
 """
+
 import re
 from typing import Optional
 from .exceptions import ValidationException
@@ -33,7 +34,7 @@ def validate_username(username: str) -> None:
         raise ValidationException("El username no puede tener más de 20 caracteres")
 
     # Solo permite: letras, números y _ (guión bajo)
-    if not re.match(r'^[a-zA-Z0-9_]+$', username):
+    if not re.match(r"^[a-zA-Z0-9_]+$", username):
         raise ValidationException(
             "El username solo puede contener letras, números y guiones bajos"
         )
@@ -54,7 +55,7 @@ def validate_email(email: Optional[str]) -> None:
         return  # Email es opcional
 
     # Patrón simple de email
-    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
     if not re.match(pattern, email):
         raise ValidationException("El formato del email no es válido")
@@ -76,7 +77,7 @@ def validate_level_name(level: str) -> None:
         "senda_ebano",
         "fortaleza_gigantes",
         "aquelarre_sombras",
-        "claro_almas"
+        "claro_almas",
     ]
 
     if level not in valid_levels:
@@ -99,7 +100,7 @@ def validate_choice(level: str, choice: str) -> None:
     choices_by_level = {
         "senda_ebano": ["forzar", "sanar"],
         "fortaleza_gigantes": ["destruir", "construir"],
-        "aquelarre_sombras": ["ocultar", "revelar"]
+        "aquelarre_sombras": ["ocultar", "revelar"],
     }
 
     # Si el nivel no tiene elección, no validar

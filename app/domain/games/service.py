@@ -4,6 +4,7 @@ Service Layer para Games - Lógica de negocio
 Contiene todas las reglas de negocio de partidas.
 Depende de interfaces, no de implementaciones concretas.
 """
+
 from typing import Optional, List
 from datetime import datetime
 
@@ -28,7 +29,7 @@ class GameService:
         self,
         game_repository: IGameRepository,
         player_repository: IPlayerRepository,
-        player_service: PlayerService
+        player_service: PlayerService,
     ):
         """
         Inicializa el servicio con sus dependencias.
@@ -123,8 +124,7 @@ class GameService:
         # Si la partida terminó, actualizar stats del jugador
         if game_update.status in ["completed", "abandoned"]:
             self.player_service.update_player_stats_after_game(
-                game.player_id,
-                updated_game
+                game.player_id, updated_game
             )
 
         return updated_game
@@ -223,18 +223,12 @@ class GameService:
 
         # Preparar actualización
         status = "completed" if completed else "abandoned"
-        update_data = GameUpdate(
-            status=status,
-            ended_at=datetime.utcnow()
-        )
+        update_data = GameUpdate(status=status, ended_at=datetime.utcnow())
 
         # Actualizar partida
         updated_game = self.game_repository.update(game_id, update_data)
 
         # Actualizar stats del jugador
-        self.player_service.update_player_stats_after_game(
-            game.player_id,
-            updated_game
-        )
+        self.player_service.update_player_stats_after_game(game.player_id, updated_game)
 
         return updated_game

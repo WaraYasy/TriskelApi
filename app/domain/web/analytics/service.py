@@ -11,7 +11,8 @@ Esto mantiene el desacoplamiento y asegura que:
 - Usa las mismas validaciones que el juego
 - Más fácil de escalar (puede estar en otro servidor)
 """
-from typing import List, Dict, Any, Optional
+
+from typing import List, Dict, Any
 from collections import Counter
 
 # Imports opcionales (instalar si se necesitan visualizaciones)
@@ -19,7 +20,7 @@ try:
     import httpx
     import pandas as pd
     import plotly.express as px
-    import plotly.graph_objects as go
+
     ANALYTICS_AVAILABLE = True
 except ImportError:
     ANALYTICS_AVAILABLE = False
@@ -36,7 +37,9 @@ class AnalyticsService:
     - Gráficos con Plotly
     """
 
-    def __init__(self, api_base_url: str = "http://localhost:8000", api_key: str = None):
+    def __init__(
+        self, api_base_url: str = "http://localhost:8000", api_key: str = None
+    ):
         """
         Inicializa el servicio.
 
@@ -59,26 +62,23 @@ class AnalyticsService:
         Retorna configuración de layout oscuro para gráficos de Plotly.
         """
         return {
-            'paper_bgcolor': 'rgba(0,0,0,0)',
-            'plot_bgcolor': 'rgba(0,0,0,0)',
-            'font': {'color': '#a0aec0', 'family': 'Inter, sans-serif'},
-            'xaxis': {
-                'gridcolor': '#2d3748',
-                'color': '#a0aec0',
-                'showline': False,
-                'zeroline': False
+            "paper_bgcolor": "rgba(0,0,0,0)",
+            "plot_bgcolor": "rgba(0,0,0,0)",
+            "font": {"color": "#a0aec0", "family": "Inter, sans-serif"},
+            "xaxis": {
+                "gridcolor": "#2d3748",
+                "color": "#a0aec0",
+                "showline": False,
+                "zeroline": False,
             },
-            'yaxis': {
-                'gridcolor': '#2d3748',
-                'color': '#a0aec0',
-                'showline': False,
-                'zeroline': False
+            "yaxis": {
+                "gridcolor": "#2d3748",
+                "color": "#a0aec0",
+                "showline": False,
+                "zeroline": False,
             },
-            'legend': {
-                'font': {'color': '#a0aec0'},
-                'bgcolor': 'rgba(0,0,0,0)'
-            },
-            'margin': {'t': 40, 'r': 20, 'b': 40, 'l': 60}
+            "legend": {"font": {"color": "#a0aec0"}, "bgcolor": "rgba(0,0,0,0)"},
+            "margin": {"t": 40, "r": 20, "b": 40, "l": 60},
         }
 
     def get_all_players(self) -> List[Dict[str, Any]]:
@@ -121,11 +121,15 @@ class AnalyticsService:
                 games = response.json()
                 all_games.extend(games)
             except Exception as e:
-                print(f"Error obteniendo partidas del jugador {player['player_id']}: {e}")
+                print(
+                    f"Error obteniendo partidas del jugador {player['player_id']}: {e}"
+                )
 
         return all_games
 
-    def calculate_global_metrics(self, players: List[Dict], games: List[Dict]) -> Dict[str, Any]:
+    def calculate_global_metrics(
+        self, players: List[Dict], games: List[Dict]
+    ) -> Dict[str, Any]:
         """
         Calcula métricas globales del juego.
 
@@ -138,53 +142,55 @@ class AnalyticsService:
         """
         if not ANALYTICS_AVAILABLE or not games:
             return {
-                'total_players': len(players),
-                'total_games': len(games),
-                'completed_games': 0,
-                'avg_playtime': 0,
-                'completion_rate': 0,
-                'avg_deaths': 0,
-                'total_deaths': 0,
-                'total_relics': 0,
-                'total_events': 0
+                "total_players": len(players),
+                "total_games": len(games),
+                "completed_games": 0,
+                "avg_playtime": 0,
+                "completion_rate": 0,
+                "avg_deaths": 0,
+                "total_deaths": 0,
+                "total_relics": 0,
+                "total_events": 0,
             }
 
         df = pd.DataFrame(games)
 
         # Calcular métricas
-        completed_games = df[df['status'] == 'completed']
+        completed_games = df[df["status"] == "completed"]
 
         # Total de tiempo jugado (suma de todos los tiempos de niveles)
         total_playtime = 0
         for game in games:
-            for level_data in game.get('levels_data', {}).values():
-                total_playtime += level_data.get('time_seconds', 0)
+            for level_data in game.get("levels_data", {}).values():
+                total_playtime += level_data.get("time_seconds", 0)
 
         avg_playtime = total_playtime / len(games) if games else 0
 
         # Total de muertes
         total_deaths = 0
         for game in games:
-            for level_data in game.get('levels_data', {}).values():
-                total_deaths += level_data.get('deaths', 0)
+            for level_data in game.get("levels_data", {}).values():
+                total_deaths += level_data.get("deaths", 0)
 
         avg_deaths = total_deaths / len(games) if games else 0
 
         # Total de reliquias obtenidas
         total_relics = 0
         for game in games:
-            relics = game.get('relics', [])
+            relics = game.get("relics", [])
             total_relics += len(relics)
 
         return {
-            'total_players': len(players),
-            'total_games': len(games),
-            'completed_games': len(completed_games),
-            'avg_playtime': round(avg_playtime, 2),
-            'completion_rate': round(len(completed_games) / len(games) * 100, 2) if games else 0,
-            'avg_deaths': round(avg_deaths, 2),
-            'total_deaths': total_deaths,
-            'total_relics': total_relics
+            "total_players": len(players),
+            "total_games": len(games),
+            "completed_games": len(completed_games),
+            "avg_playtime": round(avg_playtime, 2),
+            "completion_rate": (
+                round(len(completed_games) / len(games) * 100, 2) if games else 0
+            ),
+            "avg_deaths": round(avg_deaths, 2),
+            "total_deaths": total_deaths,
+            "total_relics": total_relics,
         }
 
     def create_moral_choices_chart(self, games: List[Dict]) -> str:
@@ -204,35 +210,37 @@ class AnalyticsService:
         choices_data = []
 
         for game in games:
-            for level_name, level_data in game.get('levels_data', {}).items():
-                choice = level_data.get('choice')
+            for level_name, level_data in game.get("levels_data", {}).items():
+                choice = level_data.get("choice")
                 if choice:
-                    choices_data.append({
-                        'Nivel': level_name,
-                        'Decisión': choice,
-                        'count': 1
-                    })
+                    choices_data.append(
+                        {"Nivel": level_name, "Decisión": choice, "count": 1}
+                    )
 
         if not choices_data:
             return "<div>No hay decisiones morales registradas</div>"
 
         df = pd.DataFrame(choices_data)
-        df_grouped = df.groupby(['Nivel', 'Decisión']).count().reset_index()
+        df_grouped = df.groupby(["Nivel", "Decisión"]).count().reset_index()
 
         fig = px.bar(
             df_grouped,
-            x='Nivel',
-            y='count',
-            color='Decisión',
-            labels={'count': 'Cantidad de jugadores'},
-            barmode='group',
-            color_discrete_map={'good': '#10b981', 'bad': '#ef4444', 'neutral': '#6b7280'}
+            x="Nivel",
+            y="count",
+            color="Decisión",
+            labels={"count": "Cantidad de jugadores"},
+            barmode="group",
+            color_discrete_map={
+                "good": "#10b981",
+                "bad": "#ef4444",
+                "neutral": "#6b7280",
+            },
         )
-        
+
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(showlegend=True, title=None)
 
-        return fig.to_html(full_html=False, config={'displayModeBar': False})
+        return fig.to_html(full_html=False, config={"displayModeBar": False})
 
     def create_playtime_distribution(self, players: List[Dict]) -> str:
         """
@@ -247,19 +255,21 @@ class AnalyticsService:
         if not ANALYTICS_AVAILABLE or not players:
             return "<div>No hay datos disponibles</div>"
 
-        playtimes = [p.get('total_playtime', 0) for p in players]
+        playtimes = [p.get("total_playtime", 0) for p in players]
 
-        df = pd.DataFrame({
-            'Jugador': [p.get('username', 'Unknown') for p in players],
-            'Tiempo (min)': [pt / 60 for pt in playtimes]
-        })
+        df = pd.DataFrame(
+            {
+                "Jugador": [p.get("username", "Unknown") for p in players],
+                "Tiempo (min)": [pt / 60 for pt in playtimes],
+            }
+        )
 
         fig = px.histogram(
             df,
-            x='Tiempo (min)',
-            title='Distribución de Tiempo de Juego',
-            labels={'Tiempo (min)': 'Tiempo total de juego (minutos)'},
-            nbins=20
+            x="Tiempo (min)",
+            title="Distribución de Tiempo de Juego",
+            labels={"Tiempo (min)": "Tiempo total de juego (minutos)"},
+            nbins=20,
         )
 
         return fig.to_html(full_html=False)
@@ -281,10 +291,10 @@ class AnalyticsService:
         deaths_by_level = {}
 
         for game in games:
-            for level_name, level_data in game.get('levels_data', {}).items():
+            for level_name, level_data in game.get("levels_data", {}).items():
                 if level_name not in deaths_by_level:
                     deaths_by_level[level_name] = []
-                deaths_by_level[level_name].append(level_data.get('deaths', 0))
+                deaths_by_level[level_name].append(level_data.get("deaths", 0))
 
         # Calcular promedio
         avg_deaths = {
@@ -292,23 +302,25 @@ class AnalyticsService:
             for level, deaths in deaths_by_level.items()
         }
 
-        df = pd.DataFrame({
-            'Nivel': list(avg_deaths.keys()),
-            'Muertes promedio': list(avg_deaths.values())
-        })
+        df = pd.DataFrame(
+            {
+                "Nivel": list(avg_deaths.keys()),
+                "Muertes promedio": list(avg_deaths.values()),
+            }
+        )
 
         fig = px.bar(
             df,
-            x='Nivel',
-            y='Muertes promedio',
-            labels={'Muertes promedio': 'Promedio de muertes'},
-            color_discrete_sequence=['#10b981']
+            x="Nivel",
+            y="Muertes promedio",
+            labels={"Muertes promedio": "Promedio de muertes"},
+            color_discrete_sequence=["#10b981"],
         )
-        
+
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None)
 
-        return fig.to_html(full_html=False, config={'displayModeBar': False})
+        return fig.to_html(full_html=False, config={"displayModeBar": False})
 
     def create_events_by_type_chart(self, events: List[Dict]) -> str:
         """
@@ -324,26 +336,34 @@ class AnalyticsService:
             return "<div>No hay eventos registrados</div>"
 
         # Contar eventos por tipo
-        event_types = [e.get('event_type') for e in events]
+        event_types = [e.get("event_type") for e in events]
         type_counts = Counter(event_types)
 
-        df = pd.DataFrame({
-            'Tipo de evento': list(type_counts.keys()),
-            'Cantidad': list(type_counts.values())
-        })
+        df = pd.DataFrame(
+            {
+                "Tipo de evento": list(type_counts.keys()),
+                "Cantidad": list(type_counts.values()),
+            }
+        )
 
         fig = px.pie(
             df,
-            values='Cantidad',
-            names='Tipo de evento',
-            color_discrete_sequence=['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
+            values="Cantidad",
+            names="Tipo de evento",
+            color_discrete_sequence=[
+                "#10b981",
+                "#3b82f6",
+                "#f59e0b",
+                "#ef4444",
+                "#8b5cf6",
+            ],
         )
 
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None, showlegend=True)
-        fig.update_traces(textfont_color='#ffffff')
+        fig.update_traces(textfont_color="#ffffff")
 
-        return fig.to_html(full_html=False, config={'displayModeBar': False})
+        return fig.to_html(full_html=False, config={"displayModeBar": False})
 
     def create_moral_alignment_chart(self, players: List[Dict]) -> str:
         """
@@ -361,13 +381,13 @@ class AnalyticsService:
         # Clasificar jugadores por alineación moral
         alignments = []
         for player in players:
-            moral_alignment = player.get('stats', {}).get('moral_alignment', 0)
+            moral_alignment = player.get("stats", {}).get("moral_alignment", 0)
             if moral_alignment > 0.3:
-                category = 'Bueno'
+                category = "Bueno"
             elif moral_alignment < -0.3:
-                category = 'Malo'
+                category = "Malo"
             else:
-                category = 'Neutral'
+                category = "Neutral"
             alignments.append(category)
 
         if not alignments:
@@ -375,28 +395,30 @@ class AnalyticsService:
 
         alignment_counts = Counter(alignments)
 
-        df = pd.DataFrame({
-            'Alineación': list(alignment_counts.keys()),
-            'Jugadores': list(alignment_counts.values())
-        })
+        df = pd.DataFrame(
+            {
+                "Alineación": list(alignment_counts.keys()),
+                "Jugadores": list(alignment_counts.values()),
+            }
+        )
 
         # Colores personalizados
-        colors = {'Bueno': '#10b981', 'Neutral': '#6b7280', 'Malo': '#ef4444'}
-        df['color'] = df['Alineación'].map(colors)
+        colors = {"Bueno": "#10b981", "Neutral": "#6b7280", "Malo": "#ef4444"}
+        df["color"] = df["Alineación"].map(colors)
 
         fig = px.pie(
             df,
-            values='Jugadores',
-            names='Alineación',
-            color='Alineación',
-            color_discrete_map=colors
+            values="Jugadores",
+            names="Alineación",
+            color="Alineación",
+            color_discrete_map=colors,
         )
-        
+
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None, showlegend=True)
-        fig.update_traces(textfont_color='#ffffff')
+        fig.update_traces(textfont_color="#ffffff")
 
-        return fig.to_html(full_html=False, config={'displayModeBar': False})
+        return fig.to_html(full_html=False, config={"displayModeBar": False})
 
     def create_relics_distribution_chart(self, games: List[Dict]) -> str:
         """
@@ -413,7 +435,7 @@ class AnalyticsService:
 
         all_relics = []
         for game in games:
-            relics = game.get('relics', [])
+            relics = game.get("relics", [])
             all_relics.extend(relics)
 
         if not all_relics:
@@ -421,24 +443,26 @@ class AnalyticsService:
 
         relic_counts = Counter(all_relics)
 
-        df = pd.DataFrame({
-            'Reliquia': list(relic_counts.keys()),
-            'Cantidad': list(relic_counts.values())
-        })
+        df = pd.DataFrame(
+            {
+                "Reliquia": list(relic_counts.keys()),
+                "Cantidad": list(relic_counts.values()),
+            }
+        )
 
         fig = px.bar(
             df,
-            x='Reliquia',
-            y='Cantidad',
-            labels={'Cantidad': 'Veces obtenida'},
-            color='Reliquia',
-            color_discrete_sequence=['#10b981', '#3b82f6', '#f59e0b']
+            x="Reliquia",
+            y="Cantidad",
+            labels={"Cantidad": "Veces obtenida"},
+            color="Reliquia",
+            color_discrete_sequence=["#10b981", "#3b82f6", "#f59e0b"],
         )
 
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None, showlegend=False)
 
-        return fig.to_html(full_html=False, config={'displayModeBar': False})
+        return fig.to_html(full_html=False, config={"displayModeBar": False})
 
     def create_level_completion_chart(self, games: List[Dict]) -> str:
         """
@@ -457,7 +481,7 @@ class AnalyticsService:
         total_games = len(games)
 
         for game in games:
-            levels_completed = game.get('levels_completed', [])
+            levels_completed = game.get("levels_completed", [])
             for level in levels_completed:
                 if level not in level_completions:
                     level_completions[level] = 0
@@ -472,24 +496,26 @@ class AnalyticsService:
             for level, count in level_completions.items()
         }
 
-        df = pd.DataFrame({
-            'Nivel': list(level_percentages.keys()),
-            'Porcentaje Completado': list(level_percentages.values())
-        })
+        df = pd.DataFrame(
+            {
+                "Nivel": list(level_percentages.keys()),
+                "Porcentaje Completado": list(level_percentages.values()),
+            }
+        )
 
         fig = px.bar(
             df,
-            x='Nivel',
-            y='Porcentaje Completado',
-            labels={'Porcentaje Completado': '% de jugadores que completaron'},
-            color='Porcentaje Completado',
-            color_continuous_scale='Viridis'
+            x="Nivel",
+            y="Porcentaje Completado",
+            labels={"Porcentaje Completado": "% de jugadores que completaron"},
+            color="Porcentaje Completado",
+            color_continuous_scale="Viridis",
         )
 
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None)
 
-        return fig.to_html(full_html=False, config={'displayModeBar': False})
+        return fig.to_html(full_html=False, config={"displayModeBar": False})
 
     def create_playtime_per_level_chart(self, games: List[Dict]) -> str:
         """
@@ -507,8 +533,8 @@ class AnalyticsService:
         level_times = {}
 
         for game in games:
-            metrics = game.get('metrics', {})
-            time_per_level = metrics.get('time_per_level', {})
+            metrics = game.get("metrics", {})
+            time_per_level = metrics.get("time_per_level", {})
 
             for level, time_seconds in time_per_level.items():
                 if level not in level_times:
@@ -524,24 +550,26 @@ class AnalyticsService:
             for level, times in level_times.items()
         }
 
-        df = pd.DataFrame({
-            'Nivel': list(avg_times.keys()),
-            'Tiempo Promedio (min)': list(avg_times.values())
-        })
+        df = pd.DataFrame(
+            {
+                "Nivel": list(avg_times.keys()),
+                "Tiempo Promedio (min)": list(avg_times.values()),
+            }
+        )
 
         fig = px.bar(
             df,
-            x='Nivel',
-            y='Tiempo Promedio (min)',
-            labels={'Tiempo Promedio (min)': 'Minutos'},
-            color='Tiempo Promedio (min)',
-            color_continuous_scale='Blues'
+            x="Nivel",
+            y="Tiempo Promedio (min)",
+            labels={"Tiempo Promedio (min)": "Minutos"},
+            color="Tiempo Promedio (min)",
+            color_continuous_scale="Blues",
         )
 
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None)
 
-        return fig.to_html(full_html=False, config={'displayModeBar': False})
+        return fig.to_html(full_html=False, config={"displayModeBar": False})
 
     def export_to_csv(self, data: List[Dict], filename: str) -> str:
         """

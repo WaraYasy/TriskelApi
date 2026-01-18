@@ -3,6 +3,7 @@ Schemas (DTOs) para la API de Events
 
 Modelos de entrada y salida para los endpoints de eventos.
 """
+
 from pydantic import BaseModel, Field, field_validator
 from typing import Dict, Any, List, Optional
 from datetime import datetime
@@ -16,13 +17,14 @@ class EventCreate(BaseModel):
 
     Los eventos son inmutables, solo se crean, no se actualizan.
     """
+
     game_id: str
     player_id: str
     event_type: str
     level: str
     data: Dict[str, Any] = Field(default_factory=dict)
 
-    @field_validator('event_type')
+    @field_validator("event_type")
     @classmethod
     def validate_event_type(cls, v: str) -> str:
         """Valida que el tipo de evento sea uno de los permitidos"""
@@ -34,7 +36,7 @@ class EventCreate(BaseModel):
             "item_collected",
             "checkpoint_reached",
             "boss_encounter",
-            "custom_event"
+            "custom_event",
         ]
         if v not in valid_types:
             raise ValueError(
@@ -42,7 +44,7 @@ class EventCreate(BaseModel):
             )
         return v
 
-    @field_validator('level')
+    @field_validator("level")
     @classmethod
     def validate_level(cls, v: str) -> str:
         """Valida que el nivel sea uno de los 5 niveles válidos"""
@@ -59,10 +61,7 @@ class EventCreate(BaseModel):
                 "player_id": "xyz-789",
                 "event_type": "player_death",
                 "level": "senda_ebano",
-                "data": {
-                    "position": {"x": 150.5, "y": 200.3},
-                    "cause": "fall"
-                }
+                "data": {"position": {"x": 150.5, "y": 200.3}, "cause": "fall"},
             }
         }
 
@@ -74,6 +73,7 @@ class EventBatchCreate(BaseModel):
     Optimización: Unity puede enviar múltiples eventos acumulados
     para reducir número de requests HTTP.
     """
+
     events: List[EventCreate] = Field(..., min_length=1, max_length=100)
 
     class Config:
@@ -85,15 +85,15 @@ class EventBatchCreate(BaseModel):
                         "player_id": "xyz-789",
                         "event_type": "player_death",
                         "level": "senda_ebano",
-                        "data": {"position": {"x": 150.5, "y": 200.3}, "cause": "fall"}
+                        "data": {"position": {"x": 150.5, "y": 200.3}, "cause": "fall"},
                     },
                     {
                         "game_id": "abc-123",
                         "player_id": "xyz-789",
                         "event_type": "checkpoint_reached",
                         "level": "senda_ebano",
-                        "data": {"checkpoint_id": "checkpoint_1"}
-                    }
+                        "data": {"checkpoint_id": "checkpoint_1"},
+                    },
                 ]
             }
         }
@@ -105,6 +105,7 @@ class EventFilter(BaseModel):
 
     Todos los campos son opcionales, se combinan con AND.
     """
+
     game_id: Optional[str] = None
     player_id: Optional[str] = None
     event_type: Optional[str] = None
@@ -115,9 +116,5 @@ class EventFilter(BaseModel):
 
     class Config:
         json_schema_extra = {
-            "example": {
-                "game_id": "abc-123",
-                "event_type": "player_death",
-                "limit": 50
-            }
+            "example": {"game_id": "abc-123", "event_type": "player_death", "limit": 50}
         }

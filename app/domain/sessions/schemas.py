@@ -8,4 +8,5 @@ Schemas necesarios:
 - SessionEnd: Datos para finalizar sesión
 - SessionResponse: Respuesta con sesión creada/actualizada
 """
+
 pass

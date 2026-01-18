@@ -7,6 +7,7 @@ Se usará para Auth (usuarios admin) y logs de auditoría.
 
 NOTA: La base de datos SQL es OPCIONAL. Si no está configurada, la app funcionará igual.
 """
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
@@ -57,7 +58,7 @@ class SQLManager:
             self._engine = create_engine(
                 db_url,
                 pool_pre_ping=True,  # Verifica que la conexión esté viva
-                pool_recycle=3600    # Recicla conexiones cada hora
+                pool_recycle=3600,  # Recicla conexiones cada hora
             )
 
             # Crear fábrica de sesiones

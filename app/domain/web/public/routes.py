@@ -10,13 +10,10 @@ Rutas futuras:
 - GET /public/guides        → Guías y tutoriales
 - GET /public/community     → Comunidad/Foros
 """
-from flask import Blueprint, render_template
+
+from flask import Blueprint
 
 # Crear blueprint
-public_bp = Blueprint(
-    'public',
-    __name__,
-    template_folder='templates'
-)
+public_bp = Blueprint("public", __name__, template_folder="templates")
 
 # TODO: Implementar rutas públicas

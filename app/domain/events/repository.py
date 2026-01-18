@@ -4,6 +4,7 @@ Repositorio para Events (acceso directo a Firestore)
 Este dominio usa arquitectura SIMPLE (sin ports ni adapters).
 El repository accede directamente a Firestore.
 """
+
 from typing import Optional, List
 from google.cloud.firestore_v1 import Client, Query
 from datetime import datetime
@@ -43,7 +44,7 @@ class EventRepository:
             player_id=event_data.player_id,
             event_type=event_data.event_type,
             level=event_data.level,
-            data=event_data.data
+            data=event_data.data,
         )
 
         # Guardar en Firestore
@@ -76,7 +77,7 @@ class EventRepository:
                 player_id=event_data.player_id,
                 event_type=event_data.event_type,
                 level=event_data.level,
-                data=event_data.data
+                data=event_data.data,
             )
 
             # Añadir al batch
@@ -113,8 +114,7 @@ class EventRepository:
             List[GameEvent]: Lista de eventos ordenados por timestamp
         """
         query = (
-            self.collection
-            .where("game_id", "==", game_id)
+            self.collection.where("game_id", "==", game_id)
             .order_by("timestamp", direction=Query.DESCENDING)
             .limit(limit)
         )
@@ -139,8 +139,7 @@ class EventRepository:
             List[GameEvent]: Lista de eventos ordenados por timestamp
         """
         query = (
-            self.collection
-            .where("player_id", "==", player_id)
+            self.collection.where("player_id", "==", player_id)
             .order_by("timestamp", direction=Query.DESCENDING)
             .limit(limit)
         )
@@ -153,7 +152,9 @@ class EventRepository:
 
         return events
 
-    def get_by_type(self, event_type: str, game_id: Optional[str] = None, limit: int = 1000) -> List[GameEvent]:
+    def get_by_type(
+        self, event_type: str, game_id: Optional[str] = None, limit: int = 1000
+    ) -> List[GameEvent]:
         """
         Obtiene eventos filtrados por tipo.
 
@@ -188,7 +189,7 @@ class EventRepository:
         level: Optional[str] = None,
         start_time: Optional[datetime] = None,
         end_time: Optional[datetime] = None,
-        limit: int = 1000
+        limit: int = 1000,
     ) -> List[GameEvent]:
         """
         Búsqueda de eventos con filtros múltiples.
@@ -244,5 +245,5 @@ class EventRepository:
         except Exception as e:
             # Si la query falla por índice compuesto faltante en Firestore
             print(f"⚠️ Query compleja falló: {e}")
-            print(f"   Puede que necesites crear un índice compuesto en Firestore")
+            print("   Puede que necesites crear un índice compuesto en Firestore")
             return []

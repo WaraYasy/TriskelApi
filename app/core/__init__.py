@@ -14,32 +14,32 @@ from .exceptions import (
     AuthenticationException,
     AuthorizationException,
     ConflictException,
-    BusinessRuleException
+    BusinessRuleException,
 )
 from .validators import (
     validate_username,
     validate_email,
     validate_level_name,
     validate_choice,
-    validate_relic
+    validate_relic,
 )
 from .logger import logger
 
 __all__ = [
     # Exceptions
-    'TriskelAPIException',
-    'NotFoundException',
-    'ValidationException',
-    'AuthenticationException',
-    'AuthorizationException',
-    'ConflictException',
-    'BusinessRuleException',
+    "TriskelAPIException",
+    "NotFoundException",
+    "ValidationException",
+    "AuthenticationException",
+    "AuthorizationException",
+    "ConflictException",
+    "BusinessRuleException",
     # Validators
-    'validate_username',
-    'validate_email',
-    'validate_level_name',
-    'validate_choice',
-    'validate_relic',
+    "validate_username",
+    "validate_email",
+    "validate_level_name",
+    "validate_choice",
+    "validate_relic",
     # Logger
-    'logger'
+    "logger",
 ]

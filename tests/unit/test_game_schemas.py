@@ -3,10 +3,11 @@ Tests unitarios para schemas de Games.
 
 Prueba la validación de datos de entrada/salida de la API.
 """
+
 import pytest
 from pydantic import ValidationError
 
-from app.domain.games.schemas import GameCreate, GameUpdate, LevelStart, LevelComplete
+from app.domain.games.schemas import GameUpdate, LevelComplete
 
 
 @pytest.mark.unit
@@ -59,7 +60,7 @@ class TestLevelComplete:
             time_seconds=300,
             deaths=5,
             choice="sanar",
-            relic="lirio"
+            relic="lirio",
         )
 
         assert data.level == "senda_ebano"

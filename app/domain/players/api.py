@@ -12,6 +12,7 @@ Reglas de acceso:
 - PATCH /v1/players/{id}: Solo si es tu ID o con API Key
 - DELETE /v1/players/{id}: Solo si es tu ID o con API Key
 """
+
 from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
 
@@ -27,6 +28,7 @@ router = APIRouter(prefix="/v1/players", tags=["Players"])
 
 
 # ==================== HELPERS ====================
+
 
 def check_player_access(request: Request, target_player_id: str) -> None:
     """
@@ -53,12 +55,12 @@ def check_player_access(request: Request, target_player_id: str) -> None:
     # Jugador solo puede acceder a su propio ID
     if authenticated_player_id != target_player_id:
         raise HTTPException(
-            status_code=403,
-            detail="No tienes permisos para acceder a este jugador"
+            status_code=403, detail="No tienes permisos para acceder a este jugador"
         )
 
 
 # ==================== DEPENDENCY INJECTION ====================
+
 
 def get_player_repository() -> IPlayerRepository:
     """
@@ -74,7 +76,7 @@ def get_player_repository() -> IPlayerRepository:
 
 
 def get_player_service(
-    repository: IPlayerRepository = Depends(get_player_repository)
+    repository: IPlayerRepository = Depends(get_player_repository),
 ) -> PlayerService:
     """
     Dependency que provee el servicio de Players.
@@ -92,10 +94,10 @@ def get_player_service(
 
 # ==================== ENDPOINTS ====================
 
+
 @router.post("", response_model=PlayerAuthResponse, status_code=201)
 def create_player(
-    player_data: PlayerCreate,
-    service: PlayerService = Depends(get_player_service)
+    player_data: PlayerCreate, service: PlayerService = Depends(get_player_service)
 ):
     """
     Crear un nuevo jugador.
@@ -120,7 +122,7 @@ def create_player(
         return PlayerAuthResponse(
             player_id=player.player_id,
             username=player.username,
-            player_token=player.player_token
+            player_token=player.player_token,
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -131,10 +133,10 @@ def create_player(
     response_model=Player,
     responses={
         200: {"description": "Perfil del jugador autenticado"},
-        401: {"description": "No autenticado - requiere X-Player-ID y X-Player-Token"}
+        401: {"description": "No autenticado - requiere X-Player-ID y X-Player-Token"},
     },
     summary="Ver mi perfil",
-    dependencies=[]
+    dependencies=[],
 )
 def get_my_profile(request: Request):
     """
@@ -160,7 +162,7 @@ def get_my_profile(request: Request):
 def get_player(
     player_id: str,
     request: Request,
-    service: PlayerService = Depends(get_player_service)
+    service: PlayerService = Depends(get_player_service),
 ):
     """
     Obtener un jugador por ID.
@@ -193,7 +195,7 @@ def get_player(
 def get_all_players(
     request: Request,
     limit: int = 100,
-    service: PlayerService = Depends(get_player_service)
+    service: PlayerService = Depends(get_player_service),
 ):
     """
     Listar todos los jugadores.
@@ -217,7 +219,7 @@ def get_all_players(
     if not is_admin:
         raise HTTPException(
             status_code=403,
-            detail="Este endpoint solo está disponible para administradores (requiere X-API-Key)"
+            detail="Este endpoint solo está disponible para administradores (requiere X-API-Key)",
         )
 
     return service.get_all_players(limit=limit)
@@ -228,7 +230,7 @@ def update_player(
     player_id: str,
     player_update: PlayerUpdate,
     request: Request,
-    service: PlayerService = Depends(get_player_service)
+    service: PlayerService = Depends(get_player_service),
 ):
     """
     Actualizar un jugador.
@@ -263,7 +265,7 @@ def update_player(
 def delete_player(
     player_id: str,
     request: Request,
-    service: PlayerService = Depends(get_player_service)
+    service: PlayerService = Depends(get_player_service),
 ):
     """
     Eliminar un jugador.

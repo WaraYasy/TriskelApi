@@ -6,9 +6,16 @@ from jose import JWTError
 from .ports import IAuthRepository
 from .service import AuthService
 from .schemas import (
-    LoginRequest, RefreshTokenRequest, AdminUserCreate, AdminUserUpdate,
-    ChangePasswordRequest, TokenResponse, AdminUserResponse,
-    CurrentUserResponse, AuditLogResponse, AuditLogListResponse,
+    LoginRequest,
+    RefreshTokenRequest,
+    AdminUserCreate,
+    AdminUserUpdate,
+    ChangePasswordRequest,
+    TokenResponse,
+    AdminUserResponse,
+    CurrentUserResponse,
+    AuditLogResponse,
+    AuditLogListResponse,
 )
 from .adapters.sql_repository import SQLAuthRepository
 from app.infrastructure.database.sql_client import get_db_session
@@ -22,11 +29,15 @@ def get_auth_repository(db: Session = Depends(get_db_session)) -> IAuthRepositor
     return SQLAuthRepository(session=db)
 
 
-def get_auth_service(repository: IAuthRepository = Depends(get_auth_repository)) -> AuthService:
+def get_auth_service(
+    repository: IAuthRepository = Depends(get_auth_repository),
+) -> AuthService:
     return AuthService(repository=repository)
 
 
-def get_current_admin(authorization: str = Header(...), service: AuthService = Depends(get_auth_service)) -> dict:
+def get_current_admin(
+    authorization: str = Header(...), service: AuthService = Depends(get_auth_service)
+) -> dict:
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Token inválido")
 
@@ -42,8 +53,11 @@ def get_current_admin(authorization: str = Header(...), service: AuthService = D
 def require_permission(permission: str):
     def check_permission(current_user: dict = Depends(get_current_admin)) -> dict:
         if permission not in current_user.get("permissions", []):
-            raise HTTPException(status_code=403, detail=f"Permiso '{permission}' requerido")
+            raise HTTPException(
+                status_code=403, detail=f"Permiso '{permission}' requerido"
+            )
         return current_user
+
     return check_permission
 
 
@@ -54,20 +68,28 @@ def get_client_info(request: Request) -> tuple:
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(login_data: LoginRequest, request: Request, service: AuthService = Depends(get_auth_service)):
+def login(
+    login_data: LoginRequest,
+    request: Request,
+    service: AuthService = Depends(get_auth_service),
+):
     ip_address, user_agent = get_client_info(request)
     try:
-        result = service.login(login_data.username, login_data.password, ip_address, user_agent)
+        result = service.login(
+            login_data.username, login_data.password, ip_address, user_agent
+        )
         return TokenResponse(
             access_token=result["access_token"],
             refresh_token=result["refresh_token"],
             token_type=result["token_type"],
-            expires_in=result["expires_in"]
+            expires_in=result["expires_in"],
         )
     except ValueError as e:
         error_msg = str(e)
         if "72 caracteres" in error_msg:
-            raise HTTPException(status_code=400, detail="Password excede longitud máxima")
+            raise HTTPException(
+                status_code=400, detail="Password excede longitud máxima"
+            )
         elif "Credenciales inválidas" in error_msg or "Password inválido" in error_msg:
             raise HTTPException(status_code=401, detail="Credenciales inválidas")
         elif "desactivado" in error_msg.lower():
@@ -77,22 +99,32 @@ def login(login_data: LoginRequest, request: Request, service: AuthService = Dep
 
 
 @router.post("/refresh", response_model=TokenResponse)
-def refresh_token(refresh_data: RefreshTokenRequest, request: Request, service: AuthService = Depends(get_auth_service)):
+def refresh_token(
+    refresh_data: RefreshTokenRequest,
+    request: Request,
+    service: AuthService = Depends(get_auth_service),
+):
     ip_address, user_agent = get_client_info(request)
     try:
-        result = service.refresh_access_token(refresh_data.refresh_token, ip_address, user_agent)
+        result = service.refresh_access_token(
+            refresh_data.refresh_token, ip_address, user_agent
+        )
         return TokenResponse(
             access_token=result["access_token"],
             refresh_token=result["refresh_token"],
             token_type=result["token_type"],
-            expires_in=result["expires_in"]
+            expires_in=result["expires_in"],
         )
     except (JWTError, ValueError) as e:
         raise HTTPException(status_code=401, detail=str(e))
 
 
 @router.post("/logout")
-def logout(request: Request, current_user: dict = Depends(get_current_admin), service: AuthService = Depends(get_auth_service)):
+def logout(
+    request: Request,
+    current_user: dict = Depends(get_current_admin),
+    service: AuthService = Depends(get_auth_service),
+):
     ip_address, user_agent = get_client_info(request)
     service.repository.create_audit_log(
         user_id=current_user["id"],
@@ -100,7 +132,7 @@ def logout(request: Request, current_user: dict = Depends(get_current_admin), se
         action="logout",
         ip_address=ip_address,
         user_agent=user_agent,
-        success=True
+        success=True,
     )
     return {"message": "Logout exitoso"}
 
@@ -111,19 +143,30 @@ def get_current_user_info(current_user: dict = Depends(get_current_admin)):
 
 
 @router.post("/change-password")
-def change_password(password_data: ChangePasswordRequest, request: Request,
-                   current_user: dict = Depends(get_current_admin), service: AuthService = Depends(get_auth_service)):
+def change_password(
+    password_data: ChangePasswordRequest,
+    request: Request,
+    current_user: dict = Depends(get_current_admin),
+    service: AuthService = Depends(get_auth_service),
+):
     ip_address, _ = get_client_info(request)
-    success = service.change_password(current_user["id"], password_data.old_password,
-                                     password_data.new_password, ip_address)
+    success = service.change_password(
+        current_user["id"],
+        password_data.old_password,
+        password_data.new_password,
+        ip_address,
+    )
     if not success:
         raise HTTPException(status_code=400, detail="Password actual incorrecto")
     return {"message": "Password cambiado exitosamente"}
 
 
 @router.post("/admin/users", response_model=AdminUserResponse, status_code=201)
-def create_admin_user(admin_data: AdminUserCreate, current_user: dict = Depends(require_permission("create_admins")),
-                     service: AuthService = Depends(get_auth_service)):
+def create_admin_user(
+    admin_data: AdminUserCreate,
+    current_user: dict = Depends(require_permission("create_admins")),
+    service: AuthService = Depends(get_auth_service),
+):
     try:
         user = service.create_admin(admin_data)
         return AdminUserResponse(**user)
@@ -132,16 +175,23 @@ def create_admin_user(admin_data: AdminUserCreate, current_user: dict = Depends(
 
 
 @router.get("/admin/users", response_model=List[AdminUserResponse])
-def list_admin_users(role: Optional[str] = None, is_active: Optional[bool] = None, limit: int = 100,
-                    current_user: dict = Depends(require_permission("view_admins")),
-                    service: AuthService = Depends(get_auth_service)):
+def list_admin_users(
+    role: Optional[str] = None,
+    is_active: Optional[bool] = None,
+    limit: int = 100,
+    current_user: dict = Depends(require_permission("view_admins")),
+    service: AuthService = Depends(get_auth_service),
+):
     users = service.list_admins(role=role, is_active=is_active, limit=limit)
     return [AdminUserResponse(**user) for user in users]
 
 
 @router.get("/admin/users/{user_id}", response_model=AdminUserResponse)
-def get_admin_user(user_id: int, current_user: dict = Depends(require_permission("view_admins")),
-                  service: AuthService = Depends(get_auth_service)):
+def get_admin_user(
+    user_id: int,
+    current_user: dict = Depends(require_permission("view_admins")),
+    service: AuthService = Depends(get_auth_service),
+):
     user = service.get_admin(user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
@@ -149,9 +199,12 @@ def get_admin_user(user_id: int, current_user: dict = Depends(require_permission
 
 
 @router.patch("/admin/users/{user_id}", response_model=AdminUserResponse)
-def update_admin_user(user_id: int, admin_update: AdminUserUpdate,
-                     current_user: dict = Depends(require_permission("edit_admins")),
-                     service: AuthService = Depends(get_auth_service)):
+def update_admin_user(
+    user_id: int,
+    admin_update: AdminUserUpdate,
+    current_user: dict = Depends(require_permission("edit_admins")),
+    service: AuthService = Depends(get_auth_service),
+):
     try:
         user = service.update_admin(user_id, admin_update)
         if not user:
@@ -162,16 +215,29 @@ def update_admin_user(user_id: int, admin_update: AdminUserUpdate,
 
 
 @router.get("/admin/audit", response_model=AuditLogListResponse)
-def get_audit_logs(user_id: Optional[int] = None, action: Optional[str] = None,
-                  start_date: Optional[datetime] = None, end_date: Optional[datetime] = None,
-                  success: Optional[bool] = None, limit: int = 100, offset: int = 0,
-                  current_user: dict = Depends(require_permission("view_audit_logs")),
-                  service: AuthService = Depends(get_auth_service)):
-    result = service.get_audit_logs(user_id=user_id, action=action, start_date=start_date,
-                                   end_date=end_date, success=success, limit=limit, offset=offset)
+def get_audit_logs(
+    user_id: Optional[int] = None,
+    action: Optional[str] = None,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    success: Optional[bool] = None,
+    limit: int = 100,
+    offset: int = 0,
+    current_user: dict = Depends(require_permission("view_audit_logs")),
+    service: AuthService = Depends(get_auth_service),
+):
+    result = service.get_audit_logs(
+        user_id=user_id,
+        action=action,
+        start_date=start_date,
+        end_date=end_date,
+        success=success,
+        limit=limit,
+        offset=offset,
+    )
     return AuditLogListResponse(
         logs=[AuditLogResponse(**log) for log in result["logs"]],
         total=result["total"],
         limit=result["limit"],
-        offset=result["offset"]
+        offset=result["offset"],
     )

@@ -5,6 +5,7 @@ Implementación CONCRETA del repositorio usando SQLAlchemy + Base de Datos SQL.
 Soporta PostgreSQL, MySQL, MariaDB, etc.
 Implementa la interfaz IAuthRepository.
 """
+
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from sqlalchemy.orm import Session
@@ -35,7 +36,9 @@ class SQLAuthRepository(IAuthRepository):
 
     # ==================== Helper Methods ====================
 
-    def _user_to_dict(self, user: AdminUser, include_password: bool = False) -> Dict[str, Any]:
+    def _user_to_dict(
+        self, user: AdminUser, include_password: bool = False
+    ) -> Dict[str, Any]:
         """
         Convierte un AdminUser ORM model a dict.
 
@@ -54,7 +57,7 @@ class SQLAuthRepository(IAuthRepository):
             "is_active": user.is_active,
             "created_at": user.created_at,
             "updated_at": user.updated_at,
-            "last_login": user.last_login
+            "last_login": user.last_login,
         }
 
         if include_password:
@@ -84,17 +87,13 @@ class SQLAuthRepository(IAuthRepository):
             "details": log.details,
             "timestamp": log.timestamp,
             "success": log.success,
-            "error_message": log.error_message
+            "error_message": log.error_message,
         }
 
     # ==================== Admin User Management ====================
 
     def create_admin_user(
-        self,
-        username: str,
-        email: str,
-        password_hash: str,
-        role: str = "viewer"
+        self, username: str, email: str, password_hash: str, role: str = "viewer"
     ) -> Dict[str, Any]:
         """
         Crea un nuevo usuario administrador.
@@ -105,7 +104,7 @@ class SQLAuthRepository(IAuthRepository):
                 email=email,
                 password_hash=password_hash,
                 role=role,
-                is_active=True
+                is_active=True,
             )
 
             self.session.add(user)
@@ -118,7 +117,7 @@ class SQLAuthRepository(IAuthRepository):
         except IntegrityError as e:
             self.session.rollback()
             logger.error(f"Error creando admin (username/email duplicado): {e}")
-            raise ValueError(f"Username o email ya existe")
+            raise ValueError("Username o email ya existe")
 
     def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
         """
@@ -169,7 +168,7 @@ class SQLAuthRepository(IAuthRepository):
         user_id: int,
         email: Optional[str] = None,
         role: Optional[str] = None,
-        is_active: Optional[bool] = None
+        is_active: Optional[bool] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Actualiza campos de un usuario administrador.
@@ -196,7 +195,7 @@ class SQLAuthRepository(IAuthRepository):
         except IntegrityError as e:
             self.session.rollback()
             logger.error(f"Error actualizando admin (email duplicado): {e}")
-            raise ValueError(f"Email ya existe")
+            raise ValueError("Email ya existe")
 
     def update_password(self, user_id: int, new_password_hash: str) -> bool:
         """
@@ -232,7 +231,7 @@ class SQLAuthRepository(IAuthRepository):
         self,
         role: Optional[str] = None,
         is_active: Optional[bool] = None,
-        limit: int = 100
+        limit: int = 100,
     ) -> List[Dict[str, Any]]:
         """
         Lista usuarios administradores con filtros opcionales.
@@ -262,7 +261,7 @@ class SQLAuthRepository(IAuthRepository):
         user_agent: Optional[str] = None,
         details: Optional[str] = None,
         success: bool = True,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Crea un registro de auditoría.
@@ -277,7 +276,7 @@ class SQLAuthRepository(IAuthRepository):
             user_agent=user_agent,
             details=details,
             success=success,
-            error_message=error_message
+            error_message=error_message,
         )
 
         self.session.add(log)
@@ -295,7 +294,7 @@ class SQLAuthRepository(IAuthRepository):
         end_date: Optional[datetime] = None,
         success: Optional[bool] = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[Dict[str, Any]]:
         """
         Obtiene logs de auditoría con filtros opcionales.
@@ -330,7 +329,7 @@ class SQLAuthRepository(IAuthRepository):
         user_id: Optional[int] = None,
         action: Optional[str] = None,
         start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None
+        end_date: Optional[datetime] = None,
     ) -> int:
         """
         Cuenta logs de auditoría con filtros opcionales.

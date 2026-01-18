@@ -8,26 +8,39 @@ from .ports import IAuthRepository
 from .schemas import AdminUserCreate, AdminUserUpdate
 from .validators import PasswordValidator
 from app.config.settings import settings
-from app.core.logger import logger
 
 
 class AuthService:
     ROLE_PERMISSIONS = {
         "admin": [
-            "view_players", "edit_players", "delete_players",
-            "view_games", "edit_games", "delete_games",
-            "view_events", "edit_events", "delete_events",
-            "view_admins", "create_admins", "edit_admins", "delete_admins",
+            "view_players",
+            "edit_players",
+            "delete_players",
+            "view_games",
+            "edit_games",
+            "delete_games",
+            "view_events",
+            "edit_events",
+            "delete_events",
+            "view_admins",
+            "create_admins",
+            "edit_admins",
+            "delete_admins",
             "view_audit_logs",
         ],
         "support": [
-            "view_players", "edit_players",
-            "view_games", "edit_games",
-            "view_events", "edit_events",
+            "view_players",
+            "edit_players",
+            "view_games",
+            "edit_games",
+            "view_events",
+            "edit_events",
             "view_audit_logs",
         ],
         "viewer": [
-            "view_players", "view_games", "view_events",
+            "view_players",
+            "view_games",
+            "view_events",
         ],
     }
 
@@ -37,17 +50,23 @@ class AuthService:
     @staticmethod
     def hash_password(password: str) -> str:
         if len(password) > PasswordValidator.MAX_LENGTH:
-            raise ValueError(f"Password no puede exceder {PasswordValidator.MAX_LENGTH} caracteres")
+            raise ValueError(
+                f"Password no puede exceder {PasswordValidator.MAX_LENGTH} caracteres"
+            )
         salt = bcrypt.gensalt()
-        hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
-        return hashed.decode('utf-8')
+        hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
+        return hashed.decode("utf-8")
 
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
-        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"), hashed_password.encode("utf-8")
+        )
 
     def create_access_token(self, user_id: int, username: str, role: str) -> str:
-        expire = datetime.utcnow() + timedelta(minutes=settings.jwt_access_token_expire_minutes)
+        expire = datetime.utcnow() + timedelta(
+            minutes=settings.jwt_access_token_expire_minutes
+        )
         payload = {
             "type": "access",
             "user_id": user_id,
@@ -56,10 +75,14 @@ class AuthService:
             "exp": expire,
             "iat": datetime.utcnow(),
         }
-        return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+        return jwt.encode(
+            payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
+        )
 
     def create_refresh_token(self, user_id: int, username: str) -> str:
-        expire = datetime.utcnow() + timedelta(days=settings.jwt_refresh_token_expire_days)
+        expire = datetime.utcnow() + timedelta(
+            days=settings.jwt_refresh_token_expire_days
+        )
         payload = {
             "type": "refresh",
             "user_id": user_id,
@@ -67,16 +90,27 @@ class AuthService:
             "exp": expire,
             "iat": datetime.utcnow(),
         }
-        return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+        return jwt.encode(
+            payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
+        )
 
     def verify_token(self, token: str, token_type: str = "access") -> Dict[str, Any]:
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
+        )
         if payload.get("type") != token_type:
-            raise JWTError(f"Token tipo '{payload.get('type')}', esperado '{token_type}'")
+            raise JWTError(
+                f"Token tipo '{payload.get('type')}', esperado '{token_type}'"
+            )
         return payload
 
-    def login(self, username: str, password: str, ip_address: Optional[str] = None,
-              user_agent: Optional[str] = None) -> Dict[str, Any]:
+    def login(
+        self,
+        username: str,
+        password: str,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
+    ) -> Dict[str, Any]:
         username = username.strip()
 
         if len(password) > PasswordValidator.MAX_LENGTH:
@@ -94,7 +128,9 @@ class AuthService:
 
         self.repository.update_last_login(user["id"])
 
-        access_token = self.create_access_token(user["id"], user["username"], user["role"])
+        access_token = self.create_access_token(
+            user["id"], user["username"], user["role"]
+        )
         refresh_token = self.create_refresh_token(user["id"], user["username"])
 
         self.repository.create_audit_log(
@@ -103,7 +139,7 @@ class AuthService:
             action="login_success",
             ip_address=ip_address,
             user_agent=user_agent,
-            success=True
+            success=True,
         )
 
         return {
@@ -116,11 +152,15 @@ class AuthService:
                 "username": user["username"],
                 "email": user["email"],
                 "role": user["role"],
-            }
+            },
         }
 
-    def refresh_access_token(self, refresh_token: str, ip_address: Optional[str] = None,
-                            user_agent: Optional[str] = None) -> Dict[str, Any]:
+    def refresh_access_token(
+        self,
+        refresh_token: str,
+        ip_address: Optional[str] = None,
+        user_agent: Optional[str] = None,
+    ) -> Dict[str, Any]:
         payload = self.verify_token(refresh_token, token_type="refresh")
         user = self.repository.get_user_by_id(payload["user_id"])
 
@@ -129,7 +169,9 @@ class AuthService:
         if not user["is_active"]:
             raise ValueError("Usuario desactivado")
 
-        new_access_token = self.create_access_token(user["id"], user["username"], user["role"])
+        new_access_token = self.create_access_token(
+            user["id"], user["username"], user["role"]
+        )
         new_refresh_token = self.create_refresh_token(user["id"], user["username"])
 
         return {
@@ -166,19 +208,26 @@ class AuthService:
             username=admin_data.username,
             email=admin_data.email,
             password_hash=password_hash,
-            role=admin_data.role
+            role=admin_data.role,
         )
 
-    def update_admin(self, user_id: int, admin_update: AdminUserUpdate) -> Optional[Dict[str, Any]]:
+    def update_admin(
+        self, user_id: int, admin_update: AdminUserUpdate
+    ) -> Optional[Dict[str, Any]]:
         return self.repository.update_user(
             user_id=user_id,
             email=admin_update.email,
             role=admin_update.role,
-            is_active=admin_update.is_active
+            is_active=admin_update.is_active,
         )
 
-    def change_password(self, user_id: int, old_password: str, new_password: str,
-                       ip_address: Optional[str] = None) -> bool:
+    def change_password(
+        self,
+        user_id: int,
+        old_password: str,
+        new_password: str,
+        ip_address: Optional[str] = None,
+    ) -> bool:
         user = self.repository.get_user_by_id(user_id)
         if not user:
             raise ValueError("Usuario no existe")
@@ -195,13 +244,17 @@ class AuthService:
                 username=user["username"],
                 action="change_password",
                 ip_address=ip_address,
-                success=True
+                success=True,
             )
 
         return success
 
-    def list_admins(self, role: Optional[str] = None, is_active: Optional[bool] = None,
-                   limit: int = 100) -> List[Dict[str, Any]]:
+    def list_admins(
+        self,
+        role: Optional[str] = None,
+        is_active: Optional[bool] = None,
+        limit: int = 100,
+    ) -> List[Dict[str, Any]]:
         return self.repository.list_users(role=role, is_active=is_active, limit=limit)
 
     def get_admin(self, user_id: int) -> Optional[Dict[str, Any]]:
@@ -220,12 +273,24 @@ class AuthService:
     def check_permission(cls, role: str, permission: str) -> bool:
         return permission in cls.get_role_permissions(role)
 
-    def get_audit_logs(self, user_id: Optional[int] = None, action: Optional[str] = None,
-                      start_date: Optional[datetime] = None, end_date: Optional[datetime] = None,
-                      success: Optional[bool] = None, limit: int = 100, offset: int = 0) -> Dict[str, Any]:
+    def get_audit_logs(
+        self,
+        user_id: Optional[int] = None,
+        action: Optional[str] = None,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
+        success: Optional[bool] = None,
+        limit: int = 100,
+        offset: int = 0,
+    ) -> Dict[str, Any]:
         logs = self.repository.get_audit_logs(
-            user_id=user_id, action=action, start_date=start_date, end_date=end_date,
-            success=success, limit=limit, offset=offset
+            user_id=user_id,
+            action=action,
+            start_date=start_date,
+            end_date=end_date,
+            success=success,
+            limit=limit,
+            offset=offset,
         )
         total = self.repository.count_audit_logs(
             user_id=user_id, action=action, start_date=start_date, end_date=end_date

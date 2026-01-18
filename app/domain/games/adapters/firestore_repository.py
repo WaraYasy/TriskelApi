@@ -3,6 +3,7 @@ Adaptador Firestore para Games
 
 Implementación concreta del repositorio usando Firestore.
 """
+
 from typing import Optional, List
 from google.cloud.firestore_v1 import Client
 
@@ -70,8 +71,7 @@ class FirestoreGameRepository(IGameRepository):
         """
         # Query: WHERE player_id == X AND status == "in_progress" LIMIT 1
         query = (
-            self.collection
-            .where("player_id", "==", player_id)
+            self.collection.where("player_id", "==", player_id)
             .where("status", "==", "in_progress")
             .limit(1)
         )

@@ -32,4 +32,5 @@ def moral_analysis():
     chart = create_moral_chart(data)  # Plotly
     return render_template('dashboard/moral.html', chart=chart)
 """
+
 pass

@@ -7,10 +7,11 @@ Este archivo contiene:
 - Cliente de prueba de FastAPI
 - Utilidades de testing
 """
+
 import pytest
 from datetime import datetime, timezone, timedelta
 from typing import Dict, Any
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
@@ -24,6 +25,7 @@ from app.domain.auth.service import AuthService
 # =============================================================================
 # FIXTURES DE TIEMPO
 # =============================================================================
+
 
 @pytest.fixture
 def fixed_datetime():
@@ -47,6 +49,7 @@ def future_datetime():
 # FIXTURES DE PLAYERS
 # =============================================================================
 
+
 @pytest.fixture
 def player_id():
     """ID único para un jugador de prueba"""
@@ -68,12 +71,14 @@ def sample_player_stats() -> PlayerStats:
         total_deaths=12,
         favorite_relic="lirio",
         best_speedrun_seconds=3600,
-        moral_alignment=0.25
+        moral_alignment=0.25,
     )
 
 
 @pytest.fixture
-def sample_player(player_id, player_token, fixed_datetime, sample_player_stats) -> Player:
+def sample_player(
+    player_id, player_token, fixed_datetime, sample_player_stats
+) -> Player:
     """Jugador completo con estadísticas"""
     return Player(
         player_id=player_id,
@@ -85,7 +90,7 @@ def sample_player(player_id, player_token, fixed_datetime, sample_player_stats) 
         total_playtime_seconds=7200,
         games_played=10,
         games_completed=6,
-        stats=sample_player_stats
+        stats=sample_player_stats,
     )
 
 
@@ -102,7 +107,7 @@ def new_player(player_id, player_token, fixed_datetime) -> Player:
         total_playtime_seconds=0,
         games_played=0,
         games_completed=0,
-        stats=PlayerStats()
+        stats=PlayerStats(),
     )
 
 
@@ -116,6 +121,7 @@ def player_dict(sample_player) -> Dict[str, Any]:
 # FIXTURES DE GAMES
 # =============================================================================
 
+
 @pytest.fixture
 def game_id():
     """ID único para una partida de prueba"""
@@ -126,9 +132,9 @@ def game_id():
 def sample_game_choices() -> GameChoices:
     """Decisiones morales de una partida"""
     return GameChoices(
-        senda_ebano="sanar",      # bueno
+        senda_ebano="sanar",  # bueno
         fortaleza_gigantes="construir",  # bueno
-        aquelarre_sombras=None    # no decidido aún
+        aquelarre_sombras=None,  # no decidido aún
     )
 
 
@@ -137,19 +143,15 @@ def sample_game_metrics() -> GameMetrics:
     """Métricas de una partida"""
     return GameMetrics(
         total_deaths=8,
-        time_per_level={
-            "senda_ebano": 1200,
-            "fortaleza_gigantes": 1500
-        },
-        deaths_per_level={
-            "senda_ebano": 3,
-            "fortaleza_gigantes": 5
-        }
+        time_per_level={"senda_ebano": 1200, "fortaleza_gigantes": 1500},
+        deaths_per_level={"senda_ebano": 3, "fortaleza_gigantes": 5},
     )
 
 
 @pytest.fixture
-def active_game(game_id, player_id, fixed_datetime, sample_game_choices, sample_game_metrics) -> Game:
+def active_game(
+    game_id, player_id, fixed_datetime, sample_game_choices, sample_game_metrics
+) -> Game:
     """Partida en progreso"""
     return Game(
         game_id=game_id,
@@ -165,7 +167,7 @@ def active_game(game_id, player_id, fixed_datetime, sample_game_choices, sample_
         relics=["lirio", "hacha"],
         boss_defeated=False,
         npcs_helped=["aldeano_1", "anciano"],
-        metrics=sample_game_metrics
+        metrics=sample_game_metrics,
     )
 
 
@@ -186,7 +188,7 @@ def completed_game(game_id, player_id, fixed_datetime) -> Game:
         choices=GameChoices(
             senda_ebano="sanar",
             fortaleza_gigantes="construir",
-            aquelarre_sombras="revelar"
+            aquelarre_sombras="revelar",
         ),
         relics=["lirio", "hacha", "manto"],
         boss_defeated=True,
@@ -196,14 +198,14 @@ def completed_game(game_id, player_id, fixed_datetime) -> Game:
             time_per_level={
                 "senda_ebano": 1200,
                 "fortaleza_gigantes": 1500,
-                "aquelarre_sombras": 900
+                "aquelarre_sombras": 900,
             },
             deaths_per_level={
                 "senda_ebano": 2,
                 "fortaleza_gigantes": 2,
-                "aquelarre_sombras": 1
-            }
-        )
+                "aquelarre_sombras": 1,
+            },
+        ),
     )
 
 
@@ -216,7 +218,7 @@ def new_game(game_id, player_id, fixed_datetime) -> Game:
         started_at=fixed_datetime,
         status="in_progress",
         completion_percentage=0.0,
-        total_time_seconds=0
+        total_time_seconds=0,
     )
 
 
@@ -229,6 +231,7 @@ def game_dict(active_game) -> Dict[str, Any]:
 # =============================================================================
 # FIXTURES DE EVENTS
 # =============================================================================
+
 
 @pytest.fixture
 def event_id():
@@ -246,11 +249,7 @@ def sample_event(event_id, game_id, player_id, fixed_datetime) -> GameEvent:
         timestamp=fixed_datetime,
         event_type="player_death",
         level="senda_ebano",
-        data={
-            "position": {"x": 150.5, "y": 200.3},
-            "cause": "fall",
-            "health": 0
-        }
+        data={"position": {"x": 150.5, "y": 200.3}, "cause": "fall", "health": 0},
     )
 
 
@@ -264,10 +263,7 @@ def level_start_event(event_id, game_id, player_id, fixed_datetime) -> GameEvent
         timestamp=fixed_datetime,
         event_type="level_start",
         level="fortaleza_gigantes",
-        data={
-            "previous_level": "senda_ebano",
-            "player_health": 100
-        }
+        data={"previous_level": "senda_ebano", "player_health": 100},
     )
 
 
@@ -280,6 +276,7 @@ def event_dict(sample_event) -> Dict[str, Any]:
 # =============================================================================
 # MOCKS DE FIREBASE
 # =============================================================================
+
 
 @pytest.fixture
 def mock_firestore_client():
@@ -314,6 +311,7 @@ def mock_firestore_document():
 # MOCKS DE SQL DATABASE
 # =============================================================================
 
+
 @pytest.fixture
 def mock_db_session():
     """Mock de sesión de base de datos SQL"""
@@ -329,6 +327,7 @@ def mock_db_session():
 # =============================================================================
 # MOCKS DE REPOSITORIES
 # =============================================================================
+
 
 @pytest.fixture
 def mock_player_repository():
@@ -390,6 +389,7 @@ def mock_player_service():
 # FIXTURES DE AUTENTICACIÓN
 # =============================================================================
 
+
 @pytest.fixture
 def admin_user_data():
     """Datos de usuario administrador"""
@@ -398,7 +398,7 @@ def admin_user_data():
         "username": "admin",
         "email": "admin@example.com",
         "role": "admin",
-        "is_active": True
+        "is_active": True,
     }
 
 
@@ -409,14 +409,14 @@ def admin_jwt_token(admin_user_data):
     return service.create_access_token(
         user_id=admin_user_data["id"],
         username=admin_user_data["username"],
-        role=admin_user_data["role"]
+        role=admin_user_data["role"],
     )
 
 
 @pytest.fixture
 def expired_jwt_token():
     """Token JWT expirado (para tests de autenticación)"""
-    service = AuthService(repository=None)
+    AuthService(repository=None)
     # Crear token con expiración negativa
     from datetime import timedelta
     from jose import jwt
@@ -427,15 +427,18 @@ def expired_jwt_token():
         "username": "admin",
         "role": "admin",
         "type": "access",
-        "exp": datetime.utcnow() - timedelta(hours=1)  # Expirado hace 1 hora
+        "exp": datetime.utcnow() - timedelta(hours=1),  # Expirado hace 1 hora
     }
-    return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    return jwt.encode(
+        payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
+    )
 
 
 @pytest.fixture
 def api_key():
     """API Key válida para tests"""
     from app.config.settings import settings
+
     return settings.api_key
 
 
@@ -443,29 +446,26 @@ def api_key():
 # FIXTURES DE API CLIENT
 # =============================================================================
 
+
 @pytest.fixture
 def api_client():
     """Cliente de prueba para FastAPI"""
     from app.main import app
+
     return TestClient(app)
 
 
 @pytest.fixture
 def authenticated_api_client(api_client, admin_jwt_token):
     """Cliente autenticado con JWT"""
-    api_client.headers = {
-        "Authorization": f"Bearer {admin_jwt_token}"
-    }
+    api_client.headers = {"Authorization": f"Bearer {admin_jwt_token}"}
     return api_client
 
 
 @pytest.fixture
 def player_api_client(api_client, player_id, player_token):
     """Cliente autenticado como jugador"""
-    api_client.headers = {
-        "X-Player-ID": player_id,
-        "X-Player-Token": player_token
-    }
+    api_client.headers = {"X-Player-ID": player_id, "X-Player-Token": player_token}
     return api_client
 
 
@@ -473,28 +473,34 @@ def player_api_client(api_client, player_id, player_token):
 # UTILIDADES DE TESTING
 # =============================================================================
 
+
 @pytest.fixture
 def assert_valid_uuid():
     """Helper para validar que un string es un UUID válido"""
+
     def _assert(value: str) -> bool:
         try:
-            uuid4_obj = uuid4()
+            uuid4()
             # Intenta convertir a UUID
             from uuid import UUID
+
             UUID(value)
             return True
         except (ValueError, AttributeError):
             return False
+
     return _assert
 
 
 @pytest.fixture
 def assert_recent_timestamp():
     """Helper para validar que un timestamp es reciente (últimos 5 minutos)"""
+
     def _assert(timestamp: datetime) -> bool:
         now = datetime.now(timezone.utc)
         diff = abs((now - timestamp).total_seconds())
         return diff < 300  # 5 minutos
+
     return _assert
 
 
@@ -502,21 +508,12 @@ def assert_recent_timestamp():
 # CONFIGURACIÓN DE PYTEST
 # =============================================================================
 
+
 def pytest_configure(config):
     """Configuración global de pytest"""
     # Registrar marcadores personalizados
-    config.addinivalue_line(
-        "markers", "unit: Tests unitarios de lógica de negocio"
-    )
-    config.addinivalue_line(
-        "markers", "integration: Tests de integración con adapters"
-    )
-    config.addinivalue_line(
-        "markers", "e2e: Tests end-to-end de flujos completos"
-    )
-    config.addinivalue_line(
-        "markers", "slow: Tests que tardan más de 1 segundo"
-    )
-    config.addinivalue_line(
-        "markers", "security: Tests de seguridad y validación"
-    )
+    config.addinivalue_line("markers", "unit: Tests unitarios de lógica de negocio")
+    config.addinivalue_line("markers", "integration: Tests de integración con adapters")
+    config.addinivalue_line("markers", "e2e: Tests end-to-end de flujos completos")
+    config.addinivalue_line("markers", "slow: Tests que tardan más de 1 segundo")
+    config.addinivalue_line("markers", "security: Tests de seguridad y validación")

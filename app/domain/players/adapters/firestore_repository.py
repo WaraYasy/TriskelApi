@@ -4,6 +4,7 @@ Adaptador Firestore para Players
 Implementación CONCRETA del repositorio usando Firestore.
 Implementa la interfaz IPlayerRepository.
 """
+
 from typing import Optional, List
 from google.cloud.firestore_v1 import Client
 
@@ -37,10 +38,7 @@ class FirestorePlayerRepository(IPlayerRepository):
     def create(self, player_data: PlayerCreate) -> Player:
         """Crea un nuevo jugador en Firestore"""
         # Crear el objeto Player completo
-        player = Player(
-            username=player_data.username,
-            email=player_data.email
-        )
+        player = Player(username=player_data.username, email=player_data.email)
 
         # Guardar en Firestore
         doc_ref = self.collection.document(player.player_id)
@@ -102,7 +100,9 @@ class FirestorePlayerRepository(IPlayerRepository):
             doc_ref = self.collection.document(player_id)
             doc_ref.update(update_data)
 
-            logger.info(f"Jugador actualizado: {player_id} - {list(update_data.keys())}")
+            logger.info(
+                f"Jugador actualizado: {player_id} - {list(update_data.keys())}"
+            )
 
             # Retornar el jugador actualizado
             return self.get_by_id(player_id)

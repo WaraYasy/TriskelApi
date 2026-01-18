@@ -8,6 +8,7 @@ Portal web de Triskel que integra:
 
 Este dominio usa Flask y se monta en FastAPI.
 """
+
 from .app import flask_app
 
-__all__ = ['flask_app']
+__all__ = ["flask_app"]

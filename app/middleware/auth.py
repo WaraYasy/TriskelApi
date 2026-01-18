@@ -6,6 +6,7 @@ Soporta TRES tipos de autenticación:
 2. API Key: Para administración programática (acceso completo)
 3. Player Token: Para jugadores (solo acceden a sus propios datos)
 """
+
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from jose import JWTError, jwt
@@ -20,8 +21,8 @@ PUBLIC_ROUTES = [
     "/docs",
     "/openapi.json",
     "/redoc",
-    "/v1/auth/login",      # Login público
-    "/v1/auth/refresh",    # Refresh público
+    "/v1/auth/login",  # Login público
+    "/v1/auth/refresh",  # Refresh público
 ]
 
 # Rutas que permiten crear jugadores sin autenticación
@@ -50,7 +51,12 @@ async def auth_middleware(request: Request, call_next):
     path = request.url.path
 
     # Rutas públicas (sin autenticación)
-    if path in PUBLIC_ROUTES or path.startswith("/docs") or path.startswith("/openapi") or path.startswith("/web"):
+    if (
+        path in PUBLIC_ROUTES
+        or path.startswith("/docs")
+        or path.startswith("/openapi")
+        or path.startswith("/web")
+    ):
         return await call_next(request)
 
     # POST /v1/players (crear jugador) no requiere autenticación
@@ -67,9 +73,7 @@ async def auth_middleware(request: Request, call_next):
             try:
                 # Decodificar y validar JWT
                 payload = jwt.decode(
-                    token,
-                    settings.jwt_secret_key,
-                    algorithms=[settings.jwt_algorithm]
+                    token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
                 )
 
                 # Verificar que sea access token
@@ -80,19 +84,20 @@ async def auth_middleware(request: Request, call_next):
                     request.state.admin_user = {
                         "id": payload["user_id"],
                         "username": payload["username"],
-                        "role": payload["role"]
+                        "role": payload["role"],
                     }
                     return await call_next(request)
                 else:
                     return JSONResponse(
                         status_code=401,
-                        content={"detail": "Token inválido. Usa access token, no refresh token"}
+                        content={
+                            "detail": "Token inválido. Usa access token, no refresh token"
+                        },
                     )
 
             except JWTError:
                 return JSONResponse(
-                    status_code=401,
-                    content={"detail": "JWT inválido o expirado"}
+                    status_code=401, content={"detail": "JWT inválido o expirado"}
                 )
 
         # OPCIÓN 2: Autenticación con API Key (admin programmatic)
@@ -100,8 +105,7 @@ async def auth_middleware(request: Request, call_next):
         if api_key:
             if api_key != settings.api_key:
                 return JSONResponse(
-                    status_code=401,
-                    content={"detail": "API Key inválida"}
+                    status_code=401, content={"detail": "API Key inválida"}
                 )
 
             # API Key válida - marcar como admin
@@ -119,7 +123,7 @@ async def auth_middleware(request: Request, call_next):
                 status_code=401,
                 content={
                     "detail": "Autenticación requerida. Usa Authorization: Bearer <JWT> (admin), X-API-Key (admin), o X-Player-ID + X-Player-Token (jugador)"
-                }
+                },
             )
 
         # Validar que el player_id y token sean correctos
@@ -129,14 +133,12 @@ async def auth_middleware(request: Request, call_next):
 
             if not player:
                 return JSONResponse(
-                    status_code=401,
-                    content={"detail": "Player ID inválido"}
+                    status_code=401, content={"detail": "Player ID inválido"}
                 )
 
             if player.player_token != player_token:
                 return JSONResponse(
-                    status_code=401,
-                    content={"detail": "Token inválido"}
+                    status_code=401, content={"detail": "Token inválido"}
                 )
 
             # Autenticación exitosa - agregar player_id al request state
@@ -146,8 +148,7 @@ async def auth_middleware(request: Request, call_next):
 
         except Exception as e:
             return JSONResponse(
-                status_code=500,
-                content={"detail": f"Error de autenticación: {str(e)}"}
+                status_code=500, content={"detail": f"Error de autenticación: {str(e)}"}
             )
 
     return await call_next(request)

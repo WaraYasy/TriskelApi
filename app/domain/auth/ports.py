@@ -10,6 +10,7 @@ Este dominio usa arquitectura HEXAGONAL porque:
 - Testing con mocks es crítico para seguridad
 - Desacopla lógica de negocio de persistencia
 """
+
 from abc import ABC, abstractmethod
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -27,11 +28,7 @@ class IAuthRepository(ABC):
 
     @abstractmethod
     def create_admin_user(
-        self,
-        username: str,
-        email: str,
-        password_hash: str,
-        role: str = "viewer"
+        self, username: str, email: str, password_hash: str, role: str = "viewer"
     ) -> Dict[str, Any]:
         """
         Crea y guarda un nuevo usuario administrador.
@@ -105,7 +102,7 @@ class IAuthRepository(ABC):
         user_id: int,
         email: Optional[str] = None,
         role: Optional[str] = None,
-        is_active: Optional[bool] = None
+        is_active: Optional[bool] = None,
     ) -> Optional[Dict[str, Any]]:
         """
         Actualiza campos de un usuario administrador.
@@ -153,7 +150,7 @@ class IAuthRepository(ABC):
         self,
         role: Optional[str] = None,
         is_active: Optional[bool] = None,
-        limit: int = 100
+        limit: int = 100,
     ) -> List[Dict[str, Any]]:
         """
         Lista usuarios administradores con filtros opcionales.
@@ -182,7 +179,7 @@ class IAuthRepository(ABC):
         user_agent: Optional[str] = None,
         details: Optional[str] = None,
         success: bool = True,
-        error_message: Optional[str] = None
+        error_message: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Crea un registro de auditoría.
@@ -213,7 +210,7 @@ class IAuthRepository(ABC):
         end_date: Optional[datetime] = None,
         success: Optional[bool] = None,
         limit: int = 100,
-        offset: int = 0
+        offset: int = 0,
     ) -> List[Dict[str, Any]]:
         """
         Obtiene logs de auditoría con filtros opcionales.
@@ -238,7 +235,7 @@ class IAuthRepository(ABC):
         user_id: Optional[int] = None,
         action: Optional[str] = None,
         start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None
+        end_date: Optional[datetime] = None,
     ) -> int:
         """
         Cuenta logs de auditoría con filtros opcionales.

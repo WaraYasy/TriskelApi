@@ -4,6 +4,7 @@ Cliente de Firebase Firestore
 Gestor centralizado para conectarse a Firebase.
 Usa patrón Singleton para tener una sola conexión.
 """
+
 import os
 import json
 import base64
@@ -43,13 +44,17 @@ class FirebaseManager:
                 logger.info("Cargando credenciales de Firebase desde Base64")
                 try:
                     # Decodificar base64 a JSON string
-                    decoded_bytes = base64.b64decode(settings.firebase_credentials_base64)
-                    decoded_str = decoded_bytes.decode('utf-8')
+                    decoded_bytes = base64.b64decode(
+                        settings.firebase_credentials_base64
+                    )
+                    decoded_str = decoded_bytes.decode("utf-8")
                     creds_dict = json.loads(decoded_str)
                     cred = credentials.Certificate(creds_dict)
                     logger.info("Credenciales Base64 decodificadas correctamente")
                 except Exception as e:
-                    raise ValueError(f"Error decodificando FIREBASE_CREDENTIALS_BASE64: {e}")
+                    raise ValueError(
+                        f"Error decodificando FIREBASE_CREDENTIALS_BASE64: {e}"
+                    )
 
             # Opción 2: Credenciales desde JSON string (Alternativa)
             elif settings.firebase_credentials_json:
@@ -59,7 +64,9 @@ class FirebaseManager:
 
             # Opción 3: Credenciales desde archivo (Local/Desarrollo)
             elif os.path.exists(settings.firebase_credentials_path):
-                logger.info(f"Cargando credenciales de Firebase desde archivo: {settings.firebase_credentials_path}")
+                logger.info(
+                    f"Cargando credenciales de Firebase desde archivo: {settings.firebase_credentials_path}"
+                )
                 cred = credentials.Certificate(settings.firebase_credentials_path)
 
             else:

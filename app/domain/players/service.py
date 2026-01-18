@@ -4,6 +4,7 @@ Service Layer para Players - Lógica de negocio
 Contiene todas las reglas de negocio y validaciones.
 Depende de la INTERFAZ IPlayerRepository, no de una implementación concreta.
 """
+
 from typing import Optional, List
 
 from .ports import IPlayerRepository
@@ -75,7 +76,9 @@ class PlayerService:
         """
         return self.repository.get_all(limit=limit)
 
-    def update_player(self, player_id: str, player_update: PlayerUpdate) -> Optional[Player]:
+    def update_player(
+        self, player_id: str, player_update: PlayerUpdate
+    ) -> Optional[Player]:
         """
         Actualiza un jugador.
 
@@ -146,7 +149,7 @@ class PlayerService:
         moral_choices_map = {
             "senda_ebano": {"good": "sanar", "bad": "forzar"},
             "fortaleza_gigantes": {"good": "construir", "bad": "destruir"},
-            "aquelarre_sombras": {"good": "revelar", "bad": "ocultar"}
+            "aquelarre_sombras": {"good": "revelar", "bad": "ocultar"},
         }
 
         good_choices = 0
@@ -174,8 +177,8 @@ class PlayerService:
 
         if total_choices > 0:
             player.stats.moral_alignment = (
-                (player.stats.total_good_choices - player.stats.total_bad_choices) / total_choices
-            )
+                player.stats.total_good_choices - player.stats.total_bad_choices
+            ) / total_choices
         # Si total_choices == 0, moral_alignment se queda en 0.0 (neutral)
 
         # 6. RELIQUIA FAVORITA (TODO: mejorar lógica para contar la más usada)
@@ -197,7 +200,7 @@ class PlayerService:
             total_playtime_seconds=player.total_playtime_seconds,
             games_played=player.games_played,
             games_completed=player.games_completed,
-            stats=player.stats
+            stats=player.stats,
         )
 
         return self.repository.update(player_id, update_data)

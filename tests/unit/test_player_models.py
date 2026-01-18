@@ -3,6 +3,7 @@ Tests unitarios para modelos de Players.
 
 Prueba la validación de Pydantic y lógica del modelo.
 """
+
 import pytest
 from datetime import datetime, timezone
 from pydantic import ValidationError
@@ -33,7 +34,7 @@ class TestPlayerStats:
             total_deaths=20,
             favorite_relic="lirio",
             best_speedrun_seconds=3600,
-            moral_alignment=0.5
+            moral_alignment=0.5,
         )
 
         assert stats.total_good_choices == 10
@@ -144,28 +145,21 @@ class TestPlayer:
             Player(
                 username="test",
                 games_played=5,
-                games_completed=10  # Mayor que games_played!
+                games_completed=10,  # Mayor que games_played!
             )
         assert "no puede ser mayor que games_played" in str(exc_info.value)
 
     @pytest.mark.edge_case
     def test_games_completed_equals_games_played(self):
         """games_completed puede ser igual a games_played (100% completado)"""
-        player = Player(
-            username="perfect_player",
-            games_played=10,
-            games_completed=10
-        )
+        player = Player(username="perfect_player", games_played=10, games_completed=10)
         assert player.games_completed == player.games_played
 
     @pytest.mark.edge_case
     def test_negative_playtime_rejected(self):
         """Rechazar tiempo de juego negativo"""
         with pytest.raises(ValidationError):
-            Player(
-                username="test",
-                total_playtime_seconds=-100
-            )
+            Player(username="test", total_playtime_seconds=-100)
 
     @pytest.mark.edge_case
     def test_negative_games_rejected(self):
@@ -206,19 +200,14 @@ class TestPlayer:
     def test_player_with_extreme_playtime(self):
         """Jugador con tiempo de juego extremo (1000 horas)"""
         player = Player(
-            username="hardcore_gamer",
-            total_playtime_seconds=3_600_000  # 1000 horas
+            username="hardcore_gamer", total_playtime_seconds=3_600_000  # 1000 horas
         )
         assert player.total_playtime_seconds == 3_600_000
 
     @pytest.mark.edge_case
     def test_player_with_many_games(self):
         """Jugador con muchas partidas"""
-        player = Player(
-            username="veteran",
-            games_played=1000,
-            games_completed=750
-        )
+        player = Player(username="veteran", games_played=1000, games_completed=750)
         assert player.games_played == 1000
         assert player.games_completed == 750
 
@@ -237,13 +226,10 @@ class TestPlayer:
             total_good_choices=15,
             total_bad_choices=2,
             favorite_relic="hacha",
-            moral_alignment=0.88
+            moral_alignment=0.88,
         )
 
-        player = Player(
-            username="good_player",
-            stats=custom_stats
-        )
+        player = Player(username="good_player", stats=custom_stats)
 
         assert player.stats.total_good_choices == 15
         assert player.stats.favorite_relic == "hacha"

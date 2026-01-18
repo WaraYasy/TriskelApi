@@ -4,8 +4,9 @@ Modelos de dominio para Events
 Representa eventos de gameplay que ocurren durante una partida.
 Los eventos son inmutables una vez creados (solo inserción, no actualización).
 """
+
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Dict, Any
 from datetime import datetime
 import uuid
 
@@ -36,6 +37,7 @@ class GameEvent(BaseModel):
         level: Nivel donde ocurrió el evento
         data: Datos específicos del evento (estructura varía por tipo)
     """
+
     event_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     game_id: str
     player_id: str
@@ -53,10 +55,7 @@ class GameEvent(BaseModel):
                 "timestamp": "2024-01-10T15:30:00Z",
                 "event_type": "player_death",
                 "level": "senda_ebano",
-                "data": {
-                    "position": {"x": 150.5, "y": 200.3},
-                    "cause": "fall"
-                }
+                "data": {"position": {"x": 150.5, "y": 200.3}, "cause": "fall"},
             }
         }
 
@@ -69,7 +68,7 @@ class GameEvent(BaseModel):
             "timestamp": self.timestamp,
             "event_type": self.event_type,
             "level": self.level,
-            "data": self.data
+            "data": self.data,
         }
 
     @classmethod

@@ -11,25 +11,21 @@ Rutas:
 - GET /dashboard/events    → Análisis de eventos de gameplay
 - GET /dashboard/export    → Exportar datos a CSV
 """
+
 from flask import Blueprint, render_template, jsonify, request, send_file
 from .service import AnalyticsService
 from app.config.settings import settings
 
 # Crear blueprint
-analytics_bp = Blueprint(
-    'analytics',
-    __name__,
-    template_folder='templates'
-)
+analytics_bp = Blueprint("analytics", __name__, template_folder="templates")
 
 # Instanciar servicio con API Key
 analytics_service = AnalyticsService(
-    api_base_url="http://localhost:8000",
-    api_key=settings.api_key
+    api_base_url="http://localhost:8000", api_key=settings.api_key
 )
 
 
-@analytics_bp.route('/')
+@analytics_bp.route("/")
 def index():
     """
     Dashboard principal con métricas globales.
@@ -52,14 +48,16 @@ def index():
     all_events = []
     for player in players:
         try:
-            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
+            response = analytics_service.client.get(
+                f"/v1/events/player/{player['player_id']}"
+            )
             response.raise_for_status()
             events_data = response.json()
             all_events.extend(events_data)
-        except Exception as e:
+        except Exception:
             pass
 
-    metrics['total_events'] = len(all_events)
+    metrics["total_events"] = len(all_events)
 
     # Generar gráficos
     moral_chart = analytics_service.create_moral_choices_chart(games)
@@ -67,15 +65,15 @@ def index():
     alignment_chart = analytics_service.create_moral_alignment_chart(players)
 
     return render_template(
-        'analytics/index.html',
+        "analytics/index.html",
         metrics=metrics,
         moral_chart=moral_chart,
         deaths_chart=deaths_chart,
-        alignment_chart=alignment_chart
+        alignment_chart=alignment_chart,
     )
 
 
-@analytics_bp.route('/players')
+@analytics_bp.route("/players")
 def players():
     """
     Análisis detallado de jugadores.
@@ -93,13 +91,11 @@ def players():
     playtime_chart = analytics_service.create_playtime_distribution(players_data)
 
     return render_template(
-        'analytics/players.html',
-        players=players_data,
-        playtime_chart=playtime_chart
+        "analytics/players.html", players=players_data, playtime_chart=playtime_chart
     )
 
 
-@analytics_bp.route('/games')
+@analytics_bp.route("/games")
 def games():
     """
     Análisis de partidas y progresión.
@@ -117,13 +113,11 @@ def games():
     deaths_chart = analytics_service.create_deaths_per_level_chart(games_data)
 
     return render_template(
-        'analytics/games.html',
-        games=games_data,
-        deaths_chart=deaths_chart
+        "analytics/games.html", games=games_data, deaths_chart=deaths_chart
     )
 
 
-@analytics_bp.route('/choices')
+@analytics_bp.route("/choices")
 def choices():
     """
     Análisis de decisiones morales.
@@ -140,13 +134,10 @@ def choices():
     # Generar gráfico de decisiones morales
     moral_chart = analytics_service.create_moral_choices_chart(games_data)
 
-    return render_template(
-        'analytics/choices.html',
-        moral_chart=moral_chart
-    )
+    return render_template("analytics/choices.html", moral_chart=moral_chart)
 
 
-@analytics_bp.route('/events')
+@analytics_bp.route("/events")
 def events():
     """
     Análisis de eventos de gameplay.
@@ -163,7 +154,9 @@ def events():
 
     for player in players:
         try:
-            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
+            response = analytics_service.client.get(
+                f"/v1/events/player/{player['player_id']}"
+            )
             response.raise_for_status()
             events_data = response.json()
             all_events.extend(events_data)
@@ -174,13 +167,11 @@ def events():
     events_chart = analytics_service.create_events_by_type_chart(all_events)
 
     return render_template(
-        'analytics/events.html',
-        total_events=len(all_events),
-        events_chart=events_chart
+        "analytics/events.html", total_events=len(all_events), events_chart=events_chart
     )
 
 
-@analytics_bp.route('/export')
+@analytics_bp.route("/export")
 def export():
     """
     Exporta datos a CSV.
@@ -192,45 +183,49 @@ def export():
     Returns:
         File: Archivo descargable
     """
-    export_type = request.args.get('type', 'players')
-    export_format = request.args.get('format', 'csv')
+    export_type = request.args.get("type", "players")
+    export_format = request.args.get("format", "csv")
 
     # Obtener datos según el tipo
-    if export_type == 'players':
+    if export_type == "players":
         data = analytics_service.get_all_players()
-        filename = 'players'
-    elif export_type == 'games':
+        filename = "players"
+    elif export_type == "games":
         data = analytics_service.get_all_games()
-        filename = 'games'
-    elif export_type == 'events':
+        filename = "games"
+    elif export_type == "events":
         # Obtener todos los eventos
         players = analytics_service.get_all_players()
         data = []
         for player in players:
             try:
-                response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
+                response = analytics_service.client.get(
+                    f"/v1/events/player/{player['player_id']}"
+                )
                 response.raise_for_status()
                 data.extend(response.json())
-            except:
+            except Exception:
                 pass
-        filename = 'events'
+        filename = "events"
     else:
-        return jsonify({'error': 'Tipo de exportación no válido'}), 400
+        return jsonify({"error": "Tipo de exportación no válido"}), 400
 
-    if export_format == 'csv':
+    if export_format == "csv":
         # Exportar a CSV
         filepath = analytics_service.export_to_csv(data, filename)
         if filepath:
-            return send_file(filepath, as_attachment=True, download_name=f'{filename}.csv')
+            return send_file(
+                filepath, as_attachment=True, download_name=f"{filename}.csv"
+            )
         else:
-            return jsonify({'error': 'Error al exportar datos'}), 500
-    elif export_format == 'json':
+            return jsonify({"error": "Error al exportar datos"}), 500
+    elif export_format == "json":
         return jsonify(data)
     else:
-        return jsonify({'error': 'Formato no válido'}), 400
+        return jsonify({"error": "Formato no válido"}), 400
 
 
-@analytics_bp.route('/advanced')
+@analytics_bp.route("/advanced")
 def advanced():
     """
     Dashboard avanzado con métricas adicionales.
@@ -251,29 +246,33 @@ def advanced():
     playtime_chart = analytics_service.create_playtime_per_level_chart(games_data)
 
     # Calcular métricas adicionales
-    total_relics = sum(len(g.get('relics', [])) for g in games_data)
-    total_deaths = sum(g.get('metrics', {}).get('total_deaths', 0) for g in games_data)
-    avg_completion = sum(g.get('completion_percentage', 0) for g in games_data) / len(games_data) if games_data else 0
+    total_relics = sum(len(g.get("relics", [])) for g in games_data)
+    total_deaths = sum(g.get("metrics", {}).get("total_deaths", 0) for g in games_data)
+    avg_completion = (
+        sum(g.get("completion_percentage", 0) for g in games_data) / len(games_data)
+        if games_data
+        else 0
+    )
 
     advanced_metrics = {
-        'total_relics': total_relics,
-        'total_deaths': total_deaths,
-        'avg_completion_percentage': round(avg_completion, 2),
-        'total_games': len(games_data),
-        'total_players': len(players_data)
+        "total_relics": total_relics,
+        "total_deaths": total_deaths,
+        "avg_completion_percentage": round(avg_completion, 2),
+        "total_games": len(games_data),
+        "total_players": len(players_data),
     }
 
     return render_template(
-        'analytics/advanced.html',
+        "analytics/advanced.html",
         metrics=advanced_metrics,
         relics_chart=relics_chart,
         completion_chart=completion_chart,
         playtime_chart=playtime_chart,
-        games=games_data
+        games=games_data,
     )
 
 
-@analytics_bp.route('/api/metrics')
+@analytics_bp.route("/api/metrics")
 def api_metrics():
     """
     API endpoint para obtener métricas en JSON.

@@ -9,6 +9,7 @@ Esto permite:
 - Crear mocks fácilmente para testing
 - Desacoplar lógica de negocio de persistencia
 """
+
 from abc import ABC, abstractmethod
 from typing import Optional, List
 from .models import Player

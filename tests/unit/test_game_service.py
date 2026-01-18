@@ -3,13 +3,12 @@ Tests unitarios para el servicio de Games.
 
 Prueba la lógica de negocio del GameService.
 """
+
 import pytest
-from unittest.mock import Mock
 from datetime import datetime
 
 from app.domain.games.service import GameService
 from app.domain.games.schemas import GameCreate, GameUpdate, LevelStart, LevelComplete
-from app.domain.games.models import Game, GameChoices, GameMetrics
 
 
 @pytest.mark.unit
@@ -17,8 +16,12 @@ class TestGameServiceCreate:
     """Tests para crear partidas"""
 
     def test_create_game_success(
-        self, mock_game_repository, mock_player_repository, mock_player_service,
-        sample_player, new_game
+        self,
+        mock_game_repository,
+        mock_player_repository,
+        mock_player_service,
+        sample_player,
+        new_game,
     ):
         """Crear partida exitosamente"""
         # Configurar mocks
@@ -27,7 +30,9 @@ class TestGameServiceCreate:
         mock_game_repository.create.return_value = new_game
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         game_data = GameCreate(player_id=sample_player.player_id)
         result = service.create_game(game_data)
 
@@ -46,7 +51,9 @@ class TestGameServiceCreate:
         mock_player_repository.get_by_id.return_value = None
 
         # Ejecutar y verificar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         game_data = GameCreate(player_id="nonexistent-player")
 
         with pytest.raises(ValueError) as exc_info:
@@ -57,8 +64,12 @@ class TestGameServiceCreate:
 
     @pytest.mark.edge_case
     def test_create_game_already_has_active_game(
-        self, mock_game_repository, mock_player_repository, mock_player_service,
-        sample_player, active_game
+        self,
+        mock_game_repository,
+        mock_player_repository,
+        mock_player_service,
+        sample_player,
+        active_game,
     ):
         """Rechazar crear partida si jugador ya tiene una activa"""
         # Configurar mocks
@@ -66,7 +77,9 @@ class TestGameServiceCreate:
         mock_game_repository.get_active_game.return_value = active_game
 
         # Ejecutar y verificar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         game_data = GameCreate(player_id=sample_player.player_id)
 
         with pytest.raises(ValueError) as exc_info:
@@ -81,8 +94,11 @@ class TestGameServiceLevels:
     """Tests para inicio y completado de niveles"""
 
     def test_start_level_success(
-        self, mock_game_repository, mock_player_repository, mock_player_service,
-        active_game
+        self,
+        mock_game_repository,
+        mock_player_repository,
+        mock_player_service,
+        active_game,
     ):
         """Iniciar nivel exitosamente"""
         # Configurar mocks
@@ -90,7 +106,9 @@ class TestGameServiceLevels:
         mock_game_repository.start_level.return_value = active_game
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         level_data = LevelStart(level="aquelarre_sombras")
         result = service.start_level(active_game.game_id, level_data)
 
@@ -100,15 +118,20 @@ class TestGameServiceLevels:
 
     @pytest.mark.edge_case
     def test_start_level_game_not_active(
-        self, mock_game_repository, mock_player_repository, mock_player_service,
-        completed_game
+        self,
+        mock_game_repository,
+        mock_player_repository,
+        mock_player_service,
+        completed_game,
     ):
         """Rechazar iniciar nivel si partida no está activa"""
         # Configurar mock: partida completada (no activa)
         mock_game_repository.get_by_id.return_value = completed_game
 
         # Ejecutar y verificar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         level_data = LevelStart(level="senda_ebano")
 
         with pytest.raises(ValueError) as exc_info:
@@ -118,8 +141,11 @@ class TestGameServiceLevels:
         mock_game_repository.start_level.assert_not_called()
 
     def test_complete_level_success(
-        self, mock_game_repository, mock_player_repository, mock_player_service,
-        active_game
+        self,
+        mock_game_repository,
+        mock_player_repository,
+        mock_player_service,
+        active_game,
     ):
         """Completar nivel exitosamente"""
         # Configurar mocks
@@ -127,11 +153,11 @@ class TestGameServiceLevels:
         mock_game_repository.complete_level.return_value = active_game
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         level_data = LevelComplete(
-            level="fortaleza_gigantes",
-            time_seconds=300,
-            deaths=2
+            level="fortaleza_gigantes", time_seconds=300, deaths=2
         )
         result = service.complete_level(active_game.game_id, level_data)
 
@@ -141,8 +167,11 @@ class TestGameServiceLevels:
 
     @pytest.mark.edge_case
     def test_complete_boss_level_marks_defeated(
-        self, mock_game_repository, mock_player_repository, mock_player_service,
-        active_game
+        self,
+        mock_game_repository,
+        mock_player_repository,
+        mock_player_service,
+        active_game,
     ):
         """Completar nivel final marca boss_defeated=True"""
         # Configurar mocks
@@ -151,13 +180,13 @@ class TestGameServiceLevels:
         mock_game_repository.update.return_value = active_game
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
-        level_data = LevelComplete(
-            level="claro_almas",  # Nivel final (boss)
-            time_seconds=600,
-            deaths=5
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
         )
-        result = service.complete_level(active_game.game_id, level_data)
+        level_data = LevelComplete(
+            level="claro_almas", time_seconds=600, deaths=5  # Nivel final (boss)
+        )
+        service.complete_level(active_game.game_id, level_data)
 
         # Verificar que se actualizó boss_defeated
         update_calls = mock_game_repository.update.call_args_list
@@ -173,8 +202,11 @@ class TestGameServiceFinish:
     """Tests para finalizar partidas"""
 
     def test_finish_game_completed(
-        self, mock_game_repository, mock_player_repository, mock_player_service,
-        active_game
+        self,
+        mock_game_repository,
+        mock_player_repository,
+        mock_player_service,
+        active_game,
     ):
         """Finalizar partida como completada"""
         # Configurar mocks
@@ -186,7 +218,9 @@ class TestGameServiceFinish:
         mock_game_repository.update.return_value = completed
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         result = service.finish_game(active_game.game_id, completed=True)
 
         # Verificar
@@ -200,8 +234,11 @@ class TestGameServiceFinish:
         assert game_update.ended_at is not None
 
     def test_finish_game_abandoned(
-        self, mock_game_repository, mock_player_repository, mock_player_service,
-        active_game
+        self,
+        mock_game_repository,
+        mock_player_repository,
+        mock_player_service,
+        active_game,
     ):
         """Finalizar partida como abandonada"""
         # Configurar mocks
@@ -213,8 +250,10 @@ class TestGameServiceFinish:
         mock_game_repository.update.return_value = abandoned
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
-        result = service.finish_game(active_game.game_id, completed=False)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
+        service.finish_game(active_game.game_id, completed=False)
 
         # Verificar status="abandoned"
         update_call_args = mock_game_repository.update.call_args[0]
@@ -222,8 +261,11 @@ class TestGameServiceFinish:
         assert game_update.status == "abandoned"
 
     def test_update_game_triggers_stats_update(
-        self, mock_game_repository, mock_player_repository, mock_player_service,
-        active_game
+        self,
+        mock_game_repository,
+        mock_player_repository,
+        mock_player_service,
+        active_game,
     ):
         """Actualizar partida a completada actualiza stats del jugador"""
         # Configurar mocks
@@ -234,16 +276,21 @@ class TestGameServiceFinish:
         mock_game_repository.update.return_value = completed
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         update_data = GameUpdate(status="completed")
-        result = service.update_game(active_game.game_id, update_data)
+        service.update_game(active_game.game_id, update_data)
 
         # Verificar que se actualizaron las stats del jugador
         mock_player_service.update_player_stats_after_game.assert_called_once()
 
     def test_update_game_no_stats_update_if_in_progress(
-        self, mock_game_repository, mock_player_repository, mock_player_service,
-        active_game
+        self,
+        mock_game_repository,
+        mock_player_repository,
+        mock_player_service,
+        active_game,
     ):
         """Actualizar partida sin cambiar status NO actualiza stats"""
         # Configurar mocks
@@ -251,9 +298,11 @@ class TestGameServiceFinish:
         mock_game_repository.update.return_value = active_game
 
         # Ejecutar (actualizar completion_percentage, NO status)
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         update_data = GameUpdate(completion_percentage=50.0)
-        result = service.update_game(active_game.game_id, update_data)
+        service.update_game(active_game.game_id, update_data)
 
         # Verificar que NO se actualizaron las stats
         mock_player_service.update_player_stats_after_game.assert_not_called()
@@ -264,25 +313,38 @@ class TestGameServiceGet:
     """Tests para obtener partidas"""
 
     def test_get_game_exists(
-        self, mock_game_repository, mock_player_repository, mock_player_service,
-        sample_player, active_game
+        self,
+        mock_game_repository,
+        mock_player_repository,
+        mock_player_service,
+        sample_player,
+        active_game,
     ):
         """Obtener partida que existe"""
         mock_game_repository.get_by_id.return_value = active_game
 
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         result = service.get_game(active_game.game_id)
 
         assert result == active_game
 
     def test_get_player_games(
-        self, mock_game_repository, mock_player_repository, mock_player_service,
-        active_game, completed_game, player_id
+        self,
+        mock_game_repository,
+        mock_player_repository,
+        mock_player_service,
+        active_game,
+        completed_game,
+        player_id,
     ):
         """Obtener todas las partidas de un jugador"""
         mock_game_repository.get_by_player.return_value = [active_game, completed_game]
 
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         result = service.get_player_games(player_id)
 
         assert len(result) == 2
@@ -299,7 +361,9 @@ class TestGameServiceDelete:
         """Eliminar partida exitosamente"""
         mock_game_repository.delete.return_value = True
 
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         result = service.delete_game("game-123")
 
         assert result is True

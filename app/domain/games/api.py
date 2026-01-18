@@ -11,6 +11,7 @@ Reglas de acceso:
 - POST /v1/games/{id}/level/*: Solo si es tu partida o con API Key
 - DELETE /v1/games/{id}: Solo si es tu partida o con API Key
 """
+
 from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
 
@@ -31,6 +32,7 @@ router = APIRouter(prefix="/v1/games", tags=["Games"])
 
 
 # ==================== HELPERS ====================
+
 
 def check_game_access(request: Request, game: Game, service: GameService) -> None:
     """
@@ -58,8 +60,7 @@ def check_game_access(request: Request, game: Game, service: GameService) -> Non
     # Jugador solo puede acceder a sus propias partidas
     if game.player_id != authenticated_player_id:
         raise HTTPException(
-            status_code=403,
-            detail="No tienes permisos para acceder a esta partida"
+            status_code=403, detail="No tienes permisos para acceder a esta partida"
         )
 
 
@@ -89,11 +90,12 @@ def check_player_games_access(request: Request, target_player_id: str) -> None:
     if authenticated_player_id != target_player_id:
         raise HTTPException(
             status_code=403,
-            detail="No tienes permisos para ver las partidas de este jugador"
+            detail="No tienes permisos para ver las partidas de este jugador",
         )
 
 
 # ==================== DEPENDENCY INJECTION ====================
+
 
 def get_game_repository() -> IGameRepository:
     """Dependency que provee el repositorio de Games"""
@@ -106,7 +108,7 @@ def get_player_repository() -> IPlayerRepository:
 
 
 def get_player_service(
-    player_repository: IPlayerRepository = Depends(get_player_repository)
+    player_repository: IPlayerRepository = Depends(get_player_repository),
 ) -> PlayerService:
     """Dependency que provee el servicio de Players"""
     return PlayerService(repository=player_repository)
@@ -115,7 +117,7 @@ def get_player_service(
 def get_game_service(
     game_repository: IGameRepository = Depends(get_game_repository),
     player_repository: IPlayerRepository = Depends(get_player_repository),
-    player_service: PlayerService = Depends(get_player_service)
+    player_service: PlayerService = Depends(get_player_service),
 ) -> GameService:
     """
     Dependency que provee el servicio de Games.
@@ -127,17 +129,18 @@ def get_game_service(
     return GameService(
         game_repository=game_repository,
         player_repository=player_repository,
-        player_service=player_service
+        player_service=player_service,
     )
 
 
 # ==================== ENDPOINTS ====================
 
+
 @router.post("", response_model=Game, status_code=201)
 def create_game(
     game_data: GameCreate,
     request: Request,
-    service: GameService = Depends(get_game_service)
+    service: GameService = Depends(get_game_service),
 ):
     """
     Iniciar una nueva partida.
@@ -166,8 +169,7 @@ def create_game(
 
     if not is_admin and game_data.player_id != authenticated_player_id:
         raise HTTPException(
-            status_code=403,
-            detail="Solo puedes crear partidas para ti mismo"
+            status_code=403, detail="Solo puedes crear partidas para ti mismo"
         )
 
     try:
@@ -182,9 +184,7 @@ def create_game(
 
 @router.get("/{game_id}", response_model=Game)
 def get_game(
-    game_id: str,
-    request: Request,
-    service: GameService = Depends(get_game_service)
+    game_id: str, request: Request, service: GameService = Depends(get_game_service)
 ):
     """
     Obtener una partida por ID.
@@ -219,7 +219,7 @@ def get_player_games(
     player_id: str,
     request: Request,
     limit: int = 100,
-    service: GameService = Depends(get_game_service)
+    service: GameService = Depends(get_game_service),
 ):
     """
     Obtener todas las partidas de un jugador.
@@ -249,7 +249,7 @@ def update_game(
     game_id: str,
     game_update: GameUpdate,
     request: Request,
-    service: GameService = Depends(get_game_service)
+    service: GameService = Depends(get_game_service),
 ):
     """
     Actualizar una partida.
@@ -289,7 +289,7 @@ def start_level(
     game_id: str,
     level_data: LevelStart,
     request: Request,
-    service: GameService = Depends(get_game_service)
+    service: GameService = Depends(get_game_service),
 ):
     """
     Registrar inicio de un nivel.
@@ -332,7 +332,7 @@ def complete_level(
     game_id: str,
     level_data: LevelComplete,
     request: Request,
-    service: GameService = Depends(get_game_service)
+    service: GameService = Depends(get_game_service),
 ):
     """
     Registrar completado de un nivel.
@@ -379,9 +379,7 @@ def complete_level(
 
 @router.delete("/{game_id}")
 def delete_game(
-    game_id: str,
-    request: Request,
-    service: GameService = Depends(get_game_service)
+    game_id: str, request: Request, service: GameService = Depends(get_game_service)
 ):
     """
     Eliminar una partida.

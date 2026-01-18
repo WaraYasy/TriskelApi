@@ -9,6 +9,7 @@ Reglas de acceso:
 - GET /v1/events/game/{game_id}: Solo si es tu partida o con API Key
 - GET /v1/events/player/{player_id}: Solo si es tu ID o con API Key
 """
+
 from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
 
@@ -26,6 +27,7 @@ router = APIRouter(prefix="/v1/events", tags=["Events"])
 
 
 # ==================== HELPERS ====================
+
 
 def check_event_creation_access(request: Request, event_data: EventCreate) -> None:
     """
@@ -52,8 +54,7 @@ def check_event_creation_access(request: Request, event_data: EventCreate) -> No
     # Jugador solo puede crear eventos para sí mismo
     if event_data.player_id != authenticated_player_id:
         raise HTTPException(
-            status_code=403,
-            detail="Solo puedes crear eventos para ti mismo"
+            status_code=403, detail="Solo puedes crear eventos para ti mismo"
         )
 
 
@@ -105,7 +106,7 @@ def check_game_events_access(request: Request, game_id: str) -> None:
     if game.player_id != authenticated_player_id:
         raise HTTPException(
             status_code=403,
-            detail="No tienes permisos para ver eventos de esta partida"
+            detail="No tienes permisos para ver eventos de esta partida",
         )
 
 
@@ -135,11 +136,12 @@ def check_player_events_access(request: Request, player_id: str) -> None:
     if player_id != authenticated_player_id:
         raise HTTPException(
             status_code=403,
-            detail="No tienes permisos para ver eventos de este jugador"
+            detail="No tienes permisos para ver eventos de este jugador",
         )
 
 
 # ==================== DEPENDENCY INJECTION ====================
+
 
 def get_event_repository() -> EventRepository:
     """Dependency que provee el repositorio de Events"""
@@ -147,7 +149,7 @@ def get_event_repository() -> EventRepository:
 
 
 def get_event_service(
-    repository: EventRepository = Depends(get_event_repository)
+    repository: EventRepository = Depends(get_event_repository),
 ) -> EventService:
     """Dependency que provee el servicio de Events"""
     return EventService(repository=repository)
@@ -155,11 +157,12 @@ def get_event_service(
 
 # ==================== ENDPOINTS ====================
 
+
 @router.post("", response_model=GameEvent, status_code=201)
 def create_event(
     event_data: EventCreate,
     request: Request,
-    service: EventService = Depends(get_event_service)
+    service: EventService = Depends(get_event_service),
 ):
     """
     Crear un evento de gameplay.
@@ -191,7 +194,7 @@ def create_event(
 def create_batch(
     batch_data: EventBatchCreate,
     request: Request,
-    service: EventService = Depends(get_event_service)
+    service: EventService = Depends(get_event_service),
 ):
     """
     Crear múltiples eventos en una sola petición.
@@ -225,7 +228,7 @@ def get_game_events(
     game_id: str,
     request: Request,
     limit: int = 1000,
-    service: EventService = Depends(get_event_service)
+    service: EventService = Depends(get_event_service),
 ):
     """
     Obtener eventos de una partida.
@@ -256,7 +259,7 @@ def get_player_events(
     player_id: str,
     request: Request,
     limit: int = 1000,
-    service: EventService = Depends(get_event_service)
+    service: EventService = Depends(get_event_service),
 ):
     """
     Obtener eventos de un jugador.
@@ -287,7 +290,7 @@ def get_game_events_by_type(
     event_type: str,
     request: Request,
     limit: int = 1000,
-    service: EventService = Depends(get_event_service)
+    service: EventService = Depends(get_event_service),
 ):
     """
     Obtener eventos de una partida filtrados por tipo.

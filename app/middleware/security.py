@@ -4,6 +4,7 @@ Esquemas de seguridad para autenticación
 Define los esquemas de seguridad que se muestran en Swagger UI.
 Proporciona dependencies para validar autenticación en endpoints.
 """
+
 from typing import Optional, Annotated
 from fastapi import HTTPException, Security, Depends
 from fastapi.security import APIKeyHeader
@@ -17,24 +18,21 @@ from app.domain.players.models import Player
 api_key_header = APIKeyHeader(
     name="X-API-Key",
     description="API Key para acceso administrativo",
-    auto_error=False  # No lanza error automático, lo manejamos nosotros
+    auto_error=False,  # No lanza error automático, lo manejamos nosotros
 )
 
 # Headers para jugadores
 player_id_header = APIKeyHeader(
-    name="X-Player-ID",
-    description="UUID del jugador",
-    auto_error=False
+    name="X-Player-ID", description="UUID del jugador", auto_error=False
 )
 
 player_token_header = APIKeyHeader(
-    name="X-Player-Token",
-    description="Token secreto del jugador",
-    auto_error=False
+    name="X-Player-Token", description="Token secreto del jugador", auto_error=False
 )
 
 
 # ==================== DEPENDENCIES DE VALIDACIÓN ====================
+
 
 def get_api_key(api_key: str = Security(api_key_header)) -> str:
     """
@@ -50,14 +48,14 @@ def get_api_key(api_key: str = Security(api_key_header)) -> str:
         raise HTTPException(
             status_code=401,
             detail="API Key requerida (header X-API-Key)",
-            headers={"WWW-Authenticate": "ApiKey"}
+            headers={"WWW-Authenticate": "ApiKey"},
         )
 
     if api_key != settings.api_key:
         raise HTTPException(
             status_code=401,
             detail="API Key inválida",
-            headers={"WWW-Authenticate": "ApiKey"}
+            headers={"WWW-Authenticate": "ApiKey"},
         )
 
     return api_key
@@ -65,7 +63,7 @@ def get_api_key(api_key: str = Security(api_key_header)) -> str:
 
 def get_current_player(
     player_id: Optional[str] = Security(player_id_header),
-    player_token: Optional[str] = Security(player_token_header)
+    player_token: Optional[str] = Security(player_token_header),
 ) -> Player:
     """
     Valida las credenciales del jugador y retorna el Player.
@@ -84,11 +82,13 @@ def get_current_player(
         raise HTTPException(
             status_code=401,
             detail="Credenciales de jugador requeridas (headers X-Player-ID y X-Player-Token)",
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     # Importar aquí para evitar circular import
-    from app.domain.players.adapters.firestore_repository import FirestorePlayerRepository
+    from app.domain.players.adapters.firestore_repository import (
+        FirestorePlayerRepository,
+    )
 
     repo = FirestorePlayerRepository()
     player = repo.get_by_id(player_id)
@@ -97,14 +97,14 @@ def get_current_player(
         raise HTTPException(
             status_code=401,
             detail="Player ID inválido",
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     if player.player_token != player_token:
         raise HTTPException(
             status_code=401,
             detail="Token inválido",
-            headers={"WWW-Authenticate": "Bearer"}
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     return player
@@ -113,7 +113,7 @@ def get_current_player(
 def get_current_player_or_admin(
     api_key: Optional[str] = Security(api_key_header),
     player_id: Optional[str] = Security(player_id_header),
-    player_token: Optional[str] = Security(player_token_header)
+    player_token: Optional[str] = Security(player_token_header),
 ) -> tuple[bool, Optional[Player]]:
     """
     Valida que sea admin (API Key) o jugador (Player Token).
@@ -141,7 +141,7 @@ def get_current_player_or_admin(
     # Sin credenciales
     raise HTTPException(
         status_code=401,
-        detail="Autenticación requerida. Usa X-API-Key (admin) o X-Player-ID + X-Player-Token (jugador)"
+        detail="Autenticación requerida. Usa X-API-Key (admin) o X-Player-ID + X-Player-Token (jugador)",
     )
 
 
@@ -150,4 +150,6 @@ def get_current_player_or_admin(
 # Para usar como type hints en endpoints
 CurrentPlayer = Annotated[Player, Depends(get_current_player)]
 AdminApiKey = Annotated[str, Depends(get_api_key)]
-PlayerOrAdmin = Annotated[tuple[bool, Optional[Player]], Depends(get_current_player_or_admin)]
+PlayerOrAdmin = Annotated[
+    tuple[bool, Optional[Player]], Depends(get_current_player_or_admin)
+]
