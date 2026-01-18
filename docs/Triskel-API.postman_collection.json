@@ -1,0 +1,941 @@
+{
+	"info": {
+		"_postman_id": "triskel-api-collection",
+		"name": "Triskel API",
+		"description": "Coleccion completa de endpoints para la API de Triskel: La Balada del Ultimo Guardian.\n\nDesarrollado por Mandragora.\n\n**Como usar esta coleccion:**\n\n1. Importa esta coleccion en Postman\n2. Configura las variables de entorno (ver seccion Variables)\n3. Crea un jugador con POST /v1/players\n4. Guarda el player_id y player_token en las variables\n5. Comienza a probar los endpoints\n\n**Variables necesarias:**\n- base_url: URL base de la API (ej: http://localhost:8000 o https://triskel-api.railway.app)\n- player_id: ID del jugador autenticado\n- player_token: Token del jugador autenticado\n- api_key: API Key para administracion\n- jwt_token: JWT token para administradores\n- game_id: ID de la partida actual",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "General",
+			"item": [
+				{
+					"name": "Get API Info",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": ["{{base_url}}"],
+							"path": [""]
+						},
+						"description": "Informacion general de la API."
+					},
+					"response": []
+				},
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/health",
+							"host": ["{{base_url}}"],
+							"path": ["health"]
+						},
+						"description": "Health check para monitoreo."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Players",
+			"item": [
+				{
+					"name": "Create Player",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"player_id\", jsonData.player_id);",
+									"    pm.environment.set(\"player_token\", jsonData.player_token);",
+									"    console.log(\"Player created! ID: \" + jsonData.player_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"player_test_{{$randomInt}}\",\n  \"email\": \"player{{$randomInt}}@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/players",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "players"]
+						},
+						"description": "Crear un nuevo jugador. Este endpoint guarda automaticamente player_id y player_token en las variables de entorno."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/players/me",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "players", "me"]
+						},
+						"description": "Obtener mi perfil como jugador autenticado."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Player by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/players/{{player_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "players", "{{player_id}}"]
+						},
+						"description": "Obtener perfil de un jugador especifico (requiere ser admin o el propio jugador)."
+					},
+					"response": []
+				},
+				{
+					"name": "List All Players (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{api_key}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/players?limit=100",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "players"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Listar todos los jugadores (solo admin)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Player",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"newemail@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/players/{{player_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "players", "{{player_id}}"]
+						},
+						"description": "Actualizar perfil de jugador."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Player",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/players/{{player_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "players", "{{player_id}}"]
+						},
+						"description": "Eliminar cuenta de jugador."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Games",
+			"item": [
+				{
+					"name": "Create Game",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"game_id\", jsonData.game_id);",
+									"    console.log(\"Game created! ID: \" + jsonData.game_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"player_id\": \"{{player_id}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/games",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "games"]
+						},
+						"description": "Crear una nueva partida. Guarda automaticamente game_id en las variables."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Game by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/games/{{game_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "games", "{{game_id}}"]
+						},
+						"description": "Obtener datos de una partida especifica."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Player Games",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/games/player/{{player_id}}?limit=100",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "games", "player", "{{player_id}}"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Obtener todas las partidas de un jugador."
+					},
+					"response": []
+				},
+				{
+					"name": "Start Level",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"level\": \"senda_ebano\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/games/{{game_id}}/level/start",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "games", "{{game_id}}", "level", "start"]
+						},
+						"description": "Registrar inicio de un nivel.\n\nNiveles validos:\n- hub_central\n- senda_ebano\n- fortaleza_gigantes\n- aquelarre_sombras\n- claro_almas"
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Level",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"level\": \"senda_ebano\",\n  \"time_seconds\": 245,\n  \"deaths\": 3,\n  \"choice\": \"sanar\",\n  \"relic\": \"lirio\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/games/{{game_id}}/level/complete",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "games", "{{game_id}}", "level", "complete"]
+						},
+						"description": "Registrar completado de un nivel.\n\nDecisiones por nivel:\n- senda_ebano: \"forzar\" (malo) | \"sanar\" (bueno)\n- fortaleza_gigantes: \"destruir\" (malo) | \"construir\" (bueno)\n- aquelarre_sombras: \"ocultar\" (malo) | \"revelar\" (bueno)\n\nReliquias: lirio, hacha, manto"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Game",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"completed\",\n  \"boss_defeated\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/games/{{game_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "games", "{{game_id}}"]
+						},
+						"description": "Actualizar estado de una partida."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Game",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/games/{{game_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "games", "{{game_id}}"]
+						},
+						"description": "Eliminar una partida."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Events",
+			"item": [
+				{
+					"name": "Create Event",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"game_id\": \"{{game_id}}\",\n  \"player_id\": \"{{player_id}}\",\n  \"event_type\": \"player_death\",\n  \"level\": \"senda_ebano\",\n  \"data\": {\n    \"position\": {\"x\": 150.5, \"y\": 200.3},\n    \"cause\": \"fall\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/events",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "events"]
+						},
+						"description": "Crear un evento de gameplay.\n\nTipos de eventos:\n- player_death\n- level_start\n- level_end\n- npc_interaction\n- item_collected\n- checkpoint_reached\n- boss_encounter\n- custom_event"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Events Batch",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"events\": [\n    {\n      \"game_id\": \"{{game_id}}\",\n      \"player_id\": \"{{player_id}}\",\n      \"event_type\": \"player_death\",\n      \"level\": \"senda_ebano\",\n      \"data\": {\"position\": {\"x\": 150.5, \"y\": 200.3}, \"cause\": \"fall\"}\n    },\n    {\n      \"game_id\": \"{{game_id}}\",\n      \"player_id\": \"{{player_id}}\",\n      \"event_type\": \"checkpoint_reached\",\n      \"level\": \"senda_ebano\",\n      \"data\": {\"checkpoint_id\": \"checkpoint_1\"}\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/events/batch",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "events", "batch"]
+						},
+						"description": "Crear multiples eventos en lote (1-100 eventos). Recomendado para mejor rendimiento."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Game Events",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/events/game/{{game_id}}?limit=1000",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "events", "game", "{{game_id}}"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "1000"
+								}
+							]
+						},
+						"description": "Obtener todos los eventos de una partida."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Player Events",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/events/player/{{player_id}}?limit=1000",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "events", "player", "{{player_id}}"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "1000"
+								}
+							]
+						},
+						"description": "Obtener todos los eventos de un jugador."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Events by Type",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{player_id}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{player_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/events/game/{{game_id}}/type/player_death?limit=100",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "events", "game", "{{game_id}}", "type", "player_death"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Obtener eventos filtrados por tipo."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth (Admin)",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"jwt_token\", jsonData.access_token);",
+									"    pm.environment.set(\"refresh_token\", jsonData.refresh_token);",
+									"    console.log(\"Login successful! JWT token saved.\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin_user\",\n  \"password\": \"password123456\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "auth", "login"]
+						},
+						"description": "Login de administrador. Guarda automaticamente el JWT token."
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.environment.set(\"jwt_token\", jsonData.access_token);",
+									"    console.log(\"Token refreshed!\");",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/auth/refresh",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "auth", "refresh"]
+						},
+						"description": "Refrescar access token usando refresh token."
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/auth/logout",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "auth", "logout"]
+						},
+						"description": "Cerrar sesion de administrador."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Admin Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/auth/me",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "auth", "me"]
+						},
+						"description": "Obtener mi perfil de administrador."
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"old_password\": \"password123456\",\n  \"new_password\": \"newpassword789\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/auth/change-password",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "auth", "change-password"]
+						},
+						"description": "Cambiar contrasena de administrador."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Admin User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"new_admin\",\n  \"email\": \"newadmin@example.com\",\n  \"password\": \"password123456\",\n  \"role\": \"support\",\n  \"permissions\": [\"view_admins\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/auth/admin/users",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "auth", "admin", "users"]
+						},
+						"description": "Crear nuevo administrador (requiere permiso create_admins)."
+					},
+					"response": []
+				},
+				{
+					"name": "List Admin Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/auth/admin/users?limit=100",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "auth", "admin", "users"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "role",
+									"value": "admin",
+									"disabled": true
+								},
+								{
+									"key": "is_active",
+									"value": "true",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Listar administradores (requiere permiso view_admins)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Admin User by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/auth/admin/users/1",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "auth", "admin", "users", "1"]
+						},
+						"description": "Obtener administrador por ID (requiere permiso view_admins)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Admin User",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"is_active\": false\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/v1/auth/admin/users/2",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "auth", "admin", "users", "2"]
+						},
+						"description": "Actualizar administrador (requiere permiso edit_admins)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwt_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/v1/auth/admin/audit?limit=100&offset=0",
+							"host": ["{{base_url}}"],
+							"path": ["v1", "auth", "admin", "audit"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "offset",
+									"value": "0"
+								},
+								{
+									"key": "user_id",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "action",
+									"value": "login",
+									"disabled": true
+								},
+								{
+									"key": "success",
+									"value": "true",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Obtener logs de auditoria (requiere permiso view_audit_logs)."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "player_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "player_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "game_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "api_key",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "jwt_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}

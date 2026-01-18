@@ -1,317 +1,211 @@
-# 🎮 Triskel API
+# Triskel API
 
-API REST y Dashboard Web para el videojuego **Triskel: La Balada del Último Guardián**.
+API REST y Dashboard Web para el videojuego **Triskel: La Balada del Ultimo Guardian**.
 
-Desarrollado por **Mandrágora** para Colegio Hogwarts de Magia y Hechicería.
+Desarrollado por **Mandragora** para Colegio Hogwarts de Magia y Hechiceria.
 
-## 📖 Guías Rápidas
+## Guias Rapidas
 
-- 🚀 **[Desplegar en Railway](docs/RAILWAY_DEPLOYMENT.md)** - Guía completa de despliegue en producción
-- 🎮 **[Integrar con Unity](docs/UNITY_INTEGRATION.md)** - Conecta tu juego Unity con la API
-- 🔐 **[Claves de Seguridad](docs/SECURITY_KEYS.md)** - Diferencia entre SECRET_KEY y API_KEY
-- 📚 **[Documentación Completa](docs/README.md)** - Índice de toda la documentación
+- [Desplegar en Railway](docs/RAILWAY_DEPLOYMENT.md) - Guia completa de despliegue en produccion
+- [Integrar con Unity](docs/UNITY_INTEGRATION.md) - Conecta tu juego Unity con la API
+- [Claves de Seguridad](docs/SECURITY_KEYS.md) - Diferencia entre SECRET_KEY y API_KEY
+- [Documentacion de API](docs/API.md) - Listado completo de endpoints
+- [Coleccion Postman](docs/Triskel-API.postman_collection.json) - Importar en Postman
 
 ---
 
-## 🏗️ Arquitectura
+## Arquitectura
 
 - **FastAPI** - API REST para el juego (Unity/Godot)
 - **Flask** - Dashboard web para analytics
 - **Firebase Firestore** - Base de datos NoSQL
-- **MySQL** - Base de datos SQL (autenticación admin - futuro)
+- **MySQL** - Base de datos SQL (autenticacion admin)
 - **Arquitectura Hexagonal** - Ports & Adapters para desacoplamiento
 
 ---
 
-## 📦 Instalación
+## Instalacion
 
-### **1. Clonar el Repositorio**
+### 1. Clonar el Repositorio
 ```bash
 git clone <repo-url>
 cd Triskel-API
 ```
 
-### **2. Crear Entorno Virtual (Recomendado)**
+### 2. Crear Entorno Virtual (Recomendado)
 ```bash
 python3 -m venv venv
 source venv/bin/activate  # En Windows: venv\Scripts\activate
 ```
 
-### **3. Instalar Dependencias**
+### 3. Instalar Dependencias
 ```bash
 pip install -r requirements.txt
 ```
 
-Esto instalará:
-- ✅ FastAPI + Uvicorn (API REST)
-- ✅ Flask + Plotly (Dashboard)
-- ✅ Firebase Admin SDK
-- ✅ Pandas (análisis de datos)
-
-### **4. Configurar Firebase**
+### 4. Configurar Firebase
 Coloca tu archivo de credenciales en:
 ```
 config/firebase-credentials.json
 ```
 
-### **5. Variables de Entorno**
+### 5. Variables de Entorno
 
-Para **desarrollo local**, copia `.env.example` a `.env`:
+Copia `.env.example` a `.env`:
 ```bash
 cp .env.example .env
 ```
 
-Variables **obligatorias** para desarrollo:
+Variables **obligatorias**:
 ```bash
-SECRET_KEY=triskel_secret_key_desarrollo_local_change_in_production
-API_KEY=triskel_admin_api_key_desarrollo_local_change_in_production
+# Seguridad
+SECRET_KEY=tu_clave_secreta_para_sesiones_flask
+API_KEY=tu_clave_api_para_administracion
+JWT_SECRET_KEY=tu_clave_secreta_para_jwt
+
+# JWT
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60
+JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# Password
+BCRYPT_ROUNDS=12
 ```
-
-Las credenciales de Firebase se cargan automáticamente desde `config/firebase-credentials.json` en desarrollo.
-
-**Nota:** Para desplegar en **Railway/Producción**, consulta la [Guía de Despliegue](docs/RAILWAY_DEPLOYMENT.md).
 
 ---
 
-## 🚀 Ejecutar
+## Ejecutar
 
-### **Modo Desarrollo**
+### Modo Desarrollo
 ```bash
 python3 -m uvicorn app.main:app --reload
 ```
 
-### **Modo Producción**
+### Modo Produccion
 ```bash
 gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
 ```
 
 ---
 
-## 🌐 Endpoints
+## Endpoints Principales
 
-### **API REST (FastAPI)**
-```
-http://localhost:8000/              → Info de la API
-http://localhost:8000/docs          → Swagger UI (documentación)
-http://localhost:8000/health        → Health check
-```
+### API REST (FastAPI)
 
-#### **Players**
-```
-POST   /v1/players              → Crear jugador
-GET    /v1/players/{id}         → Obtener jugador
-GET    /v1/players              → Listar jugadores
-PATCH  /v1/players/{id}         → Actualizar jugador
-DELETE /v1/players/{id}         → Eliminar jugador
-```
+| Ruta | Descripcion |
+|------|-------------|
+| `GET /` | Informacion de la API |
+| `GET /docs` | Documentacion Swagger |
+| `GET /health` | Health check |
 
-#### **Games**
-```
-POST   /v1/games                        → Crear partida
-GET    /v1/games/{id}                   → Obtener partida
-GET    /v1/games/player/{player_id}    → Partidas de un jugador
-POST   /v1/games/{id}/level/start      → Iniciar nivel
-POST   /v1/games/{id}/level/complete   → Completar nivel
-PATCH  /v1/games/{id}                   → Actualizar partida
-DELETE /v1/games/{id}                   → Eliminar partida
-```
+#### Players
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| POST | `/v1/players` | Crear jugador |
+| GET | `/v1/players/me` | Mi perfil |
+| GET | `/v1/players/{id}` | Obtener jugador |
+| GET | `/v1/players` | Listar jugadores (admin) |
+| PATCH | `/v1/players/{id}` | Actualizar jugador |
+| DELETE | `/v1/players/{id}` | Eliminar jugador |
 
-#### **Events**
-```
-POST   /v1/events                              → Crear evento
-POST   /v1/events/batch                        → Crear eventos en lote
-GET    /v1/events/game/{game_id}               → Eventos de una partida
-GET    /v1/events/player/{player_id}           → Eventos de un jugador
-GET    /v1/events/game/{game_id}/type/{type}   → Eventos filtrados por tipo
-```
+#### Games
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| POST | `/v1/games` | Crear partida |
+| GET | `/v1/games/{id}` | Obtener partida |
+| GET | `/v1/games/player/{player_id}` | Partidas de un jugador |
+| POST | `/v1/games/{id}/level/start` | Iniciar nivel |
+| POST | `/v1/games/{id}/level/complete` | Completar nivel |
+| PATCH | `/v1/games/{id}` | Actualizar partida |
+| DELETE | `/v1/games/{id}` | Eliminar partida |
 
-### **Dashboard Web (Flask)**
-```
-http://localhost:8000/web/                  → Landing page
-http://localhost:8000/web/dashboard/        → Dashboard principal con gráficos
-http://localhost:8000/web/dashboard/players → Análisis de jugadores
-http://localhost:8000/web/dashboard/games   → Análisis de partidas
-http://localhost:8000/web/dashboard/choices → Decisiones morales
-http://localhost:8000/web/dashboard/events  → Análisis de eventos
-http://localhost:8000/web/dashboard/export  → Exportar datos (CSV/JSON)
-```
+#### Events
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| POST | `/v1/events` | Crear evento |
+| POST | `/v1/events/batch` | Crear eventos en lote |
+| GET | `/v1/events/game/{game_id}` | Eventos de una partida |
+| GET | `/v1/events/player/{player_id}` | Eventos de un jugador |
+| GET | `/v1/events/game/{game_id}/type/{type}` | Eventos por tipo |
+
+#### Auth (Administradores)
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| POST | `/v1/auth/login` | Login administrador |
+| POST | `/v1/auth/refresh` | Refrescar token |
+| POST | `/v1/auth/logout` | Cerrar sesion |
+| GET | `/v1/auth/me` | Mi perfil admin |
+| POST | `/v1/auth/change-password` | Cambiar contrasena |
+| POST | `/v1/auth/admin/users` | Crear admin |
+| GET | `/v1/auth/admin/users` | Listar admins |
+| GET | `/v1/auth/admin/users/{id}` | Obtener admin |
+| PATCH | `/v1/auth/admin/users/{id}` | Actualizar admin |
+| GET | `/v1/auth/admin/audit` | Logs de auditoria |
+
+### Dashboard Web (Flask)
+
+| Ruta | Descripcion |
+|------|-------------|
+| `/web/` | Landing page |
+| `/web/dashboard/` | Dashboard principal |
+| `/web/dashboard/players` | Analisis de jugadores |
+| `/web/dashboard/games` | Analisis de partidas |
+| `/web/dashboard/choices` | Decisiones morales |
+| `/web/dashboard/events` | Analisis de eventos |
+| `/web/dashboard/advanced` | Dashboard avanzado |
+| `/web/dashboard/export` | Exportar datos |
+| `/web/admin/login` | Login administrador |
+| `/web/admin/dashboard` | Panel de administracion |
+| `/web/admin/export` | Exportar datos (admin) |
+| `/web/admin/migrations` | Migraciones |
 
 ---
 
-## 🔐 Autenticación
+## Autenticacion
 
-### **Para Jugadores (API REST)**
-Todos los endpoints (excepto `POST /v1/players`) requieren headers:
+### 1. Player Token (Jugadores)
 ```
 X-Player-ID: <player_id>
 X-Player-Token: <player_token>
 ```
 
-El token se obtiene al crear un jugador:
-```bash
-curl -X POST http://localhost:8000/v1/players \
-  -H "Content-Type: application/json" \
-  -d '{"username": "player1", "email": "player1@example.com"}'
+### 2. JWT Bearer (Administradores)
+```
+Authorization: Bearer <jwt_token>
+```
 
-# Response:
-{
-  "player_id": "abc-123",
-  "username": "player1",
-  "player_token": "xyz-789"  # ⭐ Guardar este token
-}
+### 3. API Key (Administracion programatica)
+```
+X-API-Key: <api_key>
 ```
 
 ---
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 app/
 ├── domain/                    # Dominios verticales
-│   ├── players/              # Jugadores (hexagonal)
-│   │   ├── api.py           # FastAPI endpoints
-│   │   ├── service.py       # Lógica de negocio
-│   │   ├── models.py        # Entidades
-│   │   ├── schemas.py       # DTOs
-│   │   ├── ports.py         # Interfaces
-│   │   └── adapters/
-│   │       └── firestore_repository.py
-│   ├── games/                # Partidas (hexagonal)
-│   ├── events/               # Eventos (implementado)
-│   ├── sessions/             # Sesiones (preparado)
-│   ├── auth/                 # Autenticación (preparado)
+│   ├── players/              # Jugadores
+│   ├── games/                # Partidas
+│   ├── events/               # Eventos
+│   ├── sessions/             # Sesiones
+│   ├── auth/                 # Autenticacion
 │   └── web/                  # Dashboard Flask
-│       ├── app.py
-│       ├── analytics/        # Métricas
-│       ├── templates/
-│       └── static/
-├── shared/                    # Shared Kernel
-│   ├── settings.py
-│   ├── firebase_client.py
-│   ├── logger.py
-│   └── validators.py
-├── middleware/
-│   └── auth.py
-└── main.py                    # Aplicación principal
+├── infrastructure/           # Capa de infraestructura
+│   └── database/
+├── middleware/               # Middlewares
+│   ├── auth.py
+│   └── security.py
+├── core/                     # Servicios compartidos
+└── main.py                   # Aplicacion principal
 ```
 
 ---
 
-## 🧪 Testing
+## Stack Tecnologico
 
-### **Test Manual con cURL**
-
-#### Crear Jugador
-```bash
-curl -X POST http://localhost:8000/v1/players \
-  -H "Content-Type: application/json" \
-  -d '{"username": "test_user", "email": "test@example.com"}'
-```
-
-#### Crear Partida
-```bash
-curl -X POST http://localhost:8000/v1/games \
-  -H "Content-Type: application/json" \
-  -H "X-Player-ID: <player_id>" \
-  -H "X-Player-Token: <player_token>" \
-  -d '{"player_id": "<player_id>"}'
-```
-
-#### Completar Nivel
-```bash
-curl -X POST http://localhost:8000/v1/games/<game_id>/level/complete \
-  -H "Content-Type: application/json" \
-  -H "X-Player-ID: <player_id>" \
-  -H "X-Player-Token: <player_token>" \
-  -d '{
-    "level": "senda_ebano",
-    "time_seconds": 245,
-    "deaths": 3,
-    "choice": "sanar",
-    "relic": "lirio"
-  }'
-```
-
-#### Crear Evento
-```bash
-curl -X POST http://localhost:8000/v1/events \
-  -H "Content-Type: application/json" \
-  -H "X-Player-ID: <player_id>" \
-  -H "X-Player-Token: <player_token>" \
-  -d '{
-    "game_id": "<game_id>",
-    "player_id": "<player_id>",
-    "event_type": "player_death",
-    "level": "senda_ebano",
-    "data": {
-      "position": {"x": 150.5, "y": 200.3},
-      "cause": "fall"
-    }
-  }'
-```
-
-#### Crear Eventos en Lote
-```bash
-curl -X POST http://localhost:8000/v1/events/batch \
-  -H "Content-Type: application/json" \
-  -H "X-Player-ID: <player_id>" \
-  -H "X-Player-Token: <player_token>" \
-  -d '{
-    "events": [
-      {
-        "game_id": "<game_id>",
-        "player_id": "<player_id>",
-        "event_type": "player_death",
-        "level": "senda_ebano",
-        "data": {"position": {"x": 150.5, "y": 200.3}, "cause": "fall"}
-      },
-      {
-        "game_id": "<game_id>",
-        "player_id": "<player_id>",
-        "event_type": "checkpoint_reached",
-        "level": "senda_ebano",
-        "data": {"checkpoint_id": "checkpoint_1"}
-      }
-    ]
-  }'
-```
-
----
-
-## 🔧 Desarrollo
-
-### **Añadir Nuevo Dominio**
-
-1. Crear estructura:
-```bash
-mkdir -p app/domain/nuevo_dominio/adapters
-touch app/domain/nuevo_dominio/{__init__,api,service,models,schemas,ports}.py
-```
-
-2. Implementar interfaz en `ports.py`
-3. Implementar lógica en `service.py`
-4. Implementar adaptador en `adapters/`
-5. Crear endpoints en `api.py`
-6. Registrar router en `main.py`
-
----
-
-## 📚 Documentación
-
-### Guías de Despliegue e Integración
-- 🚀 **[Railway Deployment](docs/RAILWAY_DEPLOYMENT.md)** - Desplegar API en Railway (Variables, CORS, Troubleshooting)
-- 🎮 **[Unity Integration](docs/UNITY_INTEGRATION.md)** - Conectar Unity con la API (Nativo y WebGL)
-- 📚 **[Docs Index](docs/README.md)** - Índice completo de documentación
-
-### Arquitectura y Desarrollo
-- [REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md) - Resumen de arquitectura
-- [app/domain/web/README.md](app/domain/web/README.md) - Documentación del dashboard
-
----
-
-## 🛠️ Stack Tecnológico
-
-| Componente | Tecnología | Versión |
+| Componente | Tecnologia | Version |
 |------------|------------|---------|
 | API Framework | FastAPI | 0.109.0 |
 | Web Framework | Flask | 3.0.0 |
@@ -324,36 +218,45 @@ touch app/domain/nuevo_dominio/{__init__,api,service,models,schemas,ports}.py
 
 ---
 
-## 📊 Estado del Proyecto
+## Documentacion
 
-### **Implementado ✅**
-- ✅ Arquitectura hexagonal
-- ✅ Dominio Players (completo)
-- ✅ Dominio Games (completo con seguridad)
-- ✅ Dominio Events (completo con seguridad)
-- ✅ Dashboard web con Analytics (gráficos Plotly)
-- ✅ Exportación de datos (CSV/JSON)
-- ✅ Autenticación simple
-- ✅ Logging estructurado
-- ✅ Documentación Swagger
-
-### **Por Implementar 📝**
-- 📝 Dominio Sessions
-- 📝 Dominio Auth (MySQL)
-- 📝 Leaderboards
-- 📝 Tests automatizados
+- [Documentacion de API](docs/API.md) - Listado completo de endpoints con ejemplos
+- [Coleccion Postman](docs/Triskel-API.postman_collection.json) - Importar en Postman
+- [Railway Deployment](docs/RAILWAY_DEPLOYMENT.md) - Desplegar en produccion
+- [Unity Integration](docs/UNITY_INTEGRATION.md) - Integrar con Unity
 
 ---
 
-## 👥 Equipo
+## Estado del Proyecto
 
-- **Empresa**: Mandrágora
-- **Cliente**: Colegio Hogwarts de Magia y Hechicería
-- **Videojuego**: Triskel: La Balada del Último Guardián
+### Implementado
+- Arquitectura hexagonal
+- Dominio Players (completo)
+- Dominio Games (completo)
+- Dominio Events (completo)
+- Sistema de autenticacion JWT
+- Dashboard web con Analytics
+- Exportacion de datos (CSV/JSON)
+- Audit logs
+- Logging estructurado
+- Documentacion Swagger
+
+### Por Implementar
+- Dominio Sessions
+- Leaderboards
+- Tests automatizados
+
+---
+
+## Equipo
+
+- **Empresa**: Mandragora
+- **Cliente**: Colegio Hogwarts de Magia y Hechiceria
+- **Videojuego**: Triskel: La Balada del Ultimo Guardian
 - **Fecha**: Enero 2026
 
 ---
 
-## 📄 Licencia
+## Licencia
 
-Propiedad de Mandrágora. Todos los derechos reservados.
+Propiedad de Mandragora. Todos los derechos reservados.
