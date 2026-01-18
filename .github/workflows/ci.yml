@@ -94,7 +94,7 @@ jobs:
       run: black --check --line-length=100 app/ tests/
 
     - name: Verificar imports con isort
-      run: isort --check-only app/ tests/
+      run: isort --check-only --profile black --line-length 100 app/ tests/
 
   security:
     runs-on: ubuntu-latest
