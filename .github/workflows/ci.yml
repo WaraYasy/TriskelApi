@@ -1,0 +1,131 @@
+name: CI - Tests y Cobertura
+
+on:
+  push:
+    branches: [ main, develop, 'feature/**' ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12', '3.13']
+
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Configurar Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+
+    - name: Instalar dependencias
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Configurar Firebase credentials (si existen)
+      if: ${{ secrets.FIREBASE_CREDENTIALS != '' }}
+      run: |
+        echo '${{ secrets.FIREBASE_CREDENTIALS }}' > config/firebase-credentials.json
+
+    - name: Ejecutar linter (opcional)
+      continue-on-error: true
+      run: |
+        pip install ruff
+        ruff check app/ --exit-zero
+
+    - name: Ejecutar tests unitarios
+      run: |
+        pytest -m unit -v --cov=app/domain --cov-report=xml --cov-report=term-missing
+
+    - name: Ejecutar todos los tests
+      run: |
+        pytest --cov=app/domain --cov-report=xml --cov-report=term-missing --cov-report=html
+
+    - name: Subir reporte de cobertura a Codecov
+      uses: codecov/codecov-action@v4
+      if: matrix.python-version == '3.13'
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+    - name: Archivar reporte de cobertura HTML
+      uses: actions/upload-artifact@v4
+      if: matrix.python-version == '3.13'
+      with:
+        name: coverage-report
+        path: htmlcov/
+        retention-days: 30
+
+    - name: Verificar umbral de cobertura
+      run: |
+        coverage report --fail-under=37
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Instalar herramientas de linting
+      run: |
+        python -m pip install --upgrade pip
+        pip install ruff black isort
+
+    - name: Ejecutar ruff
+      run: ruff check app/ tests/
+
+    - name: Verificar formato con black
+      run: black --check app/ tests/
+
+    - name: Verificar imports con isort
+      run: isort --check-only app/ tests/
+
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout código
+      uses: actions/checkout@v4
+
+    - name: Configurar Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13'
+
+    - name: Instalar dependencias de seguridad
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+
+    - name: Ejecutar bandit (análisis de seguridad)
+      run: bandit -r app/ -f json -o bandit-report.json
+      continue-on-error: true
+
+    - name: Verificar vulnerabilidades en dependencias
+      run: safety check --json
+      continue-on-error: true
+
+    - name: Archivar reportes de seguridad
+      uses: actions/upload-artifact@v4
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+        retention-days: 30

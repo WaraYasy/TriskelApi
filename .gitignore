@@ -1,8 +1,72 @@
+# Python
 venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Entorno
 .env
+.env.local
+.env.*.local
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Logs
 logs/
+*.log
+
 # Firebase credentials (solo en la raíz)
 /config/firebase-credentials.json
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# Linting y formateo
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pre-commit
+.pre-commit-config.yaml.bak
+
+# Bandit
+bandit-report.json
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+*.tmp
+*.bak
+*.swp

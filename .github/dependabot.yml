@@ -1,0 +1,33 @@
+version: 2
+updates:
+  # Actualización de dependencias de Python
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "warapacheco"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "DEPS"
+      include: "scope"
+
+  # Actualización de GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "CI"
+      include: "scope"
