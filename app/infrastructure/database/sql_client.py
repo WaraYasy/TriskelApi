@@ -8,12 +8,13 @@ Se usará para Auth (usuarios admin) y logs de auditoría.
 NOTA: La base de datos SQL es OPCIONAL. Si no está configurada, la app funcionará igual.
 """
 
+from typing import Generator, Optional
+
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from typing import Optional, Generator
-from app.config.settings import settings
+from sqlalchemy.orm import Session, sessionmaker
 
+from app.config.settings import settings
 
 # Base para crear modelos de tablas SQL
 Base = declarative_base()

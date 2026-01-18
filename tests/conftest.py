@@ -8,19 +8,18 @@ Este archivo contiene:
 - Utilidades de testing
 """
 
-import pytest
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any
+from datetime import datetime, timedelta, timezone
+from typing import Any, Dict
 from unittest.mock import MagicMock
 from uuid import uuid4
 
+import pytest
 from fastapi.testclient import TestClient
 
-from app.domain.players.models import Player, PlayerStats
-from app.domain.games.models import Game, GameChoices, GameMetrics
-from app.domain.events.models import GameEvent
 from app.domain.auth.service import AuthService
-
+from app.domain.events.models import GameEvent
+from app.domain.games.models import Game, GameChoices, GameMetrics
+from app.domain.players.models import Player, PlayerStats
 
 # =============================================================================
 # FIXTURES DE TIEMPO
@@ -417,7 +416,9 @@ def expired_jwt_token():
     AuthService(repository=None)
     # Crear token con expiración negativa
     from datetime import timedelta
+
     from jose import jwt
+
     from app.config.settings import settings
 
     payload = {

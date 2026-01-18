@@ -12,20 +12,20 @@ Reglas de acceso:
 - DELETE /v1/games/{id}: Solo si es tu partida o con API Key
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
 
-from .ports import IGameRepository
-from .service import GameService
-from .models import Game
-from .schemas import GameCreate, GameUpdate, LevelStart, LevelComplete
-from .adapters.firestore_repository import FirestoreGameRepository
+from fastapi import APIRouter, Depends, HTTPException, Request
+
+from ..players.adapters.firestore_repository import FirestorePlayerRepository
 
 # Importar dependencies de Players (Games depende de Players)
 from ..players.ports import IPlayerRepository
 from ..players.service import PlayerService
-from ..players.adapters.firestore_repository import FirestorePlayerRepository
-
+from .adapters.firestore_repository import FirestoreGameRepository
+from .models import Game
+from .ports import IGameRepository
+from .schemas import GameCreate, GameUpdate, LevelComplete, LevelStart
+from .service import GameService
 
 # Router de FastAPI
 router = APIRouter(prefix="/v1/games", tags=["Games"])

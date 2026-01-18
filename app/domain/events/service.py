@@ -4,16 +4,15 @@ Service para Events
 Lógica de negocio de eventos de gameplay.
 """
 
-from typing import List, Optional
 from datetime import datetime
-
-from .models import GameEvent
-from .schemas import EventCreate, EventBatchCreate
-from .repository import EventRepository
+from typing import List, Optional
 
 # Importar repositories de otros dominios para validación
 from ..games.adapters.firestore_repository import FirestoreGameRepository
 from ..players.adapters.firestore_repository import FirestorePlayerRepository
+from .models import GameEvent
+from .repository import EventRepository
+from .schemas import EventBatchCreate, EventCreate
 
 
 class EventService:

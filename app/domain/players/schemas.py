@@ -5,8 +5,10 @@ Estos son los modelos de ENTRADA y SALIDA de la API REST.
 Define qué datos acepta y retorna cada endpoint.
 """
 
-from pydantic import BaseModel, Field
 from typing import Optional
+
+from pydantic import BaseModel, Field
+
 from .models import PlayerStats
 
 

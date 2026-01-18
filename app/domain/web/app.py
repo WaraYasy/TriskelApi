@@ -16,9 +16,12 @@ Estructura de endpoints:
 - GET  /public/            → Contenido público (futuro)
 """
 
-from flask import Flask, render_template
 import os
+
+from flask import Flask, render_template
+
 from app.config.settings import settings as app_settings
+
 from .analytics.routes import analytics_bp
 
 

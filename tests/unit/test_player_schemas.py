@@ -7,8 +7,8 @@ Prueba la validación de datos de entrada/salida de la API.
 import pytest
 from pydantic import ValidationError
 
-from app.domain.players.schemas import PlayerCreate, PlayerUpdate, PlayerAuthResponse
 from app.domain.players.models import PlayerStats
+from app.domain.players.schemas import PlayerAuthResponse, PlayerCreate, PlayerUpdate
 
 
 @pytest.mark.unit

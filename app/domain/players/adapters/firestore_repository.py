@@ -5,14 +5,16 @@ Implementación CONCRETA del repositorio usando Firestore.
 Implementa la interfaz IPlayerRepository.
 """
 
-from typing import Optional, List
+from typing import List, Optional
+
 from google.cloud.firestore_v1 import Client
 
-from ..ports import IPlayerRepository
-from ..models import Player
-from ..schemas import PlayerCreate, PlayerUpdate
-from app.infrastructure.database.firebase_client import get_firestore_client
 from app.core.logger import logger
+from app.infrastructure.database.firebase_client import get_firestore_client
+
+from ..models import Player
+from ..ports import IPlayerRepository
+from ..schemas import PlayerCreate, PlayerUpdate
 
 
 class FirestorePlayerRepository(IPlayerRepository):

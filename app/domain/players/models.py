@@ -5,10 +5,11 @@ Estas son las ENTIDADES de negocio (objetos que representan conceptos reales).
 Solo contienen lógica de dominio, no validaciones de API.
 """
 
-from pydantic import BaseModel, Field, field_validator
-from typing import Optional
 from datetime import datetime, timezone
+from typing import Optional
 from uuid import uuid4
+
+from pydantic import BaseModel, Field, field_validator
 
 
 class PlayerStats(BaseModel):

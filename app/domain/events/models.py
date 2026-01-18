@@ -5,10 +5,11 @@ Representa eventos de gameplay que ocurren durante una partida.
 Los eventos son inmutables una vez creados (solo inserción, no actualización).
 """
 
-from pydantic import BaseModel, Field
-from typing import Dict, Any
-from datetime import datetime
 import uuid
+from datetime import datetime
+from typing import Any, Dict
+
+from pydantic import BaseModel, Field
 
 
 class GameEvent(BaseModel):

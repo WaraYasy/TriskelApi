@@ -4,8 +4,9 @@ Tests unitarios para modelos de Players.
 Prueba la validación de Pydantic y lógica del modelo.
 """
 
-import pytest
 from datetime import datetime, timezone
+
+import pytest
 from pydantic import ValidationError
 
 from app.domain.players.models import Player, PlayerStats

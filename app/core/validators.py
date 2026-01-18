@@ -7,6 +7,7 @@ Lanzan ValidationException si algo no es válido.
 
 import re
 from typing import Optional
+
 from .exceptions import ValidationException
 
 

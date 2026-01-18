@@ -5,10 +5,10 @@ Contiene todas las reglas de negocio y validaciones.
 Depende de la INTERFAZ IPlayerRepository, no de una implementación concreta.
 """
 
-from typing import Optional, List
+from typing import List, Optional
 
-from .ports import IPlayerRepository
 from .models import Player
+from .ports import IPlayerRepository
 from .schemas import PlayerCreate, PlayerUpdate
 
 

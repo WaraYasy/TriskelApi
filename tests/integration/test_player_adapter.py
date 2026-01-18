@@ -4,8 +4,9 @@ Tests de integración para el adapter de Players con Firestore.
 Prueba la interacción entre el adapter y el mock de Firestore.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from app.domain.players.adapters.firestore_repository import FirestorePlayerRepository
 from app.domain.players.schemas import PlayerCreate, PlayerUpdate

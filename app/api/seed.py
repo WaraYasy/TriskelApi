@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
-from app.infrastructure.database.sql_client import get_db_session
 from app.domain.auth.adapters.sql_repository import SQLAuthRepository
-from app.domain.auth.service import AuthService
 from app.domain.auth.schemas import AdminUserCreate
+from app.domain.auth.service import AuthService
+from app.infrastructure.database.sql_client import get_db_session
 
 router = APIRouter(prefix="/seed", tags=["Seed"])
 

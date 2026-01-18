@@ -12,9 +12,11 @@ Rutas:
 - GET /dashboard/export    → Exportar datos a CSV
 """
 
-from flask import Blueprint, render_template, jsonify, request, send_file
-from .service import AnalyticsService
+from flask import Blueprint, jsonify, render_template, request, send_file
+
 from app.config.settings import settings
+
+from .service import AnalyticsService
 
 # Crear blueprint
 analytics_bp = Blueprint("analytics", __name__, template_folder="templates")

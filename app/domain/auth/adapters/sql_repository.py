@@ -6,14 +6,16 @@ Soporta PostgreSQL, MySQL, MariaDB, etc.
 Implementa la interfaz IAuthRepository.
 """
 
-from typing import Optional, List, Dict, Any
 from datetime import datetime
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
+from typing import Any, Dict, List, Optional
 
-from ..ports import IAuthRepository
-from ..models import AdminUser, AuditLog
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 from app.core.logger import logger
+
+from ..models import AdminUser, AuditLog
+from ..ports import IAuthRepository
 
 
 class SQLAuthRepository(IAuthRepository):

@@ -5,14 +5,16 @@ Gestor centralizado para conectarse a Firebase.
 Usa patrón Singleton para tener una sola conexión.
 """
 
-import os
-import json
 import base64
+import json
+import os
+from typing import Optional
+
 import firebase_admin
 from firebase_admin import credentials, firestore
+
 from app.config.settings import settings
 from app.core.logger import logger
-from typing import Optional
 
 
 class FirebaseManager:

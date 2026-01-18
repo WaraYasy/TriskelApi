@@ -5,9 +5,10 @@ Define el contrato que debe cumplir cualquier repositorio de Games.
 """
 
 from abc import ABC, abstractmethod
-from typing import Optional, List
+from typing import List, Optional
+
 from .models import Game
-from .schemas import GameCreate, GameUpdate, LevelStart, LevelComplete
+from .schemas import GameCreate, GameUpdate, LevelComplete, LevelStart
 
 
 class IGameRepository(ABC):

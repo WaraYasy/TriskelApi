@@ -5,12 +5,13 @@ Define los esquemas de seguridad que se muestran en Swagger UI.
 Proporciona dependencies para validar autenticación en endpoints.
 """
 
-from typing import Optional, Annotated
-from fastapi import HTTPException, Security, Depends
+from typing import Annotated, Optional
+
+from fastapi import Depends, HTTPException, Security
 from fastapi.security import APIKeyHeader
+
 from app.config.settings import settings
 from app.domain.players.models import Player
-
 
 # ==================== ESQUEMAS DE SEGURIDAD ====================
 

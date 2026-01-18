@@ -4,8 +4,9 @@ Tests E2E para flujos completos de Games.
 Prueba el ciclo de vida completo de una partida.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 
 @pytest.mark.e2e

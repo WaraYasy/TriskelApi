@@ -6,9 +6,9 @@ Prueba la lógica de negocio del PlayerService.
 
 import pytest
 
-from app.domain.players.service import PlayerService
-from app.domain.players.schemas import PlayerCreate, PlayerUpdate
 from app.domain.games.models import Game, GameChoices, GameMetrics
+from app.domain.players.schemas import PlayerCreate, PlayerUpdate
+from app.domain.players.service import PlayerService
 
 
 @pytest.mark.unit

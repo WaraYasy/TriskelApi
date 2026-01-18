@@ -5,14 +5,14 @@ Contiene todas las reglas de negocio de partidas.
 Depende de interfaces, no de implementaciones concretas.
 """
 
-from typing import Optional, List
 from datetime import datetime
+from typing import List, Optional
 
-from .ports import IGameRepository
-from .models import Game
-from .schemas import GameCreate, GameUpdate, LevelStart, LevelComplete
 from ..players.ports import IPlayerRepository
 from ..players.service import PlayerService
+from .models import Game
+from .ports import IGameRepository
+from .schemas import GameCreate, GameUpdate, LevelComplete, LevelStart
 
 
 class GameService:

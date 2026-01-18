@@ -5,13 +5,15 @@ Este dominio usa arquitectura SIMPLE (sin ports ni adapters).
 El repository accede directamente a Firestore.
 """
 
-from typing import Optional, List
-from google.cloud.firestore_v1 import Client, Query
 from datetime import datetime
+from typing import List, Optional
+
+from google.cloud.firestore_v1 import Client, Query
+
+from app.infrastructure.database.firebase_client import get_firestore_client
 
 from .models import GameEvent
 from .schemas import EventCreate
-from app.infrastructure.database.firebase_client import get_firestore_client
 
 
 class EventRepository:

@@ -4,11 +4,12 @@ Tests unitarios para el servicio de Games.
 Prueba la lógica de negocio del GameService.
 """
 
-import pytest
 from datetime import datetime
 
+import pytest
+
+from app.domain.games.schemas import GameCreate, GameUpdate, LevelComplete, LevelStart
 from app.domain.games.service import GameService
-from app.domain.games.schemas import GameCreate, GameUpdate, LevelStart, LevelComplete
 
 
 @pytest.mark.unit

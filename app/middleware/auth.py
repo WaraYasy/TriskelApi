@@ -10,9 +10,9 @@ Soporta TRES tipos de autenticación:
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from jose import JWTError, jwt
-from app.domain.players.adapters.firestore_repository import FirestorePlayerRepository
-from app.config.settings import settings
 
+from app.config.settings import settings
+from app.domain.players.adapters.firestore_repository import FirestorePlayerRepository
 
 # Rutas que NO requieren autenticación
 PUBLIC_ROUTES = [

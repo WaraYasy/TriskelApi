@@ -12,8 +12,8 @@ Esto mantiene el desacoplamiento y asegura que:
 - Más fácil de escalar (puede estar en otro servidor)
 """
 
-from typing import List, Dict, Any
 from collections import Counter
+from typing import Any, Dict, List
 
 # Imports opcionales (instalar si se necesitan visualizaciones)
 try:

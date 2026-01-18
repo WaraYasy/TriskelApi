@@ -13,15 +13,15 @@ Reglas de acceso:
 - DELETE /v1/players/{id}: Solo si es tu ID o con API Key
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
 
-from .ports import IPlayerRepository
-from .service import PlayerService
-from .models import Player
-from .schemas import PlayerCreate, PlayerUpdate, PlayerAuthResponse
-from .adapters.firestore_repository import FirestorePlayerRepository
+from fastapi import APIRouter, Depends, HTTPException, Request
 
+from .adapters.firestore_repository import FirestorePlayerRepository
+from .models import Player
+from .ports import IPlayerRepository
+from .schemas import PlayerAuthResponse, PlayerCreate, PlayerUpdate
+from .service import PlayerService
 
 # Router de FastAPI
 router = APIRouter(prefix="/v1/players", tags=["Players"])

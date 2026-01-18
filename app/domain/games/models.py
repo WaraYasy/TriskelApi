@@ -4,10 +4,11 @@ Modelos de dominio para Games
 Estas son las entidades de negocio que representan partidas del juego.
 """
 
-from pydantic import BaseModel, Field
-from typing import Optional, List, Dict
 from datetime import datetime
+from typing import Dict, List, Optional
 from uuid import uuid4
+
+from pydantic import BaseModel, Field
 
 
 class GameChoices(BaseModel):

@@ -4,11 +4,13 @@ Schemas (DTOs) para la API de Events
 Modelos de entrada y salida para los endpoints de eventos.
 """
 
-from pydantic import BaseModel, Field, field_validator
-from typing import Dict, Any, List, Optional
 from datetime import datetime
-from app.core.validators import validate_level_name
+from typing import Any, Dict, List, Optional
+
+from pydantic import BaseModel, Field, field_validator
+
 from app.core.exceptions import ValidationException
+from app.core.validators import validate_level_name
 
 
 class EventCreate(BaseModel):

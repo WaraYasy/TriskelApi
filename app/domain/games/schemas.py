@@ -4,11 +4,13 @@ Schemas (DTOs) para la API de Games
 Modelos de entrada y salida para los endpoints de partidas.
 """
 
-from pydantic import BaseModel, field_validator
-from typing import Optional
 from datetime import datetime
-from app.core.validators import validate_level_name, validate_choice, validate_relic
+from typing import Optional
+
+from pydantic import BaseModel, field_validator
+
 from app.core.exceptions import ValidationException
+from app.core.validators import validate_choice, validate_level_name, validate_relic
 
 
 class GameCreate(BaseModel):

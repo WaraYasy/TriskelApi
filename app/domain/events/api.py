@@ -10,17 +10,16 @@ Reglas de acceso:
 - GET /v1/events/player/{player_id}: Solo si es tu ID o con API Key
 """
 
-from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
 
-from .models import GameEvent
-from .schemas import EventCreate, EventBatchCreate
-from .service import EventService
-from .repository import EventRepository
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 # Importar game repository para validar permisos de partida
 from ..games.adapters.firestore_repository import FirestoreGameRepository
-
+from .models import GameEvent
+from .repository import EventRepository
+from .schemas import EventBatchCreate, EventCreate
+from .service import EventService
 
 # Router de FastAPI
 router = APIRouter(prefix="/v1/events", tags=["Events"])

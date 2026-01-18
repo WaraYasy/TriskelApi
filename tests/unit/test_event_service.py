@@ -4,11 +4,12 @@ Tests unitarios para el servicio de Events.
 Prueba la lógica de negocio del EventService.
 """
 
-import pytest
 from unittest.mock import MagicMock
 
+import pytest
+
+from app.domain.events.schemas import EventBatchCreate, EventCreate
 from app.domain.events.service import EventService
-from app.domain.events.schemas import EventCreate, EventBatchCreate
 
 
 @pytest.fixture

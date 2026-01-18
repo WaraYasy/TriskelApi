@@ -8,8 +8,9 @@ Define las tablas SQL para:
 Compatible con PostgreSQL, MySQL, MariaDB.
 """
 
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.sql import func
+
 from app.infrastructure.database.sql_client import Base
 
 

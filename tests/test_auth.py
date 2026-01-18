@@ -1,10 +1,10 @@
 import pytest
 from jose import jwt
 
-from app.domain.auth.validators import PasswordValidator
-from app.domain.auth.service import AuthService
-from app.domain.auth.schemas import LoginRequest, AdminUserCreate, ChangePasswordRequest
 from app.config.settings import settings
+from app.domain.auth.schemas import AdminUserCreate, ChangePasswordRequest, LoginRequest
+from app.domain.auth.service import AuthService
+from app.domain.auth.validators import PasswordValidator
 
 
 class TestPasswordValidator:

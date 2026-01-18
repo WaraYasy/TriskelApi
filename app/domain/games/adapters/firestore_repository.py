@@ -4,13 +4,15 @@ Adaptador Firestore para Games
 Implementación concreta del repositorio usando Firestore.
 """
 
-from typing import Optional, List
+from typing import List, Optional
+
 from google.cloud.firestore_v1 import Client
 
-from ..ports import IGameRepository
-from ..models import Game
-from ..schemas import GameCreate, GameUpdate, LevelStart, LevelComplete
 from app.infrastructure.database.firebase_client import get_firestore_client
+
+from ..models import Game
+from ..ports import IGameRepository
+from ..schemas import GameCreate, GameUpdate, LevelComplete, LevelStart
 
 
 class FirestoreGameRepository(IGameRepository):
