@@ -22,9 +22,7 @@ class PlayerCreate(BaseModel):
     email: Optional[str] = None
 
     class Config:
-        json_schema_extra = {
-            "example": {"username": "player123", "email": "player@example.com"}
-        }
+        json_schema_extra = {"example": {"username": "player123", "email": "player@example.com"}}
 
 
 class PlayerUpdate(BaseModel):
@@ -42,9 +40,7 @@ class PlayerUpdate(BaseModel):
     stats: Optional[PlayerStats] = None
 
     class Config:
-        json_schema_extra = {
-            "example": {"total_playtime_seconds": 7200, "games_played": 10}
-        }
+        json_schema_extra = {"example": {"total_playtime_seconds": 7200, "games_played": 10}}
 
 
 class PlayerAuthResponse(BaseModel):

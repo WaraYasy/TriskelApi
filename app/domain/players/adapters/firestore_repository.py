@@ -100,9 +100,7 @@ class FirestorePlayerRepository(IPlayerRepository):
             doc_ref = self.collection.document(player_id)
             doc_ref.update(update_data)
 
-            logger.info(
-                f"Jugador actualizado: {player_id} - {list(update_data.keys())}"
-            )
+            logger.info(f"Jugador actualizado: {player_id} - {list(update_data.keys())}")
 
             # Retornar el jugador actualizado
             return self.get_by_id(player_id)

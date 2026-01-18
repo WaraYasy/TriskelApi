@@ -21,9 +21,7 @@ class Settings(BaseSettings):
     # Railway establece RAILWAY_ENVIRONMENT=production
     # Heroku establece DYNO
     environment: str = (
-        "production"
-        if os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("DYNO")
-        else "development"
+        "production" if os.getenv("RAILWAY_ENVIRONMENT") or os.getenv("DYNO") else "development"
     )
 
     # Puerto (Railway/Heroku lo proporcionan automáticamente con $PORT)
@@ -59,17 +57,13 @@ class Settings(BaseSettings):
     api_key: str
 
     # ==================== JWT (Auth de Administradores) ====================
-    jwt_secret_key: (
-        str  # Secret para firmar JWT tokens (DEBE ser diferente de SECRET_KEY)
-    )
+    jwt_secret_key: str  # Secret para firmar JWT tokens (DEBE ser diferente de SECRET_KEY)
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 60  # 1 hora
     jwt_refresh_token_expire_days: int = 7  # 7 días
 
     # ==================== Password Hashing ====================
-    bcrypt_rounds: int = (
-        12  # Número de rounds para bcrypt (más rounds = más seguro pero más lento)
-    )
+    bcrypt_rounds: int = 12  # Número de rounds para bcrypt (más rounds = más seguro pero más lento)
 
     # ==================== CORS ====================
     # Orígenes permitidos (separados por comas)
@@ -136,10 +130,7 @@ class Settings(BaseSettings):
                 raise ValueError("API_KEY es obligatoria en producción")
             if not self.jwt_secret_key or self.jwt_secret_key == "":
                 raise ValueError("JWT_SECRET_KEY es obligatoria en producción")
-            if (
-                not self.firebase_credentials_base64
-                and not self.firebase_credentials_json
-            ):
+            if not self.firebase_credentials_base64 and not self.firebase_credentials_json:
                 raise ValueError(
                     "FIREBASE_CREDENTIALS_BASE64 o FIREBASE_CREDENTIALS_JSON "
                     "son obligatorias en producción"

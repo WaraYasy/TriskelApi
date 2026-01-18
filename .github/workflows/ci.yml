@@ -95,7 +95,7 @@ jobs:
       run: ruff check app/ tests/
 
     - name: Verificar formato con black
-      run: black --check app/ tests/
+      run: black --check --line-length=100 app/ tests/
 
     - name: Verificar imports con isort
       run: isort --check-only app/ tests/

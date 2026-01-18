@@ -102,9 +102,7 @@ class TestPlayerUpdate:
 
     def test_update_stats_only(self):
         """Actualizar solo estadísticas"""
-        new_stats = PlayerStats(
-            total_good_choices=10, total_bad_choices=5, moral_alignment=0.33
-        )
+        new_stats = PlayerStats(total_good_choices=10, total_bad_choices=5, moral_alignment=0.33)
         data = PlayerUpdate(stats=new_stats)
 
         assert data.stats is not None
@@ -113,9 +111,7 @@ class TestPlayerUpdate:
 
     def test_update_playtime_and_games(self):
         """Actualizar tiempo de juego y partidas"""
-        data = PlayerUpdate(
-            total_playtime_seconds=7200, games_played=10, games_completed=6
-        )
+        data = PlayerUpdate(total_playtime_seconds=7200, games_played=10, games_completed=6)
 
         assert data.total_playtime_seconds == 7200
         assert data.games_played == 10
@@ -187,7 +183,5 @@ class TestPlayerAuthResponse:
     def test_response_with_long_token(self):
         """Permitir tokens largos (UUID)"""
         long_token = "123e4567-e89b-12d3-a456-426614174000"
-        response = PlayerAuthResponse(
-            player_id="abc-123", username="test", player_token=long_token
-        )
+        response = PlayerAuthResponse(player_id="abc-123", username="test", player_token=long_token)
         assert response.player_token == long_token

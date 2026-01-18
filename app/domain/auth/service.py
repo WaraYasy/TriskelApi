@@ -50,23 +50,17 @@ class AuthService:
     @staticmethod
     def hash_password(password: str) -> str:
         if len(password) > PasswordValidator.MAX_LENGTH:
-            raise ValueError(
-                f"Password no puede exceder {PasswordValidator.MAX_LENGTH} caracteres"
-            )
+            raise ValueError(f"Password no puede exceder {PasswordValidator.MAX_LENGTH} caracteres")
         salt = bcrypt.gensalt()
         hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
         return hashed.decode("utf-8")
 
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
-        return bcrypt.checkpw(
-            plain_password.encode("utf-8"), hashed_password.encode("utf-8")
-        )
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
 
     def create_access_token(self, user_id: int, username: str, role: str) -> str:
-        expire = datetime.utcnow() + timedelta(
-            minutes=settings.jwt_access_token_expire_minutes
-        )
+        expire = datetime.utcnow() + timedelta(minutes=settings.jwt_access_token_expire_minutes)
         payload = {
             "type": "access",
             "user_id": user_id,
@@ -75,14 +69,10 @@ class AuthService:
             "exp": expire,
             "iat": datetime.utcnow(),
         }
-        return jwt.encode(
-            payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
-        )
+        return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
     def create_refresh_token(self, user_id: int, username: str) -> str:
-        expire = datetime.utcnow() + timedelta(
-            days=settings.jwt_refresh_token_expire_days
-        )
+        expire = datetime.utcnow() + timedelta(days=settings.jwt_refresh_token_expire_days)
         payload = {
             "type": "refresh",
             "user_id": user_id,
@@ -90,18 +80,12 @@ class AuthService:
             "exp": expire,
             "iat": datetime.utcnow(),
         }
-        return jwt.encode(
-            payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
-        )
+        return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
     def verify_token(self, token: str, token_type: str = "access") -> Dict[str, Any]:
-        payload = jwt.decode(
-            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
-        )
+        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
         if payload.get("type") != token_type:
-            raise JWTError(
-                f"Token tipo '{payload.get('type')}', esperado '{token_type}'"
-            )
+            raise JWTError(f"Token tipo '{payload.get('type')}', esperado '{token_type}'")
         return payload
 
     def login(
@@ -128,9 +112,7 @@ class AuthService:
 
         self.repository.update_last_login(user["id"])
 
-        access_token = self.create_access_token(
-            user["id"], user["username"], user["role"]
-        )
+        access_token = self.create_access_token(user["id"], user["username"], user["role"])
         refresh_token = self.create_refresh_token(user["id"], user["username"])
 
         self.repository.create_audit_log(
@@ -169,9 +151,7 @@ class AuthService:
         if not user["is_active"]:
             raise ValueError("Usuario desactivado")
 
-        new_access_token = self.create_access_token(
-            user["id"], user["username"], user["role"]
-        )
+        new_access_token = self.create_access_token(user["id"], user["username"], user["role"])
         new_refresh_token = self.create_refresh_token(user["id"], user["username"])
 
         return {
@@ -211,9 +191,7 @@ class AuthService:
             role=admin_data.role,
         )
 
-    def update_admin(
-        self, user_id: int, admin_update: AdminUserUpdate
-    ) -> Optional[Dict[str, Any]]:
+    def update_admin(self, user_id: int, admin_update: AdminUserUpdate) -> Optional[Dict[str, Any]]:
         return self.repository.update_user(
             user_id=user_id,
             email=admin_update.email,

@@ -90,23 +90,17 @@ async def auth_middleware(request: Request, call_next):
                 else:
                     return JSONResponse(
                         status_code=401,
-                        content={
-                            "detail": "Token inválido. Usa access token, no refresh token"
-                        },
+                        content={"detail": "Token inválido. Usa access token, no refresh token"},
                     )
 
             except JWTError:
-                return JSONResponse(
-                    status_code=401, content={"detail": "JWT inválido o expirado"}
-                )
+                return JSONResponse(status_code=401, content={"detail": "JWT inválido o expirado"})
 
         # OPCIÓN 2: Autenticación con API Key (admin programmatic)
         api_key = request.headers.get("X-API-Key")
         if api_key:
             if api_key != settings.api_key:
-                return JSONResponse(
-                    status_code=401, content={"detail": "API Key inválida"}
-                )
+                return JSONResponse(status_code=401, content={"detail": "API Key inválida"})
 
             # API Key válida - marcar como admin
             request.state.is_admin = True
@@ -132,14 +126,10 @@ async def auth_middleware(request: Request, call_next):
             player = player_repo.get_by_id(player_id)
 
             if not player:
-                return JSONResponse(
-                    status_code=401, content={"detail": "Player ID inválido"}
-                )
+                return JSONResponse(status_code=401, content={"detail": "Player ID inválido"})
 
             if player.player_token != player_token:
-                return JSONResponse(
-                    status_code=401, content={"detail": "Token inválido"}
-                )
+                return JSONResponse(status_code=401, content={"detail": "Token inválido"})
 
             # Autenticación exitosa - agregar player_id al request state
             request.state.is_admin = False

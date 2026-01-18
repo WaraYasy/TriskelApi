@@ -30,9 +30,7 @@ class TestFirestorePlayerRepository:
         """Crear jugador en Firestore"""
         # Configurar mocks
         mock_doc_ref = MagicMock()
-        mock_firestore_client.collection.return_value.document.return_value = (
-            mock_doc_ref
-        )
+        mock_firestore_client.collection.return_value.document.return_value = mock_doc_ref
 
         # Ejecutar
         player_data = PlayerCreate(username="test_player", email="test@example.com")
@@ -90,9 +88,7 @@ class TestFirestorePlayerRepository:
         mock_doc_ref = MagicMock()
         mock_doc_ref.get.return_value = mock_doc
 
-        mock_firestore_client.collection.return_value.document.return_value = (
-            mock_doc_ref
-        )
+        mock_firestore_client.collection.return_value.document.return_value = mock_doc_ref
 
         # Ejecutar
         update_data = PlayerUpdate(total_playtime_seconds=10000)
@@ -107,9 +103,7 @@ class TestFirestorePlayerRepository:
         """Eliminar jugador"""
         # Configurar mock
         mock_doc_ref = MagicMock()
-        mock_firestore_client.collection.return_value.document.return_value = (
-            mock_doc_ref
-        )
+        mock_firestore_client.collection.return_value.document.return_value = mock_doc_ref
 
         # Ejecutar
         result = repository.delete("player-123")

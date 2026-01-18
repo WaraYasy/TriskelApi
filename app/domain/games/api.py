@@ -168,9 +168,7 @@ def create_game(
     authenticated_player_id = getattr(request.state, "player_id", None)
 
     if not is_admin and game_data.player_id != authenticated_player_id:
-        raise HTTPException(
-            status_code=403, detail="Solo puedes crear partidas para ti mismo"
-        )
+        raise HTTPException(status_code=403, detail="Solo puedes crear partidas para ti mismo")
 
     try:
         return service.create_game(game_data)
@@ -183,9 +181,7 @@ def create_game(
 
 
 @router.get("/{game_id}", response_model=Game)
-def get_game(
-    game_id: str, request: Request, service: GameService = Depends(get_game_service)
-):
+def get_game(game_id: str, request: Request, service: GameService = Depends(get_game_service)):
     """
     Obtener una partida por ID.
 
@@ -378,9 +374,7 @@ def complete_level(
 
 
 @router.delete("/{game_id}")
-def delete_game(
-    game_id: str, request: Request, service: GameService = Depends(get_game_service)
-):
+def delete_game(game_id: str, request: Request, service: GameService = Depends(get_game_service)):
     """
     Eliminar una partida.
 

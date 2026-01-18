@@ -18,9 +18,7 @@ class TestPlayerServiceCreate:
     def test_create_player_success(self, mock_player_repository, new_player):
         """Crear jugador exitosamente"""
         # Configurar mocks
-        mock_player_repository.get_by_username.return_value = (
-            None  # Username disponible
-        )
+        mock_player_repository.get_by_username.return_value = None  # Username disponible
         mock_player_repository.create.return_value = new_player
 
         # Ejecutar
@@ -34,9 +32,7 @@ class TestPlayerServiceCreate:
         mock_player_repository.create.assert_called_once_with(player_data)
 
     @pytest.mark.edge_case
-    def test_create_player_duplicate_username(
-        self, mock_player_repository, sample_player
-    ):
+    def test_create_player_duplicate_username(self, mock_player_repository, sample_player):
         """Rechazar username duplicado"""
         # Configurar mock: username ya existe
         mock_player_repository.get_by_username.return_value = sample_player
@@ -116,9 +112,7 @@ class TestPlayerServiceGet:
 class TestPlayerServiceUpdate:
     """Tests para actualizar jugadores"""
 
-    def test_update_player_success(
-        self, mock_player_repository, sample_player, player_id
-    ):
+    def test_update_player_success(self, mock_player_repository, sample_player, player_id):
         """Actualizar jugador exitosamente"""
         # Configurar mocks
         updated_player = sample_player.model_copy()
@@ -207,9 +201,7 @@ class TestPlayerStatsUpdate:
         assert player_update.total_playtime_seconds == 3600
         assert player_update.stats.total_deaths == 5
 
-    def test_update_stats_abandoned_game(
-        self, mock_player_repository, new_player, player_id
-    ):
+    def test_update_stats_abandoned_game(self, mock_player_repository, new_player, player_id):
         """Actualizar stats después de partida abandonada"""
         # Crear partida abandonada
         abandoned_game = Game(
@@ -236,9 +228,7 @@ class TestPlayerStatsUpdate:
         assert player_update.games_completed == 0  # No cuenta como completada
 
     @pytest.mark.edge_case
-    def test_moral_alignment_all_good_choices(
-        self, mock_player_repository, new_player, player_id
-    ):
+    def test_moral_alignment_all_good_choices(self, mock_player_repository, new_player, player_id):
         """Cálculo de alineación moral con todas decisiones buenas"""
         # Partida con todas decisiones buenas
         good_game = Game(
@@ -271,9 +261,7 @@ class TestPlayerStatsUpdate:
         assert player_update.stats.moral_alignment == 1.0
 
     @pytest.mark.edge_case
-    def test_moral_alignment_all_bad_choices(
-        self, mock_player_repository, new_player, player_id
-    ):
+    def test_moral_alignment_all_bad_choices(self, mock_player_repository, new_player, player_id):
         """Cálculo de alineación moral con todas decisiones malas"""
         # Partida con todas decisiones malas
         bad_game = Game(
@@ -306,9 +294,7 @@ class TestPlayerStatsUpdate:
         assert player_update.stats.moral_alignment == -1.0
 
     @pytest.mark.edge_case
-    def test_moral_alignment_mixed_choices(
-        self, mock_player_repository, new_player, player_id
-    ):
+    def test_moral_alignment_mixed_choices(self, mock_player_repository, new_player, player_id):
         """Cálculo de alineación moral con decisiones mixtas"""
         # 2 buenas, 1 mala
         mixed_game = Game(
@@ -341,9 +327,7 @@ class TestPlayerStatsUpdate:
         assert abs(player_update.stats.moral_alignment - 0.333) < 0.01
 
     @pytest.mark.edge_case
-    def test_moral_alignment_no_choices(
-        self, mock_player_repository, new_player, player_id
-    ):
+    def test_moral_alignment_no_choices(self, mock_player_repository, new_player, player_id):
         """Alineación moral sin decisiones tomadas"""
         # Partida sin decisiones (todos None)
         no_choices_game = Game(
@@ -351,9 +335,7 @@ class TestPlayerStatsUpdate:
             player_id=player_id,
             status="abandoned",
             total_time_seconds=100,
-            choices=GameChoices(
-                senda_ebano=None, fortaleza_gigantes=None, aquelarre_sombras=None
-            ),
+            choices=GameChoices(senda_ebano=None, fortaleza_gigantes=None, aquelarre_sombras=None),
             metrics=GameMetrics(total_deaths=0),
         )
 
@@ -393,9 +375,7 @@ class TestPlayerStatsUpdate:
         assert player_update.stats.best_speedrun_seconds == 3600
 
     @pytest.mark.edge_case
-    def test_best_speedrun_improved(
-        self, mock_player_repository, sample_player, player_id
-    ):
+    def test_best_speedrun_improved(self, mock_player_repository, sample_player, player_id):
         """Mejorar record de speedrun"""
         # Jugador con speedrun existente de 3600s
         sample_player.stats.best_speedrun_seconds = 3600
@@ -425,9 +405,7 @@ class TestPlayerStatsUpdate:
         assert player_update.stats.best_speedrun_seconds == 2400
 
     @pytest.mark.edge_case
-    def test_best_speedrun_not_improved(
-        self, mock_player_repository, sample_player, player_id
-    ):
+    def test_best_speedrun_not_improved(self, mock_player_repository, sample_player, player_id):
         """No actualizar speedrun si no se mejora"""
         # Jugador con speedrun de 3600s
         sample_player.stats.best_speedrun_seconds = 3600
@@ -456,9 +434,7 @@ class TestPlayerStatsUpdate:
 
         assert player_update.stats.best_speedrun_seconds == 3600  # Se mantiene
 
-    def test_favorite_relic_updated(
-        self, mock_player_repository, new_player, player_id
-    ):
+    def test_favorite_relic_updated(self, mock_player_repository, new_player, player_id):
         """Actualizar reliquia favorita"""
         game_with_relics = Game(
             game_id="game-123",
@@ -484,18 +460,14 @@ class TestPlayerStatsUpdate:
 
         assert player_update.stats.favorite_relic == "manto"  # última
 
-    def test_update_stats_player_not_found(
-        self, mock_player_repository, completed_game
-    ):
+    def test_update_stats_player_not_found(self, mock_player_repository, completed_game):
         """Actualizar stats de jugador que no existe"""
         # Configurar mock
         mock_player_repository.get_by_id.return_value = None
 
         # Ejecutar
         service = PlayerService(mock_player_repository)
-        result = service.update_player_stats_after_game(
-            "nonexistent-id", completed_game
-        )
+        result = service.update_player_stats_after_game("nonexistent-id", completed_game)
 
         # Verificar
         assert result is None

@@ -56,13 +56,13 @@ test-fast: ## Ejecutar tests sin cobertura (más rápido)
 lint: ## Ejecutar linters (ruff, black, isort)
 	@echo "$(BLUE)Ejecutando linters...$(NC)"
 	ruff check app/ tests/
-	black --check app/ tests/
-	isort --check-only app/ tests/
+	black --check --line-length=100 app/ tests/
+	isort --check-only --profile black --line-length 100 app/ tests/
 
 format: ## Formatear código automáticamente
 	@echo "$(BLUE)Formateando código...$(NC)"
-	black app/ tests/
-	isort app/ tests/
+	black --line-length=100 app/ tests/
+	isort --profile black --line-length 100 app/ tests/
 	ruff check app/ tests/ --fix
 	@echo "$(GREEN)✓ Código formateado$(NC)"
 

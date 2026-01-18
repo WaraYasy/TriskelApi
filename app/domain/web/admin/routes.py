@@ -27,9 +27,7 @@ def _create_export_audit_log(
         # Intentar obtener sesión SQL
         session = get_db_session()
         if not session:
-            logger.warning(
-                "Base de datos SQL no disponible, no se puede registrar audit log"
-            )
+            logger.warning("Base de datos SQL no disponible, no se puede registrar audit log")
             return
 
         # Crear repositorio y registrar

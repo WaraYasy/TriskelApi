@@ -199,9 +199,7 @@ class TestPlayer:
     @pytest.mark.edge_case
     def test_player_with_extreme_playtime(self):
         """Jugador con tiempo de juego extremo (1000 horas)"""
-        player = Player(
-            username="hardcore_gamer", total_playtime_seconds=3_600_000  # 1000 horas
-        )
+        player = Player(username="hardcore_gamer", total_playtime_seconds=3_600_000)  # 1000 horas
         assert player.total_playtime_seconds == 3_600_000
 
     @pytest.mark.edge_case
