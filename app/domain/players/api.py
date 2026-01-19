@@ -23,7 +23,13 @@ from app.domain.games.ports import IGameRepository
 from .adapters.firestore_repository import FirestorePlayerRepository
 from .models import Player
 from .ports import IPlayerRepository
-from .schemas import PlayerAuthResponse, PlayerCreate, PlayerLoginRequest, PlayerLoginResponse, PlayerUpdate
+from .schemas import (
+    PlayerAuthResponse,
+    PlayerCreate,
+    PlayerLoginRequest,
+    PlayerLoginResponse,
+    PlayerUpdate,
+)
 from .service import PlayerService
 
 # Router de FastAPI
