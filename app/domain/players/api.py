@@ -17,10 +17,13 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+from app.domain.games.adapters.firestore_repository import FirestoreGameRepository
+from app.domain.games.ports import IGameRepository
+
 from .adapters.firestore_repository import FirestorePlayerRepository
 from .models import Player
 from .ports import IPlayerRepository
-from .schemas import PlayerAuthResponse, PlayerCreate, PlayerUpdate
+from .schemas import PlayerAuthResponse, PlayerCreate, PlayerLoginRequest, PlayerLoginResponse, PlayerUpdate
 from .service import PlayerService
 
 # Router de FastAPI
@@ -92,6 +95,16 @@ def get_player_service(
     return PlayerService(repository=repository)
 
 
+def get_game_repository() -> IGameRepository:
+    """
+    Dependency que provee el repositorio de Games.
+
+    Returns:
+        IGameRepository: Implementación del repositorio
+    """
+    return FirestoreGameRepository()
+
+
 # ==================== ENDPOINTS ====================
 
 
@@ -124,6 +137,41 @@ def create_player(player_data: PlayerCreate, service: PlayerService = Depends(ge
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/login", response_model=PlayerLoginResponse)
+def login_player(
+    login_data: PlayerLoginRequest,
+    service: PlayerService = Depends(get_player_service),
+    game_repo: IGameRepository = Depends(get_game_repository),
+):
+    """
+    Login o registro idempotente.
+
+    Si el username existe, devuelve las credenciales existentes.
+    Si no existe, crea un nuevo jugador.
+    También devuelve la partida activa si existe.
+
+    Args:
+        login_data: Datos de login (username, email opcional)
+        service: Servicio de jugadores inyectado
+        game_repo: Repositorio de games inyectado
+
+    Returns:
+        PlayerLoginResponse: Credenciales y partida activa si existe
+    """
+    player, is_new = service.login_or_create(login_data.username, login_data.email)
+
+    # Buscar partida activa
+    active_game = game_repo.get_active_game(player.player_id)
+
+    return PlayerLoginResponse(
+        player_id=player.player_id,
+        username=player.username,
+        player_token=player.player_token,
+        active_game_id=active_game.game_id if active_game else None,
+        is_new_player=is_new,
+    )
 
 
 @router.get(

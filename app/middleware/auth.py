@@ -28,6 +28,7 @@ PUBLIC_ROUTES = [
 # Rutas que permiten crear jugadores sin autenticación
 CREATION_ROUTES = [
     "/v1/players",  # POST crear jugador
+    "/v1/players/login",  # POST login/registro
 ]
 
 

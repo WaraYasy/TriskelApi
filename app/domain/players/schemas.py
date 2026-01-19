@@ -5,6 +5,7 @@ Estos son los modelos de ENTRADA y SALIDA de la API REST.
 Define qué datos acepta y retorna cada endpoint.
 """
 
+from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
@@ -40,6 +41,7 @@ class PlayerUpdate(BaseModel):
     games_played: Optional[int] = None
     games_completed: Optional[int] = None
     stats: Optional[PlayerStats] = None
+    last_login: Optional[datetime] = None
 
     class Config:
         json_schema_extra = {"example": {"total_playtime_seconds": 7200, "games_played": 10}}
@@ -64,3 +66,20 @@ class PlayerAuthResponse(BaseModel):
                 "player_token": "abc-def-token-secret",
             }
         }
+
+
+class PlayerLoginRequest(BaseModel):
+    """Datos para login/registro de jugador"""
+
+    username: str = Field(..., min_length=3, max_length=20)
+    email: Optional[str] = None
+
+
+class PlayerLoginResponse(BaseModel):
+    """Respuesta del login con partida activa opcional"""
+
+    player_id: str
+    username: str
+    player_token: str
+    active_game_id: Optional[str] = None
+    is_new_player: bool

@@ -5,7 +5,8 @@ Contiene todas las reglas de negocio y validaciones.
 Depende de la INTERFAZ IPlayerRepository, no de una implementación concreta.
 """
 
-from typing import List, Optional
+from datetime import datetime, timezone
+from typing import List, Optional, Tuple
 
 from .models import Player
 from .ports import IPlayerRepository
@@ -51,6 +52,34 @@ class PlayerService:
 
         # Crear y retornar
         return self.repository.create(player_data)
+
+    def login_or_create(self, username: str, email: Optional[str] = None) -> Tuple[Player, bool]:
+        """
+        Login idempotente: devuelve jugador existente o crea uno nuevo.
+
+        Args:
+            username: Nombre de usuario
+            email: Email opcional
+
+        Returns:
+            Tupla (Player, is_new_player):
+                - Player: El jugador (existente o recién creado)
+                - is_new_player: True si se creó nuevo, False si ya existía
+        """
+        existing = self.repository.get_by_username(username)
+
+        if existing:
+            # Actualizar last_login y retornar jugador refrescado
+            self.repository.update(
+                existing.player_id, PlayerUpdate(last_login=datetime.now(timezone.utc))
+            )
+            updated = self.repository.get_by_id(existing.player_id)
+            return updated, False
+
+        # Crear nuevo
+        player_data = PlayerCreate(username=username, email=email)
+        new_player = self.repository.create(player_data)
+        return new_player, True
 
     def get_player(self, player_id: str) -> Optional[Player]:
         """
