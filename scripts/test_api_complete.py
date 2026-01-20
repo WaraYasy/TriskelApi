@@ -252,27 +252,28 @@ class TriskelAPIClient:
 
     def start_level(self, game_id: str, level_name: str) -> dict[str, Any]:
         """Inicia un nivel"""
-        return self._request("POST", f"/v1/games/{game_id}/level/start", {"level_name": level_name})
+        return self._request("POST", f"/v1/games/{game_id}/level/start", {"level": level_name})
 
     def complete_level(
         self,
         game_id: str,
         level_name: str,
         deaths: int,
+        time_seconds: int = 120,
         relic: str | None = None,
         choice: str | None = None,
     ) -> dict[str, Any]:
         """Completa un nivel"""
-        data = {"level_name": level_name, "deaths": deaths}
+        data = {"level": level_name, "deaths": deaths, "time_seconds": time_seconds}
         if relic:
             data["relic"] = relic
         if choice:
             data["choice"] = choice
         return self._request("POST", f"/v1/games/{game_id}/level/complete", data)
 
-    def complete_game(self, game_id: str, final_reached: int) -> dict[str, Any]:
+    def complete_game(self, game_id: str) -> dict[str, Any]:
         """Completa el juego"""
-        return self._request("POST", f"/v1/games/{game_id}/complete", {"final_reached": final_reached})
+        return self._request("POST", f"/v1/games/{game_id}/complete", {})
 
     def delete_game(self, game_id: str) -> dict[str, Any]:
         """Elimina una partida"""
@@ -498,16 +499,15 @@ def test_get_events(client: TriskelAPIClient, game_id: str) -> bool:
         return False
 
 
-def test_complete_game(client: TriskelAPIClient, game_id: str, final_reached: int) -> bool:
+def test_complete_game(client: TriskelAPIClient, game_id: str) -> bool:
     """Prueba completar el juego"""
-    print_step(7, f"Completando el juego (Final {final_reached})...")
+    print_step(7, "Completando el juego...")
 
     try:
-        result = client.complete_game(game_id, final_reached)
+        result = client.complete_game(game_id)
 
         print_success("Juego completado")
         print_info(f"status: {result['status']}")
-        print_info(f"Final alcanzado: {final_reached}")
 
         return True
 
@@ -634,7 +634,7 @@ def run_full_test(base_url: str, cleanup: bool = True):
         results.append(("Obtener eventos", test_get_events(client, game_id)))
 
         # 9. Completar juego (final 1 = bueno)
-        results.append(("Completar juego", test_complete_game(client, game_id, final_reached=1)))
+        results.append(("Completar juego", test_complete_game(client, game_id)))
 
         # 10. Estadísticas finales
         results.append(("Estadísticas finales", test_final_stats(client)))

@@ -377,6 +377,40 @@ def complete_level(
         raise HTTPException(status_code=400, detail=str(e))
 
 
+@router.post("/{game_id}/complete", response_model=Game)
+def complete_game(
+    game_id: str,
+    request: Request,
+    service: GameService = Depends(get_game_service),
+):
+    """
+    Finalizar una partida (marcarla como completada).
+
+    Solo puedes finalizar tus propias partidas, a menos que uses API Key (admin).
+
+    Args:
+        game_id: ID de la partida
+        request: Request de FastAPI
+        service: Servicio inyectado
+
+    Returns:
+        Game: Partida actualizada con status="completed"
+
+    Raises:
+        HTTPException 403: Si intentas finalizar la partida de otro jugador
+        HTTPException 404: Si la partida no existe
+    """
+    game = service.get_game(game_id)
+
+    if not game:
+        raise HTTPException(status_code=404, detail="Partida no encontrada")
+
+    check_game_access(request, game, service)
+
+    updated_game = service.finish_game(game_id, completed=True)
+    return updated_game
+
+
 @router.delete("/{game_id}")
 def delete_game(game_id: str, request: Request, service: GameService = Depends(get_game_service)):
     """
