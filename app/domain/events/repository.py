@@ -168,20 +168,27 @@ class EventRepository:
         Returns:
             List[GameEvent]: Lista de eventos ordenados por timestamp
         """
-        query = self.collection.where("event_type", "==", event_type)
+        try:
+            query = self.collection.where("event_type", "==", event_type)
 
-        if game_id:
-            query = query.where("game_id", "==", game_id)
+            if game_id:
+                query = query.where("game_id", "==", game_id)
 
-        query = query.order_by("timestamp", direction=Query.DESCENDING).limit(limit)
-        docs = query.stream()
+            query = query.order_by("timestamp", direction=Query.DESCENDING).limit(limit)
+            docs = query.stream()
 
-        events = []
-        for doc in docs:
-            data = doc.to_dict()
-            events.append(GameEvent.from_dict(data))
+            events = []
+            for doc in docs:
+                data = doc.to_dict()
+                events.append(GameEvent.from_dict(data))
 
-        return events
+            return events
+        except Exception as e:
+            # Si la query falla por índice compuesto faltante en Firestore
+            print(f"⚠️ Query get_by_type falló: {e}")
+            print("   Puede que necesites crear un índice compuesto en Firestore")
+            print("   Índice requerido: event_type (ASC) + game_id (ASC) + timestamp (DESC)")
+            return []
 
     def query_events(
         self,
