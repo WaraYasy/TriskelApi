@@ -118,7 +118,9 @@ class PlayerService:
             raise ValueError("Usuario o contraseña incorrectos")
 
         # Actualizar last_login
-        self.repository.update(player.player_id, PlayerUpdate(last_login=datetime.now(timezone.utc)))
+        self.repository.update(
+            player.player_id, PlayerUpdate(last_login=datetime.now(timezone.utc))
+        )
 
         # Retornar jugador actualizado
         return self.repository.get_by_id(player.player_id)

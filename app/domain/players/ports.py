@@ -26,19 +26,6 @@ class IPlayerRepository(ABC):
     """
 
     @abstractmethod
-    def create(self, player_data: PlayerCreate) -> Player:
-        """
-        Crea y guarda un nuevo jugador.
-
-        Args:
-            player_data: Datos del jugador a crear
-
-        Returns:
-            Player: Jugador creado con su ID generado
-        """
-        pass
-
-    @abstractmethod
     def get_by_id(self, player_id: str) -> Optional[Player]:
         """
         Busca un jugador por su ID.
@@ -132,8 +119,8 @@ class IPlayerRepository(ABC):
         """
         Guarda un Player ya construido directamente.
 
-        Útil para autenticación por dispositivo donde el Player
-        se crea sin username.
+        Útil cuando el servicio necesita crear un Player con datos específicos
+        (como password hasheado) antes de guardarlo.
 
         Args:
             player: Objeto Player completo a guardar

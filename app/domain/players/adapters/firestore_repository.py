@@ -37,18 +37,6 @@ class FirestorePlayerRepository(IPlayerRepository):
         self.db = db or get_firestore_client()
         self.collection = self.db.collection(self.COLLECTION_NAME)
 
-    def create(self, player_data: PlayerCreate) -> Player:
-        """Crea un nuevo jugador en Firestore"""
-        # Crear el objeto Player completo
-        player = Player(username=player_data.username, email=player_data.email)
-
-        # Guardar en Firestore
-        doc_ref = self.collection.document(player.player_id)
-        doc_ref.set(player.to_dict())
-
-        logger.info(f"Jugador creado: {player.player_id} - {player.username}")
-        return player
-
     def get_by_id(self, player_id: str) -> Optional[Player]:
         """Obtiene un jugador por su ID"""
         doc_ref = self.collection.document(player_id)
@@ -144,11 +132,11 @@ class FirestorePlayerRepository(IPlayerRepository):
         """
         Guarda un Player ya construido directamente.
 
-        Útil para autenticación por dispositivo donde el Player
-        se crea sin username.
+        Útil cuando el servicio necesita crear un Player con datos específicos
+        (como password hasheado) antes de guardarlo.
         """
         doc_ref = self.collection.document(player.player_id)
         doc_ref.set(player.to_dict())
 
-        logger.info(f"Jugador guardado: {player.player_id} - {player.display_name}")
+        logger.info(f"Jugador guardado: {player.player_id} - {player.username}")
         return player
