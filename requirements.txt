@@ -37,6 +37,9 @@ python-multipart==0.0.6            # Form data parsing para login
 # ==================== Producción ====================
 gunicorn==21.2.0                 # WSGI server (producción)
 
+# ==================== Scheduling ====================
+APScheduler==3.10.4              # Tareas programadas para leaderboards
+
 # ==================== Testing ====================
 pytest==7.4.3                    # Framework de testing
 pytest-asyncio==0.21.1           # Testing async
