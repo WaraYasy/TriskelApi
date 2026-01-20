@@ -317,13 +317,13 @@ X-Player-Token: {player_token}
 
 #### Request Body
 
-| Campo        | Tipo     | Requerido | Descripcion                        |
-|--------------|----------|-----------|------------------------------------|
-| `level_name` | `string` | Si        | Nombre del nivel (ver constantes)  |
+| Campo   | Tipo     | Requerido | Descripcion                        |
+|---------|----------|-----------|------------------------------------|
+| `level` | `string` | Si        | Nombre del nivel (ver constantes)  |
 
 ```json
 {
-  "level_name": "senda_ebano"
+  "level": "senda_ebano"
 }
 ```
 
@@ -350,16 +350,18 @@ X-Player-Token: {player_token}
 
 #### Request Body
 
-| Campo        | Tipo      | Requerido | Descripcion                                        |
-|--------------|-----------|-----------|---------------------------------------------------|
-| `level_name` | `string`  | Si        | Nombre del nivel completado                        |
-| `deaths`     | `integer` | Si        | Numero de muertes en este nivel (>= 0)            |
-| `relic`      | `string`  | No        | Reliquia obtenida: "lirio", "hacha" o "manto"     |
-| `choice`     | `string`  | No        | Decision moral tomada (depende del nivel)         |
+| Campo          | Tipo      | Requerido | Descripcion                                        |
+|----------------|-----------|-----------|---------------------------------------------------|
+| `level`        | `string`  | Si        | Nombre del nivel completado                        |
+| `time_seconds` | `integer` | Si        | Tiempo en segundos para completar el nivel         |
+| `deaths`       | `integer` | Si        | Numero de muertes en este nivel (>= 0)            |
+| `relic`        | `string`  | No        | Reliquia obtenida: "lirio", "hacha" o "manto"     |
+| `choice`       | `string`  | No        | Decision moral tomada (depende del nivel)         |
 
 ```json
 {
-  "level_name": "senda_ebano",
+  "level": "senda_ebano",
+  "time_seconds": 245,
   "deaths": 3,
   "relic": "lirio",
   "choice": "sanar"
@@ -432,21 +434,18 @@ X-Player-Token: {player_token}
 
 #### Request Body
 
-| Campo           | Tipo      | Requerido | Descripcion                   |
-|-----------------|-----------|-----------|-------------------------------|
-| `final_reached` | `integer` | Si        | Final alcanzado (1, 2 o 3)    |
+Vacio `{}` - No se requieren campos adicionales.
 
 ```json
-{
-  "final_reached": 1
-}
+{}
 ```
 
 #### Response (200 OK)
 
-Retorna:
-- Objeto `Game` actualizado (status: "completed")
-- Estadisticas del jugador actualizadas
+Retorna el objeto `Game` actualizado con:
+- `status`: "completed"
+- `ended_at`: Timestamp de finalizacion
+- Estadisticas del jugador actualizadas automaticamente
 
 ---
 
@@ -540,16 +539,18 @@ X-Player-Token: {player_token}
 | Campo        | Tipo     | Requerido | Descripcion                        |
 |--------------|----------|-----------|------------------------------------|
 | `game_id`    | `string` | Si        | ID de la partida                   |
+| `player_id`  | `string` | Si        | ID del jugador                     |
 | `event_type` | `string` | Si        | Tipo de evento (ver constantes)    |
 | `level`      | `string` | No        | Nivel donde ocurrio                |
-| `metadata`   | `object` | No        | Datos adicionales del evento       |
+| `data`       | `object` | No        | Datos adicionales del evento       |
 
 ```json
 {
   "game_id": "game-123-abc",
+  "player_id": "550e8400-e29b-41d4-a716-446655440000",
   "event_type": "player_death",
   "level": "senda_ebano",
-  "metadata": {
+  "data": {
     "enemy_type": "espectro",
     "position_x": 120.5,
     "position_y": 45.2
@@ -589,12 +590,14 @@ X-Player-Token: {player_token}
   "events": [
     {
       "game_id": "game-123",
+      "player_id": "550e8400-e29b-41d4-a716-446655440000",
       "event_type": "player_death",
       "level": "senda_ebano"
     },
     {
       "game_id": "game-123",
-      "event_type": "level_complete",
+      "player_id": "550e8400-e29b-41d4-a716-446655440000",
+      "event_type": "level_end",
       "level": "senda_ebano"
     }
   ]
@@ -675,7 +678,7 @@ Array de objetos `GameEvent` filtrados por tipo.
 
 ## 4. CONSTANTES Y ENUMS
 
-### Niveles (level_name)
+### Niveles (level)
 
 | Valor                  | Descripcion               |
 |------------------------|---------------------------|
@@ -717,16 +720,16 @@ Array de objetos `GameEvent` filtrados por tipo.
 
 ### Tipos de Eventos (event_type)
 
-| Valor               | Descripcion               |
-|---------------------|---------------------------|
-| `level_start`       | Inicio de nivel           |
-| `level_complete`    | Nivel completado          |
-| `player_death`      | Muerte del jugador        |
-| `relic_obtained`    | Reliquia obtenida         |
-| `moral_choice`      | Decision moral tomada     |
-| `checkpoint_reached`| Checkpoint alcanzado      |
-| `boss_encounter`    | Encuentro con jefe        |
-| `custom_event`      | Evento personalizado      |
+| Valor                | Descripcion               |
+|----------------------|---------------------------|
+| `player_death`       | Muerte del jugador        |
+| `level_start`        | Inicio de nivel           |
+| `level_end`          | Fin de nivel              |
+| `npc_interaction`    | Interaccion con NPC       |
+| `item_collected`     | Item recolectado          |
+| `checkpoint_reached` | Checkpoint alcanzado      |
+| `boss_encounter`     | Encuentro con jefe        |
+| `custom_event`       | Evento personalizado      |
 
 ---
 
@@ -793,14 +796,16 @@ Jugador entra a un nivel
     |
     v
 POST /v1/games/{game_id}/level/start
-    body: { "level_name": "senda_ebano" }
+    body: { "level": "senda_ebano" }
     |
     v
 [JUGADOR JUEGA EL NIVEL]
     |
     +-- Registrar eventos (batch cada 30s o 10 eventos):
     |   POST /v1/events/batch
-    |   body: { "events": [muerte1, muerte2, ...] }
+    |   body: { "events": [
+    |     {"game_id": "...", "player_id": "...", "event_type": "player_death", "level": "senda_ebano"}
+    |   ] }
     |
     +-- Guardar progreso cada X minutos:
         PATCH /v1/games/{game_id}
@@ -812,7 +817,8 @@ Jugador completa nivel
     v
 POST /v1/games/{game_id}/level/complete
     body: {
-      "level_name": "senda_ebano",
+      "level": "senda_ebano",
+      "time_seconds": 245,
       "deaths": 3,
       "relic": "lirio",
       "choice": "sanar"
@@ -826,13 +832,14 @@ Jugador llega al final
     |
     v
 POST /v1/games/{game_id}/complete
-    body: { "final_reached": 1 }
+    body: {}
     |
     v
 API actualiza automaticamente:
     - game.status = "completed"
+    - game.ended_at = timestamp actual
     - player.games_completed += 1
-    - player.stats (moral_alignment, total_deaths, etc.)
+    - player.stats (moral_alignment, total_deaths, best_speedrun, etc.)
     |
     v
 Mostrar pantalla de creditos/estadisticas

@@ -329,12 +329,12 @@ Crear una nueva partida.
 
 **Autenticacion**: Player Token
 
-**Request Body**:
+**Request Body** (opcional):
 ```json
-{
-  "player_id": "550e8400-e29b-41d4-a716-446655440000"
-}
+{}
 ```
+
+> **Nota**: El `player_id` es opcional. Si no se envia, se usa automaticamente el del jugador autenticado.
 
 **Respuesta**: `201 Created`
 ```json
@@ -374,7 +374,7 @@ curl -X POST http://localhost:8000/v1/games \
   -H "Content-Type: application/json" \
   -H "X-Player-ID: 550e8400-e29b-41d4-a716-446655440000" \
   -H "X-Player-Token: abc-123-xyz-789" \
-  -d '{"player_id": "550e8400-e29b-41d4-a716-446655440000"}'
+  -d '{}'
 ```
 
 ---
@@ -551,8 +551,8 @@ Registrar completado de un nivel.
 
 **Campos**:
 - `level` (string, requerido): Nivel completado
-- `time_seconds` (int, opcional): Tiempo en segundos
-- `deaths` (int, opcional): Numero de muertes
+- `time_seconds` (int, requerido): Tiempo en segundos
+- `deaths` (int, requerido): Numero de muertes
 - `choice` (string, opcional): Decision tomada
 - `relic` (string, opcional): Reliquia obtenida
 
@@ -601,6 +601,44 @@ curl -X POST http://localhost:8000/v1/games/game-uuid-123/level/complete \
 
 ---
 
+### POST /v1/games/{game_id}/complete
+
+Finalizar una partida (marcarla como completada).
+
+**Autenticacion**: Admin O dueno de la partida
+
+**Parametros URL**:
+- `game_id` (UUID): ID de la partida
+
+**Request Body**: Vacio `{}`
+
+**Respuesta**: `200 OK`
+```json
+{
+  "game_id": "game-uuid-123",
+  "player_id": "550e8400-e29b-41d4-a716-446655440000",
+  "status": "completed",
+  "ended_at": "2026-01-18T11:30:00Z",
+  "completion_percentage": 100,
+  "total_time_seconds": 3600
+}
+```
+
+**Errores**:
+- `403 Forbidden`: No tienes permiso para finalizar esta partida
+- `404 Not Found`: Partida no existe
+
+**Ejemplo cURL**:
+```bash
+curl -X POST http://localhost:8000/v1/games/game-uuid-123/complete \
+  -H "Content-Type: application/json" \
+  -H "X-Player-ID: 550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-Player-Token: abc-123-xyz-789" \
+  -d '{}'
+```
+
+---
+
 ### DELETE /v1/games/{game_id}
 
 Eliminar una partida.
@@ -613,8 +651,7 @@ Eliminar una partida.
 **Respuesta**: `200 OK`
 ```json
 {
-  "message": "Game deleted successfully",
-  "game_id": "game-uuid-123"
+  "message": "Partida eliminada correctamente"
 }
 ```
 
@@ -661,14 +698,14 @@ Crear un evento de gameplay.
 - `data` (object, opcional): Datos adicionales del evento
 
 **Tipos de eventos validos**:
-- `player_death`
-- `level_start`
-- `level_end`
-- `npc_interaction`
-- `item_collected`
-- `checkpoint_reached`
-- `boss_encounter`
-- `custom_event`
+- `player_death` - Muerte del jugador
+- `level_start` - Inicio de nivel
+- `level_end` - Fin de nivel
+- `npc_interaction` - Interaccion con NPC
+- `item_collected` - Item recolectado
+- `checkpoint_reached` - Checkpoint alcanzado
+- `boss_encounter` - Encuentro con jefe
+- `custom_event` - Evento personalizado
 
 **Respuesta**: `201 Created`
 ```json
