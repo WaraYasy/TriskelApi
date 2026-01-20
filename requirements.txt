@@ -20,7 +20,7 @@ sqlalchemy==2.0.25               # ORM para SQL (PostgreSQL, MySQL, MariaDB)
 psycopg2-binary==2.9.9           # Driver para PostgreSQL (RECOMENDADO en Railway)
 
 # ==================== Dashboard Web (Flask) ====================
-flask==3.0.0                     # Framework web
+flask==3.1.2                     # Framework web
 httpx==0.25.2                    # Cliente HTTP para consumir API REST
 pandas==2.1.4                    # Procesamiento de datos
 plotly==5.18.0                   # Visualizaciones interactivas
