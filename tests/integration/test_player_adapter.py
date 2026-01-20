@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.domain.players.adapters.firestore_repository import FirestorePlayerRepository
-from app.domain.players.schemas import PlayerCreate, PlayerUpdate
+from app.domain.players.schemas import PlayerUpdate
 
 
 @pytest.mark.integration

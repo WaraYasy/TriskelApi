@@ -14,7 +14,7 @@ from app.infrastructure.database.firebase_client import get_firestore_client
 
 from ..models import Player
 from ..ports import IPlayerRepository
-from ..schemas import PlayerCreate, PlayerUpdate
+from ..schemas import PlayerUpdate
 
 
 class FirestorePlayerRepository(IPlayerRepository):

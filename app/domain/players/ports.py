@@ -14,7 +14,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 
 from .models import Player
-from .schemas import PlayerCreate, PlayerUpdate
+from .schemas import PlayerUpdate
 
 
 class IPlayerRepository(ABC):
