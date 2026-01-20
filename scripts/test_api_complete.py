@@ -27,7 +27,6 @@ Ejemplos:
 """
 
 import argparse
-import json
 import random
 import sys
 import time
@@ -43,6 +42,7 @@ DEFAULT_BASE_URL = "https://triskel.up.railway.app"
 # ============================================================================
 # COLORES PARA TERMINAL
 # ============================================================================
+
 
 class Colors:
     """Códigos ANSI para colores en terminal"""
@@ -94,6 +94,7 @@ def print_info(text: str):
 # EXCEPCIONES
 # ============================================================================
 
+
 class APIError(Exception):
     """Error al llamar a la API"""
 
@@ -106,6 +107,7 @@ class APIError(Exception):
 # ============================================================================
 # CLIENTE API
 # ============================================================================
+
 
 @dataclass
 class PlayerCredentials:
@@ -176,7 +178,9 @@ class TriskelAPIClient:
 
     # ========== PLAYERS ==========
 
-    def create_player(self, username: str, password: str, email: str | None = None) -> PlayerCredentials:
+    def create_player(
+        self, username: str, password: str, email: str | None = None
+    ) -> PlayerCredentials:
         """
         Crea un nuevo jugador (registro).
 
@@ -252,7 +256,9 @@ class TriskelAPIClient:
 
     def start_level(self, game_id: str, level_name: str) -> dict[str, Any]:
         """Inicia un nivel"""
-        return self._request("POST", f"/v1/games/{game_id}/level/start", {"level": level_name})
+        return self._request(
+            "POST", f"/v1/games/{game_id}/level/start", {"level": level_name}
+        )
 
     def complete_level(
         self,
@@ -282,10 +288,18 @@ class TriskelAPIClient:
     # ========== EVENTS ==========
 
     def create_event(
-        self, game_id: str, event_type: str, level: str | None = None, metadata: dict | None = None
+        self,
+        game_id: str,
+        event_type: str,
+        level: str | None = None,
+        metadata: dict | None = None,
     ) -> dict[str, Any]:
         """Crea un evento"""
-        data = {"game_id": game_id, "event_type": event_type}
+        data = {
+            "game_id": game_id,
+            "player_id": self.credentials.player_id,
+            "event_type": event_type,
+        }
         if level:
             data["level"] = level
         if metadata:
@@ -304,12 +318,15 @@ class TriskelAPIClient:
         self, game_id: str, event_type: str, limit: int = 100
     ) -> list[dict[str, Any]]:
         """Obtiene eventos de una partida filtrados por tipo"""
-        return self._request("GET", f"/v1/events/game/{game_id}/type/{event_type}?limit={limit}")
+        return self._request(
+            "GET", f"/v1/events/game/{game_id}/type/{event_type}?limit={limit}"
+        )
 
 
 # ============================================================================
 # FUNCIONES DE TEST
 # ============================================================================
+
 
 def test_health_check(client: TriskelAPIClient) -> bool:
     """Prueba que la API esté disponible"""
@@ -413,7 +430,7 @@ def test_play_level(
     relic: str | None = None,
 ) -> bool:
     """Prueba jugar un nivel completo"""
-    print_step(f"▶", f"Jugando nivel: {level_name}")
+    print_step("▶", f"Jugando nivel: {level_name}")
 
     try:
         # 1. Iniciar nivel
@@ -423,18 +440,25 @@ def test_play_level(
         # 2. Simular muertes (eventos)
         deaths = random.randint(0, 5)
         if deaths > 0:
+            # Incluir player_id en cada evento
+            player_id = client.credentials.player_id
             events = [
-                {"game_id": game_id, "event_type": "player_death", "level": level_name}
+                {
+                    "game_id": game_id,
+                    "player_id": player_id,
+                    "event_type": "player_death",
+                    "level": level_name,
+                }
                 for _ in range(deaths)
             ]
             client.create_events_batch(events)
             print_info(f"Muertes: {deaths}")
 
-        # 3. Crear evento de nivel completado
-        client.create_event(game_id, "level_complete", level_name)
+        # 3. Crear evento de nivel completado (level_end, no level_complete)
+        client.create_event(game_id, "level_end", level_name)
 
         # 4. Completar nivel
-        game = client.complete_level(game_id, level_name, deaths, relic, choice)
+        client.complete_level(game_id, level_name, deaths, relic=relic, choice=choice)
         print_success(f"Nivel '{level_name}' completado")
 
         if choice:
@@ -460,7 +484,8 @@ def test_save_progress(client: TriskelAPIClient, game_id: str) -> bool:
         new_time = current_time + random.randint(300, 600)
 
         updated_game = client.update_game(
-            game_id, {"total_time_seconds": new_time, "current_level": game["current_level"]}
+            game_id,
+            {"total_time_seconds": new_time, "current_level": game["current_level"]},
         )
 
         print_success("Progreso guardado")
@@ -563,6 +588,7 @@ def test_delete_game(client: TriskelAPIClient, game_id: str) -> bool:
 # MAIN
 # ============================================================================
 
+
 def run_full_test(base_url: str, cleanup: bool = True):
     """
     Ejecuta la suite completa de tests.
@@ -601,19 +627,29 @@ def run_full_test(base_url: str, cleanup: bool = True):
 
     if game_id:
         # 5. Jugar niveles
-        results.append(("Nivel: hub_central", test_play_level(client, game_id, "hub_central")))
+        results.append(
+            ("Nivel: hub_central", test_play_level(client, game_id, "hub_central"))
+        )
 
         results.append(
             (
                 "Nivel: senda_ebano",
-                test_play_level(client, game_id, "senda_ebano", choice="sanar", relic="lirio"),
+                test_play_level(
+                    client, game_id, "senda_ebano", choice="sanar", relic="lirio"
+                ),
             )
         )
 
         results.append(
             (
                 "Nivel: fortaleza_gigantes",
-                test_play_level(client, game_id, "fortaleza_gigantes", choice="construir", relic="hacha"),
+                test_play_level(
+                    client,
+                    game_id,
+                    "fortaleza_gigantes",
+                    choice="construir",
+                    relic="hacha",
+                ),
             )
         )
 
@@ -624,11 +660,19 @@ def run_full_test(base_url: str, cleanup: bool = True):
         results.append(
             (
                 "Nivel: aquelarre_sombras",
-                test_play_level(client, game_id, "aquelarre_sombras", choice="revelar", relic="manto"),
+                test_play_level(
+                    client,
+                    game_id,
+                    "aquelarre_sombras",
+                    choice="revelar",
+                    relic="manto",
+                ),
             )
         )
 
-        results.append(("Nivel: claro_almas", test_play_level(client, game_id, "claro_almas")))
+        results.append(
+            ("Nivel: claro_almas", test_play_level(client, game_id, "claro_almas"))
+        )
 
         # 8. Obtener eventos
         results.append(("Obtener eventos", test_get_events(client, game_id)))
@@ -650,7 +694,11 @@ def run_full_test(base_url: str, cleanup: bool = True):
     total = len(results)
 
     for name, result in results:
-        status = f"{Colors.GREEN}✓ PASS{Colors.ENDC}" if result else f"{Colors.RED}✗ FAIL{Colors.ENDC}"
+        status = (
+            f"{Colors.GREEN}✓ PASS{Colors.ENDC}"
+            if result
+            else f"{Colors.RED}✗ FAIL{Colors.ENDC}"
+        )
         print(f"  [{status}] {name}")
 
     print()
@@ -672,10 +720,14 @@ def run_full_test(base_url: str, cleanup: bool = True):
 def main():
     parser = argparse.ArgumentParser(description="Test completo de Triskel API")
     parser.add_argument(
-        "--base-url", default=DEFAULT_BASE_URL, help=f"URL base de la API (default: {DEFAULT_BASE_URL})"
+        "--base-url",
+        default=DEFAULT_BASE_URL,
+        help=f"URL base de la API (default: {DEFAULT_BASE_URL})",
     )
     parser.add_argument(
-        "--no-cleanup", action="store_true", help="No eliminar la partida de prueba al final"
+        "--no-cleanup",
+        action="store_true",
+        help="No eliminar la partida de prueba al final",
     )
 
     args = parser.parse_args()
