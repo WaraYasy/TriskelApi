@@ -23,6 +23,7 @@ PUBLIC_ROUTES = [
     "/redoc",
     "/v1/auth/login",  # Login público
     "/v1/auth/refresh",  # Refresh público
+    "/v1/leaderboard",  # Listar leaderboards (público)
 ]
 
 # Rutas que permiten crear jugadores sin autenticación
@@ -58,6 +59,10 @@ async def auth_middleware(request: Request, call_next):
         or path.startswith("/openapi")
         or path.startswith("/web")
     ):
+        return await call_next(request)
+
+    # Rutas de leaderboard publicas (solo GET)
+    if path.startswith("/v1/leaderboard") and request.method == "GET":
         return await call_next(request)
 
     # POST /v1/players (crear jugador) no requiere autenticación

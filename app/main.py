@@ -18,7 +18,11 @@ from app.domain.auth.api import router as auth_router
 from app.domain.events.api import router as events_router
 from app.domain.games.api import router as games_router
 from app.domain.players.api import router as players_router
+from app.domain.sessions.api import router as sessions_router
+from app.domain.leaderboard.api import admin_router as leaderboard_admin_router
+from app.domain.leaderboard.api import router as leaderboard_router
 from app.domain.web import flask_app  # ⭐ Flask app
+from app.scheduler import shutdown_scheduler, start_scheduler
 from app.infrastructure.database.firebase_client import firebase_manager
 from app.infrastructure.database.sql_client import sql_manager
 from app.middleware.auth import auth_middleware
@@ -38,9 +42,15 @@ app = FastAPI(
         {"name": "Players", "description": "Gestión de jugadores y perfiles"},
         {"name": "Games", "description": "Gestión de partidas y estadísticas"},
         {"name": "Events", "description": "Eventos de gameplay y telemetría"},
+        {"name": "Sessions", "description": "Sesiones de juego (tracking de tiempo)"},
+        {"name": "Leaderboard", "description": "Tablas de clasificación (públicas)"},
         {
             "name": "Auth",
             "description": "Autenticación JWT para administradores del dashboard",
+        },
+        {
+            "name": "Admin - Leaderboard",
+            "description": "Administración de leaderboards (solo admin)",
         },
     ],
 )
@@ -161,7 +171,27 @@ def startup_event():
     except Exception as e:
         logger.warning(f"Base de datos SQL no disponible (opcional): {e}")
 
+    # Inicializar Scheduler de Leaderboards
+    try:
+        start_scheduler()
+    except Exception as e:
+        logger.warning(f"Scheduler no disponible: {e}")
+
     logger.info("Triskel API lista")
+
+
+@app.on_event("shutdown")
+def shutdown_event():
+    """Limpia recursos al cerrar la aplicación"""
+    logger.info("Cerrando Triskel API...")
+
+    # Detener scheduler
+    try:
+        shutdown_scheduler()
+    except Exception as e:
+        logger.warning(f"Error deteniendo scheduler: {e}")
+
+    logger.info("Triskel API cerrada")
 
 
 # Registrar routers de dominios (FastAPI REST API)
@@ -169,10 +199,10 @@ app.include_router(players_router)
 app.include_router(games_router)
 app.include_router(events_router)
 app.include_router(auth_router)
+app.include_router(sessions_router)
+app.include_router(leaderboard_router)
+app.include_router(leaderboard_admin_router)
 # app.include_router(seed_router)  # DESHABILITADO por seguridad - solo usar en desarrollo
-
-# TODO: Añadir routers adicionales cuando estén implementados:
-# app.include_router(sessions_router)
 
 # Montar Flask app (Dashboard Web)
 app.mount("/web", WSGIMiddleware(flask_app))
