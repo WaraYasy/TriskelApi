@@ -17,15 +17,15 @@ from app.core.logger import logger
 from app.domain.auth.api import router as auth_router
 from app.domain.events.api import router as events_router
 from app.domain.games.api import router as games_router
-from app.domain.players.api import router as players_router
-from app.domain.sessions.api import router as sessions_router
 from app.domain.leaderboard.api import admin_router as leaderboard_admin_router
 from app.domain.leaderboard.api import router as leaderboard_router
+from app.domain.players.api import router as players_router
+from app.domain.sessions.api import router as sessions_router
 from app.domain.web import flask_app  # ⭐ Flask app
-from app.scheduler import shutdown_scheduler, start_scheduler
 from app.infrastructure.database.firebase_client import firebase_manager
 from app.infrastructure.database.sql_client import sql_manager
 from app.middleware.auth import auth_middleware
+from app.scheduler import shutdown_scheduler, start_scheduler
 
 # Crear aplicación FastAPI
 app = FastAPI(
