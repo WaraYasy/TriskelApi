@@ -80,6 +80,7 @@ def sample_player(player_id, player_token, fixed_datetime, sample_player_stats) 
     return Player(
         player_id=player_id,
         username="test_player",
+        password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5NU7bl8qJ.6W6",  # hash de "test_password"
         email="test@example.com",
         player_token=player_token,
         created_at=fixed_datetime,
@@ -97,6 +98,7 @@ def new_player(player_id, player_token, fixed_datetime) -> Player:
     return Player(
         player_id=player_id,
         username="new_player",
+        password_hash="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5NU7bl8qJ.6W6",  # hash de "test_password"
         email="new@example.com",
         player_token=player_token,
         created_at=fixed_datetime,

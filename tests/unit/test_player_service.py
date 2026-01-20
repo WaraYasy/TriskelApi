@@ -19,17 +19,19 @@ class TestPlayerServiceCreate:
         """Crear jugador exitosamente"""
         # Configurar mocks
         mock_player_repository.get_by_username.return_value = None  # Username disponible
-        mock_player_repository.create.return_value = new_player
+        mock_player_repository.save.return_value = new_player
 
         # Ejecutar
         service = PlayerService(mock_player_repository)
-        player_data = PlayerCreate(username="new_player", email="new@example.com")
+        player_data = PlayerCreate(
+            username="new_player", password="test_pass123", email="new@example.com"
+        )
         result = service.create_player(player_data)
 
         # Verificar
         assert result == new_player
         mock_player_repository.get_by_username.assert_called_once_with("new_player")
-        mock_player_repository.create.assert_called_once_with(player_data)
+        mock_player_repository.save.assert_called_once()
 
     @pytest.mark.edge_case
     def test_create_player_duplicate_username(self, mock_player_repository, sample_player):
@@ -39,7 +41,7 @@ class TestPlayerServiceCreate:
 
         # Ejecutar y verificar excepción
         service = PlayerService(mock_player_repository)
-        player_data = PlayerCreate(username="test_player")
+        player_data = PlayerCreate(username="test_player", password="test_pass123")
 
         with pytest.raises(ValueError) as exc_info:
             service.create_player(player_data)
@@ -47,8 +49,8 @@ class TestPlayerServiceCreate:
         assert "ya existe" in str(exc_info.value)
         assert "test_player" in str(exc_info.value)
 
-        # Verificar que NO se llamó a create
-        mock_player_repository.create.assert_not_called()
+        # Verificar que NO se llamó a save
+        mock_player_repository.save.assert_not_called()
 
 
 @pytest.mark.unit

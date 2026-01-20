@@ -34,8 +34,10 @@ class TestFirestorePlayerRepository:
         mock_firestore_client.collection.return_value.document.return_value = mock_doc_ref
 
         # Ejecutar
-        player_data = PlayerCreate(username="test_player", email="test@example.com")
-        result = repository.create(player_data)
+        from app.domain.players.models import Player
+
+        player = Player(username="test_player", password_hash="test_hash", email="test@example.com")
+        result = repository.save(player)
 
         # Verificar
         assert result.username == "test_player"

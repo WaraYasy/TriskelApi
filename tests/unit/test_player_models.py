@@ -117,7 +117,7 @@ class TestPlayer:
 
     def test_create_player_minimal(self):
         """Crear jugador con datos mínimos requeridos"""
-        player = Player(username="test_player")
+        player = Player(username="test_player", password_hash="test_hash")
 
         assert player.username == "test_player"
         assert player.email is None
@@ -145,6 +145,7 @@ class TestPlayer:
         with pytest.raises(ValidationError) as exc_info:
             Player(
                 username="test",
+                password_hash="test_hash",
                 games_played=5,
                 games_completed=10,  # Mayor que games_played!
             )
@@ -153,23 +154,28 @@ class TestPlayer:
     @pytest.mark.edge_case
     def test_games_completed_equals_games_played(self):
         """games_completed puede ser igual a games_played (100% completado)"""
-        player = Player(username="perfect_player", games_played=10, games_completed=10)
+        player = Player(
+            username="perfect_player",
+            password_hash="test_hash",
+            games_played=10,
+            games_completed=10,
+        )
         assert player.games_completed == player.games_played
 
     @pytest.mark.edge_case
     def test_negative_playtime_rejected(self):
         """Rechazar tiempo de juego negativo"""
         with pytest.raises(ValidationError):
-            Player(username="test", total_playtime_seconds=-100)
+            Player(username="test", password_hash="test_hash", total_playtime_seconds=-100)
 
     @pytest.mark.edge_case
     def test_negative_games_rejected(self):
         """Rechazar contadores de partidas negativos"""
         with pytest.raises(ValidationError):
-            Player(username="test", games_played=-1)
+            Player(username="test", password_hash="test_hash", games_played=-1)
 
         with pytest.raises(ValidationError):
-            Player(username="test", games_completed=-1)
+            Player(username="test", password_hash="test_hash", games_completed=-1)
 
     def test_player_to_dict(self, sample_player):
         """Convertir Player a diccionario (para Firestore)"""
@@ -200,19 +206,23 @@ class TestPlayer:
     @pytest.mark.edge_case
     def test_player_with_extreme_playtime(self):
         """Jugador con tiempo de juego extremo (1000 horas)"""
-        player = Player(username="hardcore_gamer", total_playtime_seconds=3_600_000)  # 1000 horas
+        player = Player(
+            username="hardcore_gamer", password_hash="test_hash", total_playtime_seconds=3_600_000
+        )  # 1000 horas
         assert player.total_playtime_seconds == 3_600_000
 
     @pytest.mark.edge_case
     def test_player_with_many_games(self):
         """Jugador con muchas partidas"""
-        player = Player(username="veteran", games_played=1000, games_completed=750)
+        player = Player(
+            username="veteran", password_hash="test_hash", games_played=1000, games_completed=750
+        )
         assert player.games_played == 1000
         assert player.games_completed == 750
 
     def test_timestamps_auto_generated(self):
         """Timestamps se generan automáticamente"""
-        player = Player(username="timestamp_test")
+        player = Player(username="timestamp_test", password_hash="test_hash")
 
         assert isinstance(player.created_at, datetime)
         assert isinstance(player.last_login, datetime)
@@ -228,7 +238,7 @@ class TestPlayer:
             moral_alignment=0.88,
         )
 
-        player = Player(username="good_player", stats=custom_stats)
+        player = Player(username="good_player", password_hash="test_hash", stats=custom_stats)
 
         assert player.stats.total_good_choices == 15
         assert player.stats.favorite_relic == "hacha"

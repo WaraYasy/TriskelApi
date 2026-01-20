@@ -17,16 +17,20 @@ class TestPlayerCreate:
 
     def test_create_with_username_and_email(self):
         """Crear con username y email válidos"""
-        data = PlayerCreate(username="test_player", email="test@example.com")
+        data = PlayerCreate(
+            username="test_player", password="test_pass123", email="test@example.com"
+        )
 
         assert data.username == "test_player"
         assert data.email == "test@example.com"
+        assert data.password == "test_pass123"
 
     def test_create_with_username_only(self):
         """Crear solo con username (email es opcional)"""
-        data = PlayerCreate(username="test_player")
+        data = PlayerCreate(username="test_player", password="test_pass123")
 
         assert data.username == "test_player"
+        assert data.password == "test_pass123"
         assert data.email is None
 
     @pytest.mark.edge_case
@@ -47,13 +51,13 @@ class TestPlayerCreate:
 
     def test_username_minimum_length(self):
         """Username de 3 caracteres exactos (límite mínimo)"""
-        data = PlayerCreate(username="abc")
+        data = PlayerCreate(username="abc", password="test_pass123")
         assert data.username == "abc"
 
     def test_username_maximum_length(self):
         """Username de 20 caracteres exactos (límite máximo)"""
         username_20 = "a" * 20
-        data = PlayerCreate(username=username_20)
+        data = PlayerCreate(username=username_20, password="test_pass123")
         assert data.username == username_20
         assert len(data.username) == 20
 
@@ -69,13 +73,13 @@ class TestPlayerCreate:
     @pytest.mark.edge_case
     def test_username_with_spaces(self):
         """Username puede contener espacios (no hay validación específica)"""
-        data = PlayerCreate(username="test user")
+        data = PlayerCreate(username="test user", password="test_pass123")
         assert data.username == "test user"
 
     @pytest.mark.edge_case
     def test_username_with_special_chars(self):
         """Username puede contener caracteres especiales"""
-        data = PlayerCreate(username="test_player-123")
+        data = PlayerCreate(username="test_player-123", password="test_pass123")
         assert data.username == "test_player-123"
 
 
