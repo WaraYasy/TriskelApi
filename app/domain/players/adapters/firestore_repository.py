@@ -139,3 +139,16 @@ class FirestorePlayerRepository(IPlayerRepository):
         """Cuenta el total de jugadores"""
         docs = self.collection.stream()
         return sum(1 for _ in docs)
+
+    def save(self, player: Player) -> Player:
+        """
+        Guarda un Player ya construido directamente.
+
+        Útil para autenticación por dispositivo donde el Player
+        se crea sin username.
+        """
+        doc_ref = self.collection.document(player.player_id)
+        doc_ref.set(player.to_dict())
+
+        logger.info(f"Jugador guardado: {player.player_id} - {player.display_name}")
+        return player

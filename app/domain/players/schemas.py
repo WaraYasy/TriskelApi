@@ -36,6 +36,7 @@ class PlayerUpdate(BaseModel):
     """
 
     username: Optional[str] = Field(None, min_length=3, max_length=20)
+    display_name: Optional[str] = Field(None, min_length=1, max_length=30)
     email: Optional[str] = None
     total_playtime_seconds: Optional[int] = None
     games_played: Optional[int] = None
@@ -44,7 +45,9 @@ class PlayerUpdate(BaseModel):
     last_login: Optional[datetime] = None
 
     class Config:
-        json_schema_extra = {"example": {"total_playtime_seconds": 7200, "games_played": 10}}
+        json_schema_extra = {
+            "example": {"display_name": "GuerreroOscuro", "total_playtime_seconds": 7200}
+        }
 
 
 class PlayerAuthResponse(BaseModel):
@@ -80,6 +83,31 @@ class PlayerLoginResponse(BaseModel):
 
     player_id: str
     username: str
+    display_name: str
     player_token: str
     active_game_id: Optional[str] = None
     is_new_player: bool
+
+
+class DeviceRegisterResponse(BaseModel):
+    """
+    Respuesta al registrar un dispositivo (sin username).
+
+    El juego debe guardar player_id y player_token en almacenamiento local.
+    Si se pierde, no hay forma de recuperar la cuenta.
+    """
+
+    player_id: str
+    player_token: str
+    display_name: str
+    is_new_player: bool = True
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "player_id": "550e8400-e29b-41d4-a716-446655440000",
+                "player_token": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                "display_name": "Druida_A7B3",
+                "is_new_player": True,
+            }
+        }

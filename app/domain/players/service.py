@@ -53,6 +53,22 @@ class PlayerService:
         # Crear y retornar
         return self.repository.create(player_data)
 
+    def register_device(self) -> Player:
+        """
+        Registra un nuevo dispositivo (autenticación anónima).
+
+        Crea un jugador sin username, solo con player_id, player_token y display_name.
+        El juego debe guardar estas credenciales en almacenamiento local.
+
+        Returns:
+            Player: Jugador creado con credenciales generadas
+        """
+        # Crear un Player directamente (sin username)
+        player = Player()  # Genera automáticamente player_id, player_token, display_name
+
+        # Guardar usando el método save del repositorio
+        return self.repository.save(player)
+
     def login_or_create(self, username: str, email: Optional[str] = None) -> Tuple[Player, bool]:
         """
         Login idempotente: devuelve jugador existente o crea uno nuevo.

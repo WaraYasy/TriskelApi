@@ -126,3 +126,19 @@ class IPlayerRepository(ABC):
             Número total de jugadores en la base de datos
         """
         pass
+
+    @abstractmethod
+    def save(self, player: Player) -> Player:
+        """
+        Guarda un Player ya construido directamente.
+
+        Útil para autenticación por dispositivo donde el Player
+        se crea sin username.
+
+        Args:
+            player: Objeto Player completo a guardar
+
+        Returns:
+            Player: El mismo jugador guardado
+        """
+        pass
