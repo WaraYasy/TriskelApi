@@ -4,6 +4,8 @@ Tests unitarios para el servicio de Players.
 Prueba la lógica de negocio del PlayerService.
 """
 
+from unittest.mock import patch
+
 import pytest
 
 from app.domain.games.models import Game, GameChoices, GameMetrics
@@ -15,9 +17,11 @@ from app.domain.players.service import PlayerService
 class TestPlayerServiceCreate:
     """Tests para crear jugadores"""
 
-    def test_create_player_success(self, mock_player_repository, new_player):
+    @patch("app.domain.players.service.hash_password")
+    def test_create_player_success(self, mock_hash_password, mock_player_repository, new_player):
         """Crear jugador exitosamente"""
         # Configurar mocks
+        mock_hash_password.return_value = "hashed_password_123"
         mock_player_repository.get_by_username.return_value = None  # Username disponible
         mock_player_repository.save.return_value = new_player
 
@@ -30,6 +34,7 @@ class TestPlayerServiceCreate:
 
         # Verificar
         assert result == new_player
+        mock_hash_password.assert_called_once_with("test_pass123")
         mock_player_repository.get_by_username.assert_called_once_with("new_player")
         mock_player_repository.save.assert_called_once()
 
