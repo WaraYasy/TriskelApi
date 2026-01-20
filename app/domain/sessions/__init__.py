@@ -1,10 +1,18 @@
 """
-Dominio: Sessions (Sesiones de Juego)
+Dominio Sessions
 
-Tracking de sesiones de juego:
-- Inicio y fin de sesión
-- Duración por plataforma
-- Vinculación con partidas
-
-Arquitectura: Simple (sin ports, acceso directo a Firestore)
+Gestion de sesiones de juego (tracking de tiempo conectado).
 """
+
+from .api import router
+from .models import GameSession, Platform
+from .repository import SessionRepository
+from .service import SessionService
+
+__all__ = [
+    "router",
+    "GameSession",
+    "Platform",
+    "SessionRepository",
+    "SessionService",
+]
