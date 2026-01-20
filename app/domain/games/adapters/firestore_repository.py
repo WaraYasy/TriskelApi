@@ -7,6 +7,7 @@ Implementación concreta del repositorio usando Firestore.
 from typing import List, Optional
 
 from google.cloud.firestore_v1 import Client
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.infrastructure.database.firebase_client import get_firestore_client
 
@@ -55,7 +56,7 @@ class FirestoreGameRepository(IGameRepository):
     def get_by_player(self, player_id: str, limit: int = 100) -> List[Game]:
         """Obtiene todas las partidas de un jugador"""
         # Query: WHERE player_id == X LIMIT N
-        query = self.collection.where("player_id", "==", player_id).limit(limit)
+        query = self.collection.where(filter=FieldFilter("player_id", "==", player_id)).limit(limit)
         docs = query.stream()
 
         games = []
@@ -73,8 +74,8 @@ class FirestoreGameRepository(IGameRepository):
         """
         # Query: WHERE player_id == X AND status == "in_progress" LIMIT 1
         query = (
-            self.collection.where("player_id", "==", player_id)
-            .where("status", "==", "in_progress")
+            self.collection.where(filter=FieldFilter("player_id", "==", player_id))
+            .where(filter=FieldFilter("status", "==", "in_progress"))
             .limit(1)
         )
         docs = query.stream()

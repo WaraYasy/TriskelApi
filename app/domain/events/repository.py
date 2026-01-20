@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import List, Optional
 
 from google.cloud.firestore_v1 import Client, Query
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.infrastructure.database.firebase_client import get_firestore_client
 
@@ -116,7 +117,7 @@ class EventRepository:
             List[GameEvent]: Lista de eventos ordenados por timestamp
         """
         query = (
-            self.collection.where("game_id", "==", game_id)
+            self.collection.where(filter=FieldFilter("game_id", "==", game_id))
             .order_by("timestamp", direction=Query.DESCENDING)
             .limit(limit)
         )
@@ -141,7 +142,7 @@ class EventRepository:
             List[GameEvent]: Lista de eventos ordenados por timestamp
         """
         query = (
-            self.collection.where("player_id", "==", player_id)
+            self.collection.where(filter=FieldFilter("player_id", "==", player_id))
             .order_by("timestamp", direction=Query.DESCENDING)
             .limit(limit)
         )
@@ -169,10 +170,10 @@ class EventRepository:
             List[GameEvent]: Lista de eventos ordenados por timestamp
         """
         try:
-            query = self.collection.where("event_type", "==", event_type)
+            query = self.collection.where(filter=FieldFilter("event_type", "==", event_type))
 
             if game_id:
-                query = query.where("game_id", "==", game_id)
+                query = query.where(filter=FieldFilter("game_id", "==", game_id))
 
             query = query.order_by("timestamp", direction=Query.DESCENDING).limit(limit)
             docs = query.stream()
@@ -222,23 +223,23 @@ class EventRepository:
 
         # Aplicar filtros (máximo 1-2 por limitaciones de Firestore)
         if game_id:
-            query = query.where("game_id", "==", game_id)
+            query = query.where(filter=FieldFilter("game_id", "==", game_id))
 
         if player_id:
-            query = query.where("player_id", "==", player_id)
+            query = query.where(filter=FieldFilter("player_id", "==", player_id))
 
         if event_type:
-            query = query.where("event_type", "==", event_type)
+            query = query.where(filter=FieldFilter("event_type", "==", event_type))
 
         if level:
-            query = query.where("level", "==", level)
+            query = query.where(filter=FieldFilter("level", "==", level))
 
         # Filtros de rango de tiempo
         if start_time:
-            query = query.where("timestamp", ">=", start_time)
+            query = query.where(filter=FieldFilter("timestamp", ">=", start_time))
 
         if end_time:
-            query = query.where("timestamp", "<=", end_time)
+            query = query.where(filter=FieldFilter("timestamp", "<=", end_time))
 
         # Ordenar y limitar
         query = query.order_by("timestamp", direction=Query.DESCENDING).limit(limit)

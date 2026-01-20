@@ -8,6 +8,7 @@ Implementa la interfaz IPlayerRepository.
 from typing import List, Optional
 
 from google.cloud.firestore_v1 import Client
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.core.logger import logger
 from app.infrastructure.database.firebase_client import get_firestore_client
@@ -51,7 +52,7 @@ class FirestorePlayerRepository(IPlayerRepository):
     def get_by_username(self, username: str) -> Optional[Player]:
         """Obtiene un jugador por su username"""
         # Query en Firestore: WHERE username == X LIMIT 1
-        query = self.collection.where("username", "==", username).limit(1)
+        query = self.collection.where(filter=FieldFilter("username", "==", username)).limit(1)
         docs = query.stream()
 
         for doc in docs:
