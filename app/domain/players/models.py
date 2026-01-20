@@ -5,31 +5,11 @@ Estas son las ENTIDADES de negocio (objetos que representan conceptos reales).
 Solo contienen lógica de dominio, no validaciones de API.
 """
 
-import random
-import string
 from datetime import datetime, timezone
 from typing import Optional
 from uuid import uuid4
 
 from pydantic import BaseModel, Field, field_validator
-
-
-# Prefijos temáticos celtas para nombres generados automáticamente
-DISPLAY_NAME_PREFIXES = ["Celta", "Druida", "Guerrero", "Bardo", "Cazador", "Errante", "Guardián"]
-
-
-def generate_display_name() -> str:
-    """
-    Genera un display_name aleatorio con temática celta.
-
-    Formato: Prefijo_XXXX (ej: "Druida_A7B3", "Guerrero_X9K2")
-
-    Returns:
-        str: Nombre generado (máx 15 caracteres)
-    """
-    prefix = random.choice(DISPLAY_NAME_PREFIXES)
-    suffix = "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
-    return f"{prefix}_{suffix}"
 
 
 class PlayerStats(BaseModel):
@@ -65,8 +45,8 @@ class Player(BaseModel):
 
     # Identificación
     player_id: str = Field(default_factory=lambda: str(uuid4()))
-    username: Optional[str] = None  # Opcional para auth por dispositivo
-    display_name: str = Field(default_factory=generate_display_name)  # Nombre visible en leaderboards
+    username: str  # Nombre de usuario (requerido)
+    password_hash: str  # Hash de la contraseña (bcrypt)
     email: Optional[str] = None
     player_token: str = Field(default_factory=lambda: str(uuid4()))
 

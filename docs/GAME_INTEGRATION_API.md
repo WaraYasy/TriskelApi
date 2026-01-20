@@ -1,6 +1,6 @@
 # Triskel API - Guia de Integracion para el Juego
 
-**Version:** 1.1
+**Version:** 2.0
 **Base URL:** `http://localhost:8000` (desarrollo) | `https://tu-dominio.com` (produccion)
 
 ## Indice
@@ -27,66 +27,15 @@ X-Player-ID: {player_id}
 X-Player-Token: {player_token}
 ```
 
-> **IMPORTANTE:** Guarda `player_id` y `player_token` cuando hagas login. Son las credenciales para todas las peticiones posteriores.
+> **IMPORTANTE:** Guarda `player_id` y `player_token` cuando crees cuenta o hagas login. Son las credenciales para todas las peticiones posteriores.
 
 ---
 
 ## 1. JUGADORES
 
-### 1.1 Login (Crear o Ingresar) - ENDPOINT PRINCIPAL
+### 1.1 Crear Cuenta (Registro)
 
-Este es el endpoint que debe usar el juego para iniciar sesion. Si el usuario no existe, lo crea automaticamente.
-
-```
-POST /v1/players/login
-```
-
-**Headers:** Ninguno (endpoint publico)
-
-#### Request Body
-
-| Campo      | Tipo     | Requerido | Restricciones            | Descripcion              |
-|------------|----------|-----------|--------------------------|--------------------------|
-| `username` | `string` | Si        | 3-20 caracteres          | Nombre de usuario        |
-| `email`    | `string` | No        | Formato email valido     | Email del jugador        |
-
-```json
-{
-  "username": "jugador123",
-  "email": "jugador@email.com"
-}
-```
-
-#### Response (200 OK)
-
-| Campo            | Tipo      | Descripcion                                      |
-|------------------|-----------|--------------------------------------------------|
-| `player_id`      | `string`  | UUID unico del jugador                           |
-| `username`       | `string`  | Nombre de usuario                                |
-| `player_token`   | `string`  | Token secreto - **GUARDAR EN EL JUEGO**          |
-| `active_game_id` | `string?` | ID de partida activa (null si no hay ninguna)    |
-| `is_new_player`  | `boolean` | `true` si se creo nuevo, `false` si ya existia   |
-
-```json
-{
-  "player_id": "123e4567-e89b-12d3-a456-426614174000",
-  "username": "jugador123",
-  "player_token": "abc-def-ghi-token-secreto",
-  "active_game_id": "game-456-xyz",
-  "is_new_player": false
-}
-```
-
-> **LOGICA:**
-> - Si `is_new_player = true`: Usuario nuevo creado
-> - Si `is_new_player = false`: Usuario existente, devuelve sus credenciales
-> - Si `active_game_id != null`: Tiene una partida en progreso que puede continuar
-
----
-
-### 1.2 Crear Jugador (Solo Registro)
-
-Crea un nuevo jugador. Falla si el username ya existe.
+Crea un nuevo jugador con username y contraseña. Si el username ya existe, retorna error.
 
 ```
 POST /v1/players
@@ -96,39 +45,93 @@ POST /v1/players
 
 #### Request Body
 
-| Campo      | Tipo     | Requerido | Restricciones       | Descripcion        |
-|------------|----------|-----------|---------------------|--------------------|
-| `username` | `string` | Si        | 3-20 caracteres     | Nombre de usuario  |
-| `email`    | `string` | No        | Formato email valido| Email del jugador  |
+| Campo      | Tipo     | Requerido | Restricciones        | Descripcion         |
+|------------|----------|-----------|----------------------|---------------------|
+| `username` | `string` | Si        | 3-20 caracteres      | Nombre de usuario   |
+| `password` | `string` | Si        | 6-100 caracteres     | Contraseña          |
+| `email`    | `string` | No        | Formato email valido | Email del jugador   |
 
 ```json
 {
-  "username": "nuevo_jugador",
-  "email": "nuevo@email.com"
+  "username": "jugador123",
+  "password": "mi_password_seguro",
+  "email": "jugador@email.com"
 }
 ```
 
 #### Response (201 Created)
 
-| Campo          | Tipo     | Descripcion                         |
-|----------------|----------|-------------------------------------|
-| `player_id`    | `string` | UUID unico del jugador              |
-| `username`     | `string` | Nombre de usuario                   |
-| `player_token` | `string` | Token secreto - GUARDAR EN EL JUEGO |
+| Campo          | Tipo     | Descripcion                              |
+|----------------|----------|------------------------------------------|
+| `player_id`    | `string` | UUID unico del jugador                   |
+| `username`     | `string` | Nombre de usuario                        |
+| `player_token` | `string` | Token secreto - **GUARDAR EN EL JUEGO** |
 
 ```json
 {
   "player_id": "123e4567-e89b-12d3-a456-426614174000",
-  "username": "nuevo_jugador",
-  "player_token": "abc-def-ghi-token-secreto"
+  "username": "jugador123",
+  "player_token": "abc-def-token-secreto"
 }
 ```
 
 #### Errores
 
-| Codigo | Descripcion                    |
-|--------|--------------------------------|
-| 400    | Username ya existe o invalido  |
+| Codigo | Descripcion                     |
+|--------|---------------------------------|
+| 400    | Username ya existe o invalido   |
+
+---
+
+### 1.2 Login
+
+Inicia sesión con username y contraseña. Si las credenciales son incorrectas, retorna error.
+
+```
+POST /v1/players/login
+```
+
+**Headers:** Ninguno (endpoint publico)
+
+#### Request Body
+
+| Campo      | Tipo     | Requerido | Restricciones    | Descripcion      |
+|------------|----------|-----------|------------------|------------------|
+| `username` | `string` | Si        | 3-20 caracteres  | Nombre de usuario|
+| `password` | `string` | Si        | 6-100 caracteres | Contraseña       |
+
+```json
+{
+  "username": "jugador123",
+  "password": "mi_password_seguro"
+}
+```
+
+#### Response (200 OK)
+
+| Campo            | Tipo      | Descripcion                                   |
+|------------------|-----------|-----------------------------------------------|
+| `player_id`      | `string`  | UUID unico del jugador                        |
+| `username`       | `string`  | Nombre de usuario                             |
+| `player_token`   | `string`  | Token secreto - **GUARDAR EN EL JUEGO**       |
+| `active_game_id` | `string?` | ID de partida activa (null si no hay ninguna) |
+
+```json
+{
+  "player_id": "123e4567-e89b-12d3-a456-426614174000",
+  "username": "jugador123",
+  "player_token": "abc-def-token-secreto",
+  "active_game_id": "game-456-xyz"
+}
+```
+
+> **NOTA:** Si `active_game_id != null`, el jugador tiene una partida en progreso que puede continuar.
+
+#### Errores
+
+| Codigo | Descripcion                        |
+|--------|------------------------------------|
+| 401    | Usuario o contraseña incorrectos   |
 
 ---
 
@@ -149,51 +152,30 @@ X-Player-Token: {player_token}
 
 #### Response (200 OK)
 
-| Campo                    | Tipo           | Descripcion                        |
-|--------------------------|----------------|------------------------------------|
-| `player_id`              | `string`       | UUID del jugador                   |
-| `username`               | `string`       | Nombre de usuario                  |
-| `email`                  | `string?`      | Email (puede ser null)             |
-| `player_token`           | `string`       | Token de autenticacion             |
-| `created_at`             | `datetime`     | Fecha de creacion (ISO 8601)       |
-| `last_login`             | `datetime`     | Ultimo acceso (ISO 8601)           |
-| `total_playtime_seconds` | `integer`      | Tiempo total jugado en segundos    |
-| `games_played`           | `integer`      | Numero de partidas iniciadas       |
-| `games_completed`        | `integer`      | Numero de partidas completadas     |
-| `stats`                  | `PlayerStats`  | Estadisticas agregadas             |
-
-#### PlayerStats (objeto anidado)
-
-| Campo                   | Tipo      | Rango        | Descripcion                             |
-|-------------------------|-----------|--------------|----------------------------------------|
-| `total_good_choices`    | `integer` | >= 0         | Total decisiones buenas (todas partidas)|
-| `total_bad_choices`     | `integer` | >= 0         | Total decisiones malas (todas partidas) |
-| `total_deaths`          | `integer` | >= 0         | Muertes acumuladas                      |
-| `favorite_relic`        | `string?` | enum         | Reliquia mas recolectada                |
-| `best_speedrun_seconds` | `integer?`| >= 0         | Mejor tiempo de completado              |
-| `moral_alignment`       | `float`   | -1.0 a 1.0   | Alineacion moral                        |
-
 ```json
 {
   "player_id": "123e4567-e89b-12d3-a456-426614174000",
   "username": "jugador123",
+  "password_hash": "$2b$12$...",
   "email": "jugador@email.com",
   "player_token": "abc-def-token",
-  "created_at": "2026-01-15T10:30:00Z",
-  "last_login": "2026-01-18T14:20:00Z",
+  "created_at": "2024-01-01T12:00:00Z",
+  "last_login": "2024-01-10T18:30:00Z",
   "total_playtime_seconds": 7200,
   "games_played": 5,
-  "games_completed": 2,
+  "games_completed": 3,
   "stats": {
-    "total_good_choices": 4,
-    "total_bad_choices": 2,
-    "total_deaths": 45,
+    "total_good_choices": 10,
+    "total_bad_choices": 5,
+    "total_deaths": 20,
     "favorite_relic": "lirio",
     "best_speedrun_seconds": 2400,
     "moral_alignment": 0.33
   }
 }
 ```
+
+> **NOTA:** El campo `password_hash` nunca debe mostrarse al jugador, es solo para uso interno.
 
 ---
 
@@ -231,7 +213,6 @@ X-Player-Token: {player_token}
 
 ```json
 {
-  "username": "nuevo_nombre",
   "total_playtime_seconds": 9000
 }
 ```
@@ -244,9 +225,9 @@ Retorna el objeto `Player` completo actualizado.
 
 ## 2. PARTIDAS
 
-### 2.1 Crear Nueva Partida
+### 2.1 Crear Partida
 
-Inicia una nueva partida para el jugador.
+Crea una nueva partida para el jugador autenticado.
 
 ```
 POST /v1/games
@@ -261,147 +242,38 @@ X-Player-Token: {player_token}
 
 #### Request Body
 
-| Campo       | Tipo     | Requerido | Descripcion        |
-|-------------|----------|-----------|-------------------|
-| `player_id` | `string` | Si        | UUID del jugador  |
+Vacio `{}` (el player_id se obtiene del token de autenticacion)
+
+#### Response (201 Created)
 
 ```json
 {
-  "player_id": "123e4567-e89b-12d3-a456-426614174000"
-}
-```
-
-#### Response (201 Created) - Objeto Game
-
-| Campo                   | Tipo           | Descripcion                          |
-|-------------------------|----------------|--------------------------------------|
-| `game_id`               | `string`       | UUID de la partida                   |
-| `player_id`             | `string`       | UUID del jugador                     |
-| `started_at`            | `datetime`     | Fecha/hora de inicio (ISO 8601)      |
-| `ended_at`              | `datetime?`    | Fecha/hora de fin (null si activa)   |
-| `status`                | `string`       | Estado: `in_progress`, `completed`, `abandoned` |
-| `completion_percentage` | `float`        | Porcentaje completado (0.0-100.0)    |
-| `total_time_seconds`    | `integer`      | Tiempo total jugado en segundos      |
-| `levels_completed`      | `string[]`     | Lista de niveles completados         |
-| `current_level`         | `string?`      | Nivel actual (null si no hay)        |
-| `choices`               | `GameChoices`  | Decisiones morales tomadas           |
-| `relics`                | `string[]`     | Reliquias recolectadas               |
-| `boss_defeated`         | `boolean`      | Si derroto al jefe final             |
-| `npcs_helped`           | `string[]`     | NPCs ayudados                        |
-| `metrics`               | `GameMetrics`  | Metricas de juego                    |
-
-#### GameChoices (objeto anidado)
-
-| Campo                | Tipo      | Valores validos               |
-|----------------------|-----------|-------------------------------|
-| `senda_ebano`        | `string?` | `"sanar"` \| `"forzar"` \| null |
-| `fortaleza_gigantes` | `string?` | `"construir"` \| `"destruir"` \| null |
-| `aquelarre_sombras`  | `string?` | `"revelar"` \| `"ocultar"` \| null |
-
-#### GameMetrics (objeto anidado)
-
-| Campo              | Tipo                   | Descripcion                    |
-|--------------------|------------------------|--------------------------------|
-| `total_deaths`     | `integer`              | Muertes totales en la partida  |
-| `time_per_level`   | `object<string, int>`  | Segundos por nivel             |
-| `deaths_per_level` | `object<string, int>`  | Muertes por nivel              |
-
-```json
-{
-  "game_id": "abc-123-def-456",
+  "game_id": "game-123-abc",
   "player_id": "123e4567-e89b-12d3-a456-426614174000",
-  "started_at": "2026-01-18T10:00:00Z",
-  "ended_at": null,
+  "current_level": "hub_central",
   "status": "in_progress",
-  "completion_percentage": 0.0,
-  "total_time_seconds": 0,
-  "levels_completed": [],
-  "current_level": null,
+  "relics": [],
   "choices": {
     "senda_ebano": null,
     "fortaleza_gigantes": null,
     "aquelarre_sombras": null
   },
-  "relics": [],
-  "boss_defeated": false,
-  "npcs_helped": [],
   "metrics": {
     "total_deaths": 0,
-    "time_per_level": {},
-    "deaths_per_level": {}
-  }
+    "levels_completed": 0
+  },
+  "progress": {
+    "levels_unlocked": ["hub_central"]
+  },
+  "total_time_seconds": 0,
+  "created_at": "2024-01-10T18:30:00Z",
+  "last_played_at": "2024-01-10T18:30:00Z"
 }
 ```
 
-#### Errores
-
-| Codigo | Descripcion                              |
-|--------|------------------------------------------|
-| 403    | Intentas crear partida para otro jugador |
-| 404    | Jugador no existe                        |
-| 409    | Ya tiene una partida activa              |
-
 ---
 
-### 2.2 Obtener Partidas del Jugador
-
-Lista todas las partidas de un jugador.
-
-```
-GET /v1/games/player/{player_id}?limit=100
-```
-
-#### Headers
-
-```
-X-Player-ID: {player_id}
-X-Player-Token: {player_token}
-```
-
-#### Path Parameters
-
-| Parametro   | Tipo     | Descripcion      |
-|-------------|----------|------------------|
-| `player_id` | `string` | UUID del jugador |
-
-#### Query Parameters
-
-| Parametro | Tipo      | Default | Rango   | Descripcion          |
-|-----------|-----------|---------|---------|----------------------|
-| `limit`   | `integer` | 100     | 1-1000  | Maximo de resultados |
-
-#### Response (200 OK)
-
-Array de objetos `Game` (ver estructura en 2.1).
-
-```json
-[
-  {
-    "game_id": "abc-123",
-    "player_id": "123e4567",
-    "status": "in_progress",
-    "current_level": "fortaleza_gigantes",
-    "completion_percentage": 40.0,
-    "relics": ["lirio"],
-    "choices": {
-      "senda_ebano": "sanar",
-      "fortaleza_gigantes": null,
-      "aquelarre_sombras": null
-    }
-  },
-  {
-    "game_id": "xyz-789",
-    "status": "completed",
-    "completion_percentage": 100.0
-  }
-]
-```
-
-> **TIP:** Filtra en tu codigo por `status === "in_progress"` para mostrar solo partidas activas.
-
----
-
-### 2.3 Obtener Partida por ID
+### 2.2 Obtener Partida
 
 Obtiene los detalles de una partida especifica.
 
@@ -418,17 +290,17 @@ X-Player-Token: {player_token}
 
 #### Path Parameters
 
-| Parametro | Tipo     | Descripcion       |
-|-----------|----------|-------------------|
-| `game_id` | `string` | UUID de la partida|
+| Parametro | Tipo     | Descripcion     |
+|-----------|----------|-----------------|
+| `game_id` | `string` | ID de la partida|
 
 #### Response (200 OK)
 
-Objeto `Game` completo (ver estructura en 2.1).
+Retorna el objeto `Game` completo.
 
 ---
 
-### 2.4 Iniciar Nivel
+### 2.3 Iniciar Nivel
 
 Marca el inicio de un nivel en la partida.
 
@@ -443,33 +315,27 @@ X-Player-ID: {player_id}
 X-Player-Token: {player_token}
 ```
 
-#### Path Parameters
-
-| Parametro | Tipo     | Descripcion        |
-|-----------|----------|--------------------|
-| `game_id` | `string` | UUID de la partida |
-
 #### Request Body
 
-| Campo   | Tipo     | Requerido | Valores validos                                                        |
-|---------|----------|-----------|------------------------------------------------------------------------|
-| `level` | `string` | Si        | `hub_central`, `senda_ebano`, `fortaleza_gigantes`, `aquelarre_sombras`, `claro_almas` |
+| Campo        | Tipo     | Requerido | Descripcion                        |
+|--------------|----------|-----------|------------------------------------|
+| `level_name` | `string` | Si        | Nombre del nivel (ver constantes)  |
 
 ```json
 {
-  "level": "senda_ebano"
+  "level_name": "senda_ebano"
 }
 ```
 
 #### Response (200 OK)
 
-Objeto `Game` actualizado con `current_level` establecido.
+Retorna el objeto `Game` actualizado.
 
 ---
 
-### 2.5 Completar Nivel
+### 2.4 Completar Nivel
 
-Marca un nivel como completado con sus metricas, decision y reliquia.
+Marca el nivel como completado y guarda las decisiones/reliquias obtenidas.
 
 ```
 POST /v1/games/{game_id}/level/complete
@@ -482,56 +348,33 @@ X-Player-ID: {player_id}
 X-Player-Token: {player_token}
 ```
 
-#### Path Parameters
-
-| Parametro | Tipo     | Descripcion        |
-|-----------|----------|--------------------|
-| `game_id` | `string` | UUID de la partida |
-
 #### Request Body
 
-| Campo          | Tipo      | Requerido | Restricciones | Descripcion                         |
-|----------------|-----------|-----------|---------------|-------------------------------------|
-| `level`        | `string`  | Si        | enum niveles  | Nivel completado                    |
-| `time_seconds` | `integer` | Si        | 0-86400       | Tiempo en segundos (max 24h)        |
-| `deaths`       | `integer` | Si        | 0-9999        | Muertes en el nivel                 |
-| `choice`       | `string`  | No        | ver tabla     | Decision moral (si aplica al nivel) |
-| `relic`        | `string`  | No        | enum relics   | Reliquia obtenida (si aplica)       |
-
-**Decisiones por nivel:**
-
-| Nivel                | Opcion Buena  | Opcion Mala  |
-|----------------------|---------------|--------------|
-| `senda_ebano`        | `"sanar"`     | `"forzar"`   |
-| `fortaleza_gigantes` | `"construir"` | `"destruir"` |
-| `aquelarre_sombras`  | `"revelar"`   | `"ocultar"`  |
-
-**Reliquias validas:** `"lirio"`, `"hacha"`, `"manto"`
+| Campo        | Tipo      | Requerido | Descripcion                                        |
+|--------------|-----------|-----------|---------------------------------------------------|
+| `level_name` | `string`  | Si        | Nombre del nivel completado                        |
+| `deaths`     | `integer` | Si        | Numero de muertes en este nivel (>= 0)            |
+| `relic`      | `string`  | No        | Reliquia obtenida: "lirio", "hacha" o "manto"     |
+| `choice`     | `string`  | No        | Decision moral tomada (depende del nivel)         |
 
 ```json
 {
-  "level": "senda_ebano",
-  "time_seconds": 1234,
+  "level_name": "senda_ebano",
   "deaths": 3,
-  "choice": "sanar",
-  "relic": "lirio"
+  "relic": "lirio",
+  "choice": "sanar"
 }
 ```
 
 #### Response (200 OK)
 
-Objeto `Game` actualizado con:
-- Nivel agregado a `levels_completed`
-- `choices` actualizado con la decision
-- `relics` actualizado con la reliquia
-- `metrics` actualizado con tiempo y muertes
-- `total_time_seconds` recalculado
+Retorna el objeto `Game` actualizado.
 
 ---
 
-### 2.6 Actualizar Partida
+### 2.5 Actualizar Partida (Guardar Progreso)
 
-Actualiza campos de la partida directamente.
+Actualiza el estado de una partida.
 
 ```
 PATCH /v1/games/{game_id}
@@ -544,40 +387,115 @@ X-Player-ID: {player_id}
 X-Player-Token: {player_token}
 ```
 
-#### Path Parameters
+#### Request Body (todos los campos opcionales)
 
-| Parametro | Tipo     | Descripcion        |
-|-----------|----------|--------------------|
-| `game_id` | `string` | UUID de la partida |
-
-#### Request Body (todos los campos son opcionales)
-
-| Campo                   | Tipo       | Restricciones                               | Descripcion                    |
-|-------------------------|------------|---------------------------------------------|--------------------------------|
-| `status`                | `string`   | `in_progress`, `completed`, `abandoned`     | Estado de la partida           |
-| `ended_at`              | `datetime` | ISO 8601                                    | Fecha/hora de finalizacion     |
-| `completion_percentage` | `float`    | 0.0-100.0                                   | Porcentaje completado          |
-| `total_time_seconds`    | `integer`  | >= 0                                        | Tiempo total jugado            |
-| `current_level`         | `string`   | enum niveles                                | Nivel actual                   |
-| `boss_defeated`         | `boolean`  | true/false                                  | Si derroto al jefe             |
+| Campo                  | Tipo       | Descripcion                                  |
+|------------------------|------------|----------------------------------------------|
+| `current_level`        | `string`   | Nivel actual                                 |
+| `status`               | `string`   | Estado: "in_progress", "completed", "failed" |
+| `total_time_seconds`   | `integer`  | Tiempo total de juego en segundos            |
+| `relics`               | `string[]` | Reliquias obtenidas                          |
+| `choices`              | `object`   | Decisiones morales tomadas                   |
+| `metrics.total_deaths` | `integer`  | Muertes acumuladas                           |
+| `progress`             | `object`   | Progreso del jugador                         |
 
 ```json
 {
-  "status": "completed",
-  "completion_percentage": 100.0,
-  "boss_defeated": true
+  "current_level": "fortaleza_gigantes",
+  "total_time_seconds": 1200,
+  "metrics": {
+    "total_deaths": 5
+  }
 }
 ```
 
 #### Response (200 OK)
 
-Objeto `Game` actualizado.
+Retorna el objeto `Game` completo actualizado.
 
 ---
 
-### 2.7 Eliminar Partida
+### 2.6 Completar Juego
 
-Elimina una partida permanentemente.
+Marca la partida como completada y actualiza las estadisticas del jugador.
+
+```
+POST /v1/games/{game_id}/complete
+```
+
+#### Headers
+
+```
+X-Player-ID: {player_id}
+X-Player-Token: {player_token}
+```
+
+#### Request Body
+
+| Campo           | Tipo      | Requerido | Descripcion                   |
+|-----------------|-----------|-----------|-------------------------------|
+| `final_reached` | `integer` | Si        | Final alcanzado (1, 2 o 3)    |
+
+```json
+{
+  "final_reached": 1
+}
+```
+
+#### Response (200 OK)
+
+Retorna:
+- Objeto `Game` actualizado (status: "completed")
+- Estadisticas del jugador actualizadas
+
+---
+
+### 2.7 Listar Partidas del Jugador
+
+Obtiene todas las partidas de un jugador.
+
+```
+GET /v1/games/player/{player_id}
+```
+
+#### Headers
+
+```
+X-Player-ID: {player_id}
+X-Player-Token: {player_token}
+```
+
+#### Query Parameters
+
+| Parametro | Tipo     | Default | Descripcion                                  |
+|-----------|----------|---------|----------------------------------------------|
+| `status`  | `string` | -       | Filtrar por estado: "in_progress", "completed", "failed" |
+| `limit`   | `integer`| 10      | Maximo numero de partidas a retornar         |
+
+#### Response (200 OK)
+
+```json
+[
+  {
+    "game_id": "game-123",
+    "status": "completed",
+    "total_time_seconds": 3600,
+    ...
+  },
+  {
+    "game_id": "game-456",
+    "status": "in_progress",
+    "current_level": "aquelarre_sombras",
+    ...
+  }
+]
+```
+
+---
+
+### 2.8 Eliminar Partida
+
+Elimina una partida del jugador.
 
 ```
 DELETE /v1/games/{game_id}
@@ -604,7 +522,7 @@ X-Player-Token: {player_token}
 
 ### 3.1 Crear Evento
 
-Registra un evento de gameplay (muerte, checkpoint, reliquia, etc).
+Registra un evento de gameplay.
 
 ```
 POST /v1/events
@@ -619,76 +537,35 @@ X-Player-Token: {player_token}
 
 #### Request Body
 
-| Campo        | Tipo     | Requerido | Descripcion                    |
-|--------------|----------|-----------|--------------------------------|
-| `game_id`    | `string` | Si        | UUID de la partida             |
-| `player_id`  | `string` | Si        | UUID del jugador               |
-| `event_type` | `string` | Si        | Tipo de evento (ver tabla)     |
-| `level`      | `string` | Si        | Nivel donde ocurrio            |
-| `data`       | `object` | No        | Datos adicionales (flexible)   |
-
-**Tipos de evento validos:**
-
-| event_type           | Descripcion                  | Ejemplo de `data`                              |
-|----------------------|------------------------------|------------------------------------------------|
-| `player_death`       | Muerte del jugador           | `{"cause": "fall", "position_x": 100}`         |
-| `level_start`        | Inicio de nivel              | `{}`                                           |
-| `level_end`          | Fin de nivel                 | `{"completed": true}`                          |
-| `item_collected`     | Recogio un item/reliquia     | `{"item_type": "relic", "relic_name": "lirio"}`|
-| `checkpoint_reached` | Llego a checkpoint           | `{"checkpoint_id": "cp_01"}`                   |
-| `boss_encounter`     | Encontro al jefe             | `{"boss_name": "guardian"}`                    |
-| `npc_interaction`    | Interactuo con NPC           | `{"npc_id": "anciano", "action": "talk"}`      |
-| `custom_event`       | Evento personalizado         | `{"event_name": "game_ending", "ending": 2}`   |
+| Campo        | Tipo     | Requerido | Descripcion                        |
+|--------------|----------|-----------|------------------------------------|
+| `game_id`    | `string` | Si        | ID de la partida                   |
+| `event_type` | `string` | Si        | Tipo de evento (ver constantes)    |
+| `level`      | `string` | No        | Nivel donde ocurrio                |
+| `metadata`   | `object` | No        | Datos adicionales del evento       |
 
 ```json
 {
-  "game_id": "abc-123-def-456",
-  "player_id": "123e4567-e89b-12d3-a456-426614174000",
+  "game_id": "game-123-abc",
   "event_type": "player_death",
   "level": "senda_ebano",
-  "data": {
-    "cause": "enemy_attack",
-    "enemy_type": "goblin",
-    "position_x": 150.5,
-    "position_y": 200.3
+  "metadata": {
+    "enemy_type": "espectro",
+    "position_x": 120.5,
+    "position_y": 45.2
   }
 }
 ```
 
 #### Response (201 Created)
 
-| Campo        | Tipo       | Descripcion                |
-|--------------|------------|----------------------------|
-| `event_id`   | `string`   | UUID unico del evento      |
-| `game_id`    | `string`   | UUID de la partida         |
-| `player_id`  | `string`   | UUID del jugador           |
-| `timestamp`  | `datetime` | Momento del evento (UTC)   |
-| `event_type` | `string`   | Tipo de evento             |
-| `level`      | `string`   | Nivel donde ocurrio        |
-| `data`       | `object`   | Datos adicionales          |
-
-```json
-{
-  "event_id": "evt-789-xyz",
-  "game_id": "abc-123-def-456",
-  "player_id": "123e4567-e89b-12d3-a456-426614174000",
-  "timestamp": "2026-01-18T10:35:22Z",
-  "event_type": "player_death",
-  "level": "senda_ebano",
-  "data": {
-    "cause": "enemy_attack",
-    "enemy_type": "goblin",
-    "position_x": 150.5,
-    "position_y": 200.3
-  }
-}
-```
+Retorna el objeto `GameEvent` creado.
 
 ---
 
 ### 3.2 Crear Eventos en Batch
 
-Envia multiples eventos en una sola peticion (optimizacion).
+Crea multiples eventos de una sola vez (mejor rendimiento).
 
 ```
 POST /v1/events/batch
@@ -703,26 +580,22 @@ X-Player-Token: {player_token}
 
 #### Request Body
 
-| Campo    | Tipo            | Requerido | Restricciones   | Descripcion              |
-|----------|-----------------|-----------|-----------------|--------------------------|
-| `events` | `EventCreate[]` | Si        | 1-100 elementos | Array de eventos a crear |
+| Campo    | Tipo       | Requerido | Descripcion           |
+|----------|------------|-----------|-----------------------|
+| `events` | `array`    | Si        | Array de eventos      |
 
 ```json
 {
   "events": [
     {
-      "game_id": "abc-123",
-      "player_id": "xyz-789",
+      "game_id": "game-123",
       "event_type": "player_death",
-      "level": "senda_ebano",
-      "data": {"cause": "fall"}
+      "level": "senda_ebano"
     },
     {
-      "game_id": "abc-123",
-      "player_id": "xyz-789",
-      "event_type": "checkpoint_reached",
-      "level": "senda_ebano",
-      "data": {"checkpoint_id": "cp_02"}
+      "game_id": "game-123",
+      "event_type": "level_complete",
+      "level": "senda_ebano"
     }
   ]
 }
@@ -730,16 +603,21 @@ X-Player-Token: {player_token}
 
 #### Response (201 Created)
 
-Array de objetos `GameEvent` creados.
+```json
+{
+  "created_count": 2,
+  "events": [ /* array de eventos creados */ ]
+}
+```
 
 ---
 
 ### 3.3 Obtener Eventos de una Partida
 
-Lista todos los eventos de una partida.
+Obtiene todos los eventos de una partida especifica.
 
 ```
-GET /v1/events/game/{game_id}?limit=1000
+GET /v1/events/game/{game_id}
 ```
 
 #### Headers
@@ -748,31 +626,25 @@ GET /v1/events/game/{game_id}?limit=1000
 X-Player-ID: {player_id}
 X-Player-Token: {player_token}
 ```
-
-#### Path Parameters
-
-| Parametro | Tipo     | Descripcion        |
-|-----------|----------|--------------------|
-| `game_id` | `string` | UUID de la partida |
 
 #### Query Parameters
 
-| Parametro | Tipo      | Default | Rango    | Descripcion        |
-|-----------|-----------|---------|----------|--------------------|
-| `limit`   | `integer` | 1000    | 1-1000   | Maximo resultados  |
+| Parametro | Tipo     | Default | Descripcion                          |
+|-----------|----------|---------|--------------------------------------|
+| `limit`   | `integer`| 100     | Maximo numero de eventos a retornar  |
 
 #### Response (200 OK)
 
-Array de objetos `GameEvent` ordenados por timestamp.
+Array de objetos `GameEvent` ordenados por timestamp (mas reciente primero).
 
 ---
 
-### 3.4 Obtener Eventos de un Jugador
+### 3.4 Obtener Eventos por Tipo
 
-Lista todos los eventos de un jugador (todas sus partidas).
+Obtiene eventos de una partida filtrados por tipo.
 
 ```
-GET /v1/events/player/{player_id}?limit=1000
+GET /v1/events/game/{game_id}/type/{event_type}
 ```
 
 #### Headers
@@ -782,269 +654,229 @@ X-Player-ID: {player_id}
 X-Player-Token: {player_token}
 ```
 
-#### Response (200 OK)
-
-Array de objetos `GameEvent`.
-
----
-
-### 3.5 Obtener Eventos por Tipo
-
-Filtra eventos de una partida por tipo.
-
-```
-GET /v1/events/game/{game_id}/type/{event_type}?limit=1000
-```
-
 #### Path Parameters
 
-| Parametro    | Tipo     | Descripcion        |
-|--------------|----------|--------------------|
-| `game_id`    | `string` | UUID de la partida |
-| `event_type` | `string` | Tipo de evento     |
+| Parametro    | Tipo     | Descripcion            |
+|--------------|----------|------------------------|
+| `game_id`    | `string` | ID de la partida       |
+| `event_type` | `string` | Tipo de evento filtrar |
+
+#### Query Parameters
+
+| Parametro | Tipo     | Default | Descripcion                          |
+|-----------|----------|---------|--------------------------------------|
+| `limit`   | `integer`| 100     | Maximo numero de eventos a retornar  |
 
 #### Response (200 OK)
 
-Array de objetos `GameEvent` filtrados.
+Array de objetos `GameEvent` filtrados por tipo.
 
 ---
 
 ## 4. CONSTANTES Y ENUMS
 
-### Niveles
+### Niveles (level_name)
 
-| Valor                 | Orden | Descripcion           |
-|-----------------------|-------|-----------------------|
-| `hub_central`         | 0     | Hub central (inicio)  |
-| `senda_ebano`         | 1     | Primer nivel          |
-| `fortaleza_gigantes`  | 2     | Segundo nivel         |
-| `aquelarre_sombras`   | 3     | Tercer nivel          |
-| `claro_almas`         | 4     | Nivel final (jefe)    |
+| Valor                  | Descripcion               |
+|------------------------|---------------------------|
+| `hub_central`          | Hub central (inicio)      |
+| `senda_ebano`          | Senda del Ébano           |
+| `fortaleza_gigantes`   | Fortaleza de los Gigantes |
+| `aquelarre_sombras`    | Aquelarre de las Sombras  |
+| `claro_almas`          | Claro de las Almas        |
 
-### Estados de Partida
+### Reliquias (relic)
 
-| Valor         | Descripcion              |
-|---------------|--------------------------|
-| `in_progress` | Partida en curso         |
-| `completed`   | Partida completada       |
-| `abandoned`   | Partida abandonada       |
+| Valor   | Descripcion                    |
+|---------|--------------------------------|
+| `lirio` | Lirio Plateado (sanar/revelar) |
+| `hacha` | Hacha Forjada (construir)      |
+| `manto` | Manto Espectral (ocultar)      |
 
-### Decisiones Morales
+### Decisiones Morales (choice)
 
-| Nivel                | Buena       | Mala       |
-|----------------------|-------------|------------|
-| `senda_ebano`        | `sanar`     | `forzar`   |
-| `fortaleza_gigantes` | `construir` | `destruir` |
-| `aquelarre_sombras`  | `revelar`   | `ocultar`  |
+**Senda del Ébano:**
+- `sanar` (buena) - Sanar al espíritu
+- `forzar` (mala) - Forzar al espíritu
 
-### Reliquias
+**Fortaleza de los Gigantes:**
+- `construir` (buena) - Construir puente
+- `destruir` (mala) - Destruir estructura
 
-| Valor   | Nivel donde se obtiene  |
-|---------|-------------------------|
-| `lirio` | `senda_ebano`           |
-| `hacha` | `fortaleza_gigantes`    |
-| `manto` | `aquelarre_sombras`     |
+**Aquelarre de las Sombras:**
+- `revelar` (buena) - Revelar verdad
+- `ocultar` (mala) - Ocultar secreto
 
-### Tipos de Evento
+### Estados de Partida (status)
 
-| Valor               | Descripcion             |
-|---------------------|-------------------------|
-| `player_death`      | Muerte del jugador      |
-| `level_start`       | Inicio de nivel         |
-| `level_end`         | Fin de nivel            |
-| `npc_interaction`   | Interaccion con NPC     |
-| `item_collected`    | Item recogido           |
-| `checkpoint_reached`| Checkpoint alcanzado    |
-| `boss_encounter`    | Encuentro con jefe      |
-| `custom_event`      | Evento personalizado    |
+| Valor         | Descripcion                 |
+|---------------|-----------------------------|
+| `in_progress` | Partida en progreso         |
+| `completed`   | Partida completada          |
+| `failed`      | Partida fallida/abandonada  |
+
+### Tipos de Eventos (event_type)
+
+| Valor               | Descripcion               |
+|---------------------|---------------------------|
+| `level_start`       | Inicio de nivel           |
+| `level_complete`    | Nivel completado          |
+| `player_death`      | Muerte del jugador        |
+| `relic_obtained`    | Reliquia obtenida         |
+| `moral_choice`      | Decision moral tomada     |
+| `checkpoint_reached`| Checkpoint alcanzado      |
+| `boss_encounter`    | Encuentro con jefe        |
+| `custom_event`      | Evento personalizado      |
 
 ---
 
 ## 5. FLUJO DE INTEGRACION
 
-### 5.1 Login / Registro
+### 5.1 Inicio de Sesion
 
 ```
 INICIO DE APP
     |
     v
-POST /v1/players/login
+¿Tengo player_id y player_token guardados?
     |
-    +-- Guardar player_id, player_token, active_game_id
+    +-- NO --> Mostrar pantalla de inicio
+    |           |
+    |           +-- ¿Tiene cuenta? --> SI --> POST /v1/players/login
+    |           |                              (guardar credenciales)
+    |           |
+    |           +-- ¿Tiene cuenta? --> NO --> POST /v1/players
+    |                                         (crear cuenta y guardar credenciales)
     |
-    v
-¿is_new_player?
-    |
-    +-- true --> Mostrar tutorial/bienvenida
-    |
-    +-- false --> ¿active_game_id != null?
-                      |
-                      +-- true --> Preguntar: "¿Continuar partida?"
-                      |
-                      +-- false --> Menu principal
+    +-- SI --> GET /v1/players/me (validar sesion)
+                |
+                +-- Error 401 --> Credenciales invalidas, volver a login
+                |
+                +-- OK --> Menu principal
 ```
 
 ### 5.2 Menu Principal
 
 ```
-¿Tiene active_game_id del login?
+Credenciales validadas
     |
-    +-- SI --> Mostrar "Continuar" + "Nueva Partida"
+    v
+GET /v1/players/me
     |
-    +-- NO --> Solo mostrar "Nueva Partida"
-
-Si quiere ver historial:
-    GET /v1/games/player/{player_id}
+    +-- ¿Tiene active_game_id?
+            |
+            +-- SI --> GET /v1/games/{active_game_id}
+            |           Mostrar "Continuar" + "Nueva Partida"
+            |
+            +-- NO --> Solo mostrar "Nueva Partida"
 ```
 
-### 5.3 Durante el Juego
+### 5.3 Nueva Partida
 
 ```
-INICIAR NIVEL
+Usuario selecciona "Nueva Partida"
+    |
+    v
+POST /v1/games
+    |
+    v
+Guardar game_id localmente
+    |
+    v
+Empezar en hub_central
+```
+
+### 5.4 Durante el Juego
+
+```
+Jugador entra a un nivel
     |
     v
 POST /v1/games/{game_id}/level/start
+    body: { "level_name": "senda_ebano" }
     |
     v
-[GAMEPLAY]
+[JUGADOR JUEGA EL NIVEL]
     |
-    +-- Muerte --> POST /v1/events (player_death)
+    +-- Registrar eventos (batch cada 30s o 10 eventos):
+    |   POST /v1/events/batch
+    |   body: { "events": [muerte1, muerte2, ...] }
     |
-    +-- Checkpoint --> POST /v1/events (checkpoint_reached)
-    |
-    +-- Reliquia --> POST /v1/events (item_collected)
-    |
-    +-- Pausa/Guardar --> PATCH /v1/games/{game_id} (total_time_seconds)
+    +-- Guardar progreso cada X minutos:
+        PATCH /v1/games/{game_id}
+        body: { "total_time_seconds": 1800, "current_level": "..." }
     |
     v
-COMPLETAR NIVEL
+Jugador completa nivel
     |
     v
 POST /v1/games/{game_id}/level/complete
-(incluye tiempo, muertes, decision, reliquia)
+    body: {
+      "level_name": "senda_ebano",
+      "deaths": 3,
+      "relic": "lirio",
+      "choice": "sanar"
+    }
 ```
 
-### 5.4 Fin del Juego
+### 5.5 Completar el Juego
 
 ```
-DERROTAR JEFE FINAL
+Jugador llega al final
     |
     v
-Calcular final segun choices:
-- 3 buenas = Final 1 (mejor)
-- 2 buenas = Final 2
-- 1 buena  = Final 3
-- 0 buenas = Final 4 (peor)
+POST /v1/games/{game_id}/complete
+    body: { "final_reached": 1 }
     |
     v
-POST /v1/events (custom_event: game_ending)
+API actualiza automaticamente:
+    - game.status = "completed"
+    - player.games_completed += 1
+    - player.stats (moral_alignment, total_deaths, etc.)
     |
     v
-PATCH /v1/games/{game_id}
-{
-  "status": "completed",
-  "boss_defeated": true,
-  "completion_percentage": 100
-}
+Mostrar pantalla de creditos/estadisticas
 ```
-
-### 5.5 Cerrar Sesion
-
-La API no tiene endpoint de logout. En tu juego:
-
-1. Borrar `player_id` y `player_token` del almacenamiento local
-2. Redirigir a pantalla de login
 
 ---
 
 ## 6. SISTEMA MORAL
 
-### Como funciona
+### Calculo de Alineacion Moral
 
-La API **almacena** las decisiones pero **no calcula** el final. El calculo lo hace el juego.
-
-### Decisiones almacenadas
-
-Cada partida tiene un objeto `choices`:
-
-```json
-{
-  "choices": {
-    "senda_ebano": "sanar",
-    "fortaleza_gigantes": "destruir",
-    "aquelarre_sombras": null
-  }
-}
-```
-
-### Calculo del final (implementar en el juego)
+La alineación moral (`moral_alignment`) se calcula con la formula:
 
 ```
-Decisiones buenas: sanar, construir, revelar
-Decisiones malas: forzar, destruir, ocultar
-
-Contar decisiones buenas:
-
-| Total buenas | Final |
-|--------------|-------|
-| 3            | 1     |
-| 2            | 2     |
-| 1            | 3     |
-| 0            | 4     |
+moral_alignment = (total_good_choices - total_bad_choices) / (total_good_choices + total_bad_choices)
 ```
 
-### Alineacion moral del jugador
+**Rango:** -1.0 (completamente malo) a +1.0 (completamente bueno)
 
-El campo `stats.moral_alignment` es un float de -1.0 a 1.0:
+**Ejemplos:**
+- 3 buenas, 0 malas → `(3 - 0) / (3 + 0) = 1.0` (santo)
+- 0 buenas, 3 malas → `(0 - 3) / (0 + 3) = -1.0` (demonio)
+- 2 buenas, 1 mala → `(2 - 1) / (2 + 1) = 0.33` (bueno)
+- 1 buena, 2 malas → `(1 - 2) / (1 + 2) = -0.33` (malo)
 
-- **1.0** = Totalmente bueno
-- **0.0** = Neutral
-- **-1.0** = Totalmente malo
+### Finales basados en Alineacion
 
-Formula:
-```
-moral_alignment = (good - bad) / (good + bad)
-```
+| Final | Condicion            | Descripcion                 |
+|-------|----------------------|-----------------------------|
+| 1     | moral_alignment > 0  | Final bueno (redención)     |
+| 2     | moral_alignment == 0 | Final neutral (equilibrio)  |
+| 3     | moral_alignment < 0  | Final malo (corrupción)     |
 
 ---
 
 ## 7. CODIGOS DE ERROR
 
-### HTTP Status Codes
-
-| Codigo | Nombre                | Descripcion                                |
-|--------|----------------------|--------------------------------------------|
-| 200    | OK                   | Exito                                      |
-| 201    | Created              | Recurso creado                             |
-| 400    | Bad Request          | Datos de entrada invalidos                 |
-| 401    | Unauthorized         | Credenciales faltantes o invalidas         |
-| 403    | Forbidden            | Sin permisos para este recurso             |
-| 404    | Not Found            | Recurso no encontrado                      |
-| 409    | Conflict             | Conflicto (ej: ya tiene partida activa)    |
-| 422    | Validation Error     | Error de validacion en campos              |
-| 500    | Internal Server Error| Error interno del servidor                 |
-
-### Formato de Error
-
-```json
-{
-  "detail": "Mensaje descriptivo del error"
-}
-```
-
-### Error de Validacion (422)
-
-```json
-{
-  "detail": [
-    {
-      "loc": ["body", "level"],
-      "msg": "Nivel 'invalid' no valido. Validos: hub_central, senda_ebano, fortaleza_gigantes, aquelarre_sombras, claro_almas",
-      "type": "value_error"
-    }
-  ]
-}
-```
+| Codigo | Descripcion                                |
+|--------|--------------------------------------------|
+| 400    | Bad Request - Datos invalidos              |
+| 401    | Unauthorized - Credenciales incorrectas    |
+| 403    | Forbidden - Sin permisos                   |
+| 404    | Not Found - Recurso no encontrado          |
+| 500    | Internal Server Error - Error del servidor |
 
 ---
 
@@ -1052,8 +884,8 @@ moral_alignment = (good - bad) / (good + bad)
 
 | Metodo   | Endpoint                                    | Descripcion                    |
 |----------|---------------------------------------------|--------------------------------|
-| `POST`   | `/v1/players/login`                         | Login/registro (principal)     |
-| `POST`   | `/v1/players`                               | Crear jugador                  |
+| `POST`   | `/v1/players`                               | Crear cuenta (registro)        |
+| `POST`   | `/v1/players/login`                         | Login con username y password  |
 | `GET`    | `/v1/players/me`                            | Mi perfil                      |
 | `PATCH`  | `/v1/players/{player_id}`                   | Actualizar jugador             |
 | `DELETE` | `/v1/players/{player_id}`                   | Eliminar jugador               |
@@ -1063,9 +895,20 @@ moral_alignment = (good - bad) / (good + bad)
 | `PATCH`  | `/v1/games/{game_id}`                       | Actualizar partida             |
 | `POST`   | `/v1/games/{game_id}/level/start`           | Iniciar nivel                  |
 | `POST`   | `/v1/games/{game_id}/level/complete`        | Completar nivel                |
+| `POST`   | `/v1/games/{game_id}/complete`              | Completar juego                |
 | `DELETE` | `/v1/games/{game_id}`                       | Eliminar partida               |
 | `POST`   | `/v1/events`                                | Crear evento                   |
 | `POST`   | `/v1/events/batch`                          | Crear eventos en batch         |
 | `GET`    | `/v1/events/game/{game_id}`                 | Eventos de partida             |
 | `GET`    | `/v1/events/player/{player_id}`             | Eventos de jugador             |
 | `GET`    | `/v1/events/game/{game_id}/type/{type}`     | Eventos por tipo               |
+
+---
+
+**Ultima actualizacion:** 2026-01-20
+**Changelog v2.0:**
+- Sistema de autenticación con password
+- Eliminado endpoint de registro de dispositivo
+- Login requiere username + password
+- Registro (POST /v1/players) requiere password
+- Eliminado campo display_name (se usa username)

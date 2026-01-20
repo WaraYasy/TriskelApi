@@ -6,11 +6,43 @@ Depende de la INTERFAZ IPlayerRepository, no de una implementación concreta.
 """
 
 from datetime import datetime, timezone
-from typing import List, Optional, Tuple
+from typing import List, Optional
+
+from passlib.context import CryptContext
 
 from .models import Player
 from .ports import IPlayerRepository
 from .schemas import PlayerCreate, PlayerUpdate
+
+# Configurar contexto de hashing con bcrypt
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+
+def hash_password(password: str) -> str:
+    """
+    Hashea una contraseña usando bcrypt (via passlib).
+
+    Args:
+        password: Contraseña en texto plano
+
+    Returns:
+        str: Hash de la contraseña
+    """
+    return pwd_context.hash(password)
+
+
+def verify_password(password: str, password_hash: str) -> bool:
+    """
+    Verifica una contraseña contra su hash.
+
+    Args:
+        password: Contraseña en texto plano
+        password_hash: Hash almacenado
+
+    Returns:
+        bool: True si coincide, False si no
+    """
+    return pwd_context.verify(password, password_hash)
 
 
 class PlayerService:
@@ -50,52 +82,46 @@ class PlayerService:
         if existing:
             raise ValueError(f"Username '{player_data.username}' ya existe")
 
-        # Crear y retornar
-        return self.repository.create(player_data)
+        # Hashear el password
+        password_hashed = hash_password(player_data.password)
 
-    def register_device(self) -> Player:
-        """
-        Registra un nuevo dispositivo (autenticación anónima).
+        # Crear Player con password hasheado
+        player = Player(
+            username=player_data.username, password_hash=password_hashed, email=player_data.email
+        )
 
-        Crea un jugador sin username, solo con player_id, player_token y display_name.
-        El juego debe guardar estas credenciales en almacenamiento local.
-
-        Returns:
-            Player: Jugador creado con credenciales generadas
-        """
-        # Crear un Player directamente (sin username)
-        player = Player()  # Genera automáticamente player_id, player_token, display_name
-
-        # Guardar usando el método save del repositorio
+        # Guardar en el repositorio usando el método save
         return self.repository.save(player)
 
-    def login_or_create(self, username: str, email: Optional[str] = None) -> Tuple[Player, bool]:
+    def login(self, username: str, password: str) -> Optional[Player]:
         """
-        Login idempotente: devuelve jugador existente o crea uno nuevo.
+        Realiza login de un jugador validando su contraseña.
 
         Args:
             username: Nombre de usuario
-            email: Email opcional
+            password: Contraseña en texto plano
 
         Returns:
-            Tupla (Player, is_new_player):
-                - Player: El jugador (existente o recién creado)
-                - is_new_player: True si se creó nuevo, False si ya existía
+            Player si las credenciales son correctas, None si no
+
+        Raises:
+            ValueError: Si el usuario no existe o la contraseña es incorrecta
         """
-        existing = self.repository.get_by_username(username)
+        # Buscar jugador por username
+        player = self.repository.get_by_username(username)
 
-        if existing:
-            # Actualizar last_login y retornar jugador refrescado
-            self.repository.update(
-                existing.player_id, PlayerUpdate(last_login=datetime.now(timezone.utc))
-            )
-            updated = self.repository.get_by_id(existing.player_id)
-            return updated, False
+        if not player:
+            raise ValueError("Usuario o contraseña incorrectos")
 
-        # Crear nuevo
-        player_data = PlayerCreate(username=username, email=email)
-        new_player = self.repository.create(player_data)
-        return new_player, True
+        # Verificar contraseña
+        if not verify_password(password, player.password_hash):
+            raise ValueError("Usuario o contraseña incorrectos")
+
+        # Actualizar last_login
+        self.repository.update(player.player_id, PlayerUpdate(last_login=datetime.now(timezone.utc)))
+
+        # Retornar jugador actualizado
+        return self.repository.get_by_id(player.player_id)
 
     def get_player(self, player_id: str) -> Optional[Player]:
         """

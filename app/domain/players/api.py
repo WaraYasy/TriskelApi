@@ -152,32 +152,36 @@ def login_player(
     game_repo: IGameRepository = Depends(get_game_repository),
 ):
     """
-    Login o registro idempotente.
+    Login de jugador con username y contraseña.
 
-    Si el username existe, devuelve las credenciales existentes.
-    Si no existe, crea un nuevo jugador.
+    Valida las credenciales y devuelve el token de autenticación.
     También devuelve la partida activa si existe.
 
     Args:
-        login_data: Datos de login (username, email opcional)
+        login_data: Datos de login (username, password)
         service: Servicio de jugadores inyectado
         game_repo: Repositorio de games inyectado
 
     Returns:
         PlayerLoginResponse: Credenciales y partida activa si existe
+
+    Raises:
+        HTTPException 401: Si el usuario no existe o la contraseña es incorrecta
     """
-    player, is_new = service.login_or_create(login_data.username, login_data.email)
+    try:
+        player = service.login(login_data.username, login_data.password)
 
-    # Buscar partida activa
-    active_game = game_repo.get_active_game(player.player_id)
+        # Buscar partida activa
+        active_game = game_repo.get_active_game(player.player_id)
 
-    return PlayerLoginResponse(
-        player_id=player.player_id,
-        username=player.username,
-        player_token=player.player_token,
-        active_game_id=active_game.game_id if active_game else None,
-        is_new_player=is_new,
-    )
+        return PlayerLoginResponse(
+            player_id=player.player_id,
+            username=player.username,
+            player_token=player.player_token,
+            active_game_id=active_game.game_id if active_game else None,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
 
 
 @router.get(
