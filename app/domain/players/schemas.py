@@ -22,7 +22,7 @@ class PlayerCreate(BaseModel):
     """
 
     username: str = Field(..., min_length=3, max_length=20)
-    password: str = Field(..., min_length=6, max_length=100)
+    password: str = Field(..., min_length=6, max_length=72)
     email: Optional[str] = None
 
     class Config:
@@ -79,7 +79,7 @@ class PlayerLoginRequest(BaseModel):
     """Datos para login de jugador"""
 
     username: str = Field(..., min_length=3, max_length=20)
-    password: str = Field(..., min_length=6, max_length=100)
+    password: str = Field(..., min_length=6, max_length=72)
 
     class Config:
         json_schema_extra = {"example": {"username": "player123", "password": "mi_password"}}
