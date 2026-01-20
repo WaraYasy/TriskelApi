@@ -151,7 +151,7 @@ def create_game(
     - Solo puedes crear partidas para ti mismo (a menos que seas admin)
 
     Args:
-        game_data: Datos de la partida (solo player_id)
+        game_data: Datos de la partida (player_id opcional, se usa el autenticado si no se envía)
         request: Request de FastAPI
         service: Servicio inyectado
 
@@ -163,10 +163,14 @@ def create_game(
         HTTPException 404: Si el jugador no existe
         HTTPException 409: Si ya tiene partida activa
     """
-    # Verificar que el jugador autenticado puede crear partida para este player_id
     is_admin = getattr(request.state, "is_admin", False)
     authenticated_player_id = getattr(request.state, "player_id", None)
 
+    # Si no se envía player_id, usar el del jugador autenticado
+    if game_data.player_id is None:
+        game_data.player_id = authenticated_player_id
+
+    # Verificar que el jugador autenticado puede crear partida para este player_id
     if not is_admin and game_data.player_id != authenticated_player_id:
         raise HTTPException(status_code=403, detail="Solo puedes crear partidas para ti mismo")
 

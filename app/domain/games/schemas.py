@@ -17,10 +17,10 @@ class GameCreate(BaseModel):
     """
     Datos necesarios para crear una partida nueva.
 
-    Solo se pide el player_id, todo lo demás se inicializa automáticamente.
+    El player_id es opcional - si no se envía, se usa el del jugador autenticado.
     """
 
-    player_id: str
+    player_id: Optional[str] = None
 
     class Config:
         json_schema_extra = {"example": {"player_id": "123e4567-e89b-12d3-a456-426614174000"}}
