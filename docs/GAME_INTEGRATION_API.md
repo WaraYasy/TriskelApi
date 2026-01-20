@@ -1,6 +1,6 @@
 # Triskel API - Guia de Integracion para el Juego
 
-**Version:** 2.0
+**Version:** 2.1
 **Base URL:** `http://localhost:8000` (desarrollo) | `https://tu-dominio.com` (produccion)
 
 ## Indice
@@ -8,11 +8,12 @@
 1. [Autenticacion](#autenticacion)
 2. [Jugadores](#1-jugadores)
 3. [Partidas](#2-partidas)
-4. [Eventos](#3-eventos)
-5. [Constantes y Enums](#4-constantes-y-enums)
-6. [Flujo de Integracion](#5-flujo-de-integracion)
-7. [Sistema Moral](#6-sistema-moral)
-8. [Codigos de Error](#7-codigos-de-error)
+4. [Sesiones](#3-sesiones)
+5. [Eventos](#4-eventos)
+6. [Constantes y Enums](#5-constantes-y-enums)
+7. [Flujo de Integracion](#6-flujo-de-integracion)
+8. [Sistema Moral](#7-sistema-moral)
+9. [Codigos de Error](#8-codigos-de-error)
 
 ---
 
@@ -517,9 +518,204 @@ X-Player-Token: {player_token}
 
 ---
 
-## 3. EVENTOS
+## 3. SESIONES
 
-### 3.1 Crear Evento
+Las sesiones representan periodos continuos de tiempo en los que el jugador está activamente jugando (desde que abre el juego hasta que lo cierra). Permiten rastrear métricas como tiempo de juego por plataforma, sesiones concurrentes, y patrones de uso.
+
+### 3.1 Iniciar Sesión de Juego
+
+Inicia una nueva sesión de juego cuando el jugador abre la aplicación.
+
+```
+POST /v1/sessions
+```
+
+#### Headers
+
+```
+X-Player-ID: {player_id}
+X-Player-Token: {player_token}
+```
+
+#### Request Body
+
+| Campo      | Tipo       | Requerido | Descripcion                           |
+|------------|------------|-----------|---------------------------------------|
+| `game_id`  | `string`   | Si        | ID de la partida activa               |
+| `platform` | `string`   | Si        | Plataforma: "windows" o "android"     |
+
+```json
+{
+  "game_id": "game-123-abc",
+  "platform": "windows"
+}
+```
+
+#### Response (201 Created)
+
+```json
+{
+  "session_id": "s-123e4567-e89b-12d3-a456",
+  "player_id": "123e4567-e89b-12d3-a456-426614174000",
+  "game_id": "game-123-abc",
+  "started_at": "2024-01-20T10:30:00Z",
+  "ended_at": null,
+  "duration_seconds": 0,
+  "platform": "windows",
+  "is_active": true
+}
+```
+
+> **NOTA:** La API cierra automáticamente cualquier sesión huérfana (sesiones que quedaron abiertas por crash del cliente) antes de crear una nueva.
+
+---
+
+### 3.2 Terminar Sesión de Juego
+
+Termina una sesión activa cuando el jugador cierra la aplicación.
+
+```
+PATCH /v1/sessions/{session_id}/end
+```
+
+#### Headers
+
+```
+X-Player-ID: {player_id}
+X-Player-Token: {player_token}
+```
+
+#### Path Parameters
+
+| Parametro    | Tipo     | Descripcion       |
+|--------------|----------|-------------------|
+| `session_id` | `string` | ID de la sesion   |
+
+#### Request Body
+
+Vacio `{}`
+
+#### Response (200 OK)
+
+```json
+{
+  "session_id": "s-123e4567-e89b-12d3-a456",
+  "player_id": "123e4567-e89b-12d3-a456-426614174000",
+  "game_id": "game-123-abc",
+  "started_at": "2024-01-20T10:30:00Z",
+  "ended_at": "2024-01-20T12:30:00Z",
+  "duration_seconds": 7200,
+  "platform": "windows",
+  "is_active": false
+}
+```
+
+#### Errores
+
+| Codigo | Descripcion                                |
+|--------|--------------------------------------------|
+| 400    | La sesión ya está cerrada                  |
+| 403    | No tienes permisos para cerrar esta sesión |
+| 404    | Sesión no encontrada                       |
+
+---
+
+### 3.3 Obtener Sesiones de un Jugador
+
+Obtiene todas las sesiones de un jugador (ordenadas por más reciente primero).
+
+```
+GET /v1/sessions/player/{player_id}
+```
+
+#### Headers
+
+```
+X-Player-ID: {player_id}
+X-Player-Token: {player_token}
+```
+
+#### Path Parameters
+
+| Parametro   | Tipo     | Descripcion      |
+|-------------|----------|------------------|
+| `player_id` | `string` | ID del jugador   |
+
+#### Query Parameters
+
+| Parametro | Tipo      | Default | Descripcion                         |
+|-----------|-----------|---------|-------------------------------------|
+| `limit`   | `integer` | 100     | Maximo numero de sesiones a retornar|
+
+#### Response (200 OK)
+
+```json
+[
+  {
+    "session_id": "s-123e4567-e89b-12d3-a456",
+    "player_id": "123e4567-e89b-12d3-a456-426614174000",
+    "game_id": "game-123-abc",
+    "started_at": "2024-01-20T10:30:00Z",
+    "ended_at": "2024-01-20T12:30:00Z",
+    "duration_seconds": 7200,
+    "platform": "windows",
+    "is_active": false
+  },
+  {
+    "session_id": "s-987e6543-e21b-43c1-b654",
+    "player_id": "123e4567-e89b-12d3-a456-426614174000",
+    "game_id": "game-123-abc",
+    "started_at": "2024-01-19T14:00:00Z",
+    "ended_at": "2024-01-19T16:00:00Z",
+    "duration_seconds": 7200,
+    "platform": "android",
+    "is_active": false
+  }
+]
+```
+
+> **NOTA:** Solo puedes ver tus propias sesiones (a menos que seas administrador).
+
+---
+
+### 3.4 Obtener Sesiones de una Partida
+
+Obtiene todas las sesiones asociadas a una partida específica.
+
+```
+GET /v1/sessions/game/{game_id}
+```
+
+#### Headers
+
+```
+X-Player-ID: {player_id}
+X-Player-Token: {player_token}
+```
+
+#### Path Parameters
+
+| Parametro | Tipo     | Descripcion       |
+|-----------|----------|-------------------|
+| `game_id` | `string` | ID de la partida  |
+
+#### Query Parameters
+
+| Parametro | Tipo      | Default | Descripcion                         |
+|-----------|-----------|---------|-------------------------------------|
+| `limit`   | `integer` | 100     | Maximo numero de sesiones a retornar|
+
+#### Response (200 OK)
+
+Array de objetos `SessionResponse` ordenados por fecha de inicio (más reciente primero).
+
+> **NOTA:** Solo puedes ver sesiones de tus propias partidas (a menos que seas administrador).
+
+---
+
+## 4. EVENTOS
+
+### 4.1 Crear Evento
 
 Registra un evento de gameplay.
 
@@ -564,7 +760,7 @@ Retorna el objeto `GameEvent` creado.
 
 ---
 
-### 3.2 Crear Eventos en Batch
+### 4.2 Crear Eventos en Batch
 
 Crea multiples eventos de una sola vez (mejor rendimiento).
 
@@ -615,7 +811,7 @@ X-Player-Token: {player_token}
 
 ---
 
-### 3.3 Obtener Eventos de una Partida
+### 4.3 Obtener Eventos de una Partida
 
 Obtiene todos los eventos de una partida especifica.
 
@@ -642,7 +838,7 @@ Array de objetos `GameEvent` ordenados por timestamp (mas reciente primero).
 
 ---
 
-### 3.4 Obtener Eventos por Tipo
+### 4.4 Obtener Eventos por Tipo
 
 Obtiene eventos de una partida filtrados por tipo.
 
@@ -676,7 +872,7 @@ Array de objetos `GameEvent` filtrados por tipo.
 
 ---
 
-## 4. CONSTANTES Y ENUMS
+## 5. CONSTANTES Y ENUMS
 
 ### Niveles (level)
 
@@ -731,11 +927,18 @@ Array de objetos `GameEvent` filtrados por tipo.
 | `boss_encounter`     | Encuentro con jefe        |
 | `custom_event`       | Evento personalizado      |
 
+### Plataformas (platform)
+
+| Valor     | Descripcion           |
+|-----------|-----------------------|
+| `windows` | Cliente de Windows    |
+| `android` | Cliente de Android    |
+
 ---
 
-## 5. FLUJO DE INTEGRACION
+## 6. FLUJO DE INTEGRACION
 
-### 5.1 Inicio de Sesion
+### 6.1 Inicio de Sesion
 
 ```
 INICIO DE APP
@@ -758,7 +961,7 @@ INICIO DE APP
                 +-- OK --> Menu principal
 ```
 
-### 5.2 Menu Principal
+### 6.2 Menu Principal
 
 ```
 Credenciales validadas
@@ -774,7 +977,7 @@ GET /v1/players/me
             +-- NO --> Solo mostrar "Nueva Partida"
 ```
 
-### 5.3 Nueva Partida
+### 6.3 Nueva Partida
 
 ```
 Usuario selecciona "Nueva Partida"
@@ -786,10 +989,18 @@ POST /v1/games
 Guardar game_id localmente
     |
     v
+POST /v1/sessions
+    body: { "game_id": "...", "platform": "windows" }
+    (Iniciar sesión de juego)
+    |
+    v
+Guardar session_id localmente
+    |
+    v
 Empezar en hub_central
 ```
 
-### 5.4 Durante el Juego
+### 6.4 Durante el Juego
 
 ```
 Jugador entra a un nivel
@@ -823,9 +1034,17 @@ POST /v1/games/{game_id}/level/complete
       "relic": "lirio",
       "choice": "sanar"
     }
+    |
+    v
+Jugador cierra el juego
+    |
+    v
+PATCH /v1/sessions/{session_id}/end
+    body: {}
+    (Terminar sesión de juego)
 ```
 
-### 5.5 Completar el Juego
+### 6.5 Completar el Juego
 
 ```
 Jugador llega al final
@@ -847,7 +1066,7 @@ Mostrar pantalla de creditos/estadisticas
 
 ---
 
-## 6. SISTEMA MORAL
+## 7. SISTEMA MORAL
 
 ### Calculo de Alineacion Moral
 
@@ -875,7 +1094,7 @@ moral_alignment = (total_good_choices - total_bad_choices) / (total_good_choices
 
 ---
 
-## 7. CODIGOS DE ERROR
+## 8. CODIGOS DE ERROR
 
 | Codigo | Descripcion                                |
 |--------|--------------------------------------------|
@@ -904,6 +1123,10 @@ moral_alignment = (total_good_choices - total_bad_choices) / (total_good_choices
 | `POST`   | `/v1/games/{game_id}/level/complete`        | Completar nivel                |
 | `POST`   | `/v1/games/{game_id}/complete`              | Completar juego                |
 | `DELETE` | `/v1/games/{game_id}`                       | Eliminar partida               |
+| `POST`   | `/v1/sessions`                              | Iniciar sesión de juego        |
+| `PATCH`  | `/v1/sessions/{session_id}/end`             | Terminar sesión de juego       |
+| `GET`    | `/v1/sessions/player/{player_id}`           | Sesiones de un jugador         |
+| `GET`    | `/v1/sessions/game/{game_id}`               | Sesiones de una partida        |
 | `POST`   | `/v1/events`                                | Crear evento                   |
 | `POST`   | `/v1/events/batch`                          | Crear eventos en batch         |
 | `GET`    | `/v1/events/game/{game_id}`                 | Eventos de partida             |
@@ -913,6 +1136,13 @@ moral_alignment = (total_good_choices - total_bad_choices) / (total_good_choices
 ---
 
 **Ultima actualizacion:** 2026-01-20
+
+**Changelog v2.1:**
+- Añadido sistema de sesiones de juego (tracking de tiempo por plataforma)
+- Nuevos endpoints: POST /v1/sessions, PATCH /v1/sessions/{id}/end, GET /v1/sessions/player/{id}, GET /v1/sessions/game/{id}
+- Soporte para plataformas Windows y Android
+- Cierre automático de sesiones huérfanas
+
 **Changelog v2.0:**
 - Sistema de autenticación con password
 - Eliminado endpoint de registro de dispositivo
