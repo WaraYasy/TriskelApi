@@ -75,7 +75,9 @@ def sample_player_stats() -> PlayerStats:
 
 
 @pytest.fixture
-def sample_player(player_id, player_token, fixed_datetime, sample_player_stats) -> Player:
+def sample_player(
+    player_id, player_token, fixed_datetime, sample_player_stats
+) -> Player:
     """Jugador completo con estadísticas"""
     return Player(
         player_id=player_id,
@@ -430,7 +432,9 @@ def expired_jwt_token():
         "type": "access",
         "exp": datetime.utcnow() - timedelta(hours=1),  # Expirado hace 1 hora
     }
-    return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    return jwt.encode(
+        payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
+    )
 
 
 @pytest.fixture
@@ -504,6 +508,104 @@ def assert_recent_timestamp():
 
 
 # =============================================================================
+# FIXTURES DE SESSIONS
+# =============================================================================
+
+
+@pytest.fixture
+def session_id():
+    """ID único para una sesión de prueba"""
+    return f"s-{uuid4()}"
+
+
+@pytest.fixture
+def sample_session(session_id, player_id, game_id, fixed_datetime):
+    """Sesión de juego activa"""
+    from app.domain.sessions.models import GameSession, Platform
+
+    return GameSession(
+        session_id=session_id,
+        player_id=player_id,
+        game_id=game_id,
+        started_at=fixed_datetime,
+        ended_at=None,
+        platform=Platform.WINDOWS,
+    )
+
+
+@pytest.fixture
+def ended_session(session_id, player_id, game_id, fixed_datetime):
+    """Sesión de juego terminada"""
+    from app.domain.sessions.models import GameSession, Platform
+
+    return GameSession(
+        session_id=session_id,
+        player_id=player_id,
+        game_id=game_id,
+        started_at=fixed_datetime,
+        ended_at=fixed_datetime + timedelta(hours=2),
+        platform=Platform.WINDOWS,
+    )
+
+
+@pytest.fixture
+def mock_session_repository():
+    """Mock del repositorio de sesiones"""
+    mock_repo = MagicMock()
+    mock_repo.create.return_value = None
+    mock_repo.get_by_id.return_value = None
+    mock_repo.get_by_player.return_value = []
+    mock_repo.get_by_game.return_value = []
+    mock_repo.get_active_session.return_value = None
+    mock_repo.end_session.return_value = None
+    mock_repo.close_stale_sessions.return_value = 0
+    return mock_repo
+
+
+# =============================================================================
+# FIXTURES DE LEADERBOARD
+# =============================================================================
+
+
+@pytest.fixture
+def sample_leaderboard_entry(player_id, game_id, fixed_datetime):
+    """Entrada de leaderboard"""
+    from app.domain.leaderboard.models import LeaderboardEntry
+
+    return LeaderboardEntry(
+        rank=1,
+        player_id=player_id,
+        username="test_player",
+        value=3600.0,
+        game_id=game_id,
+        achieved_at=fixed_datetime,
+    )
+
+
+@pytest.fixture
+def sample_leaderboard(sample_leaderboard_entry, fixed_datetime):
+    """Leaderboard de speedrun"""
+    from app.domain.leaderboard.models import Leaderboard, LeaderboardType
+
+    return Leaderboard(
+        leaderboard_id=LeaderboardType.SPEEDRUN,
+        updated_at=fixed_datetime,
+        entries=[sample_leaderboard_entry],
+    )
+
+
+@pytest.fixture
+def mock_leaderboard_repository():
+    """Mock del repositorio de leaderboards"""
+    mock_repo = MagicMock()
+    mock_repo.get_by_type.return_value = None
+    mock_repo.get_all.return_value = []
+    mock_repo.save.return_value = None
+    mock_repo.initialize_all.return_value = None
+    return mock_repo
+
+
+# =============================================================================
 # CONFIGURACIÓN DE PYTEST
 # =============================================================================
 
@@ -516,3 +618,4 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "e2e: Tests end-to-end de flujos completos")
     config.addinivalue_line("markers", "slow: Tests que tardan más de 1 segundo")
     config.addinivalue_line("markers", "security: Tests de seguridad y validación")
+    config.addinivalue_line("markers", "edge_case: Tests de casos límite")
