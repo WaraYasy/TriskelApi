@@ -110,9 +110,7 @@ class SessionService:
         """Obtiene una sesion por ID"""
         return self.repository.get_by_id(session_id)
 
-    def get_player_sessions(
-        self, player_id: str, limit: int = 100
-    ) -> List[GameSession]:
+    def get_player_sessions(self, player_id: str, limit: int = 100) -> List[GameSession]:
         """Obtiene todas las sesiones de un jugador"""
         return self.repository.get_by_player(player_id, limit)
 
