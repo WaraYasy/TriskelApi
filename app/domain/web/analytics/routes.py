@@ -277,3 +277,33 @@ def api_metrics():
     metrics = analytics_service.calculate_global_metrics(players, games)
 
     return jsonify(metrics)
+
+
+@analytics_bp.route("/api/events")
+def api_events():
+    """
+    API endpoint para obtener eventos recientes en JSON.
+
+    Returns:
+        JSON: Lista de eventos recientes (máximo 10)
+    """
+    players = analytics_service.get_all_players()
+    all_events = []
+
+    for player in players:
+        try:
+            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
+            response.raise_for_status()
+            events_data = response.json()
+            # Agregar username del jugador a cada evento
+            for event in events_data:
+                event["player_username"] = player.get("username", "Desconocido")
+            all_events.extend(events_data)
+        except Exception:
+            pass
+
+    # Ordenar por fecha (más recientes primero) y limitar a 10
+    all_events.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+    recent_events = all_events[:10]
+
+    return jsonify(recent_events)

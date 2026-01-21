@@ -30,10 +30,9 @@ async function loadPublicMetrics() {
             progressBar.style.width = `${metrics.completion_rate}%`;
         }
 
-        // TODO: Calcular cambios reales comparando con datos históricos
-        // Por ahora están hardcodeados - se necesita endpoint de métricas históricas
-        updateChange('playersChange', '+12.5%', true);
-        updateChange('relicsChange', '-2.4%', false);
+        // Ocultar cambios si no hay datos históricos
+        hideChange('playersChange');
+        hideChange('relicsChange');
 
     } catch (error) {
         console.error('Error fetching public metrics:', error);
@@ -47,7 +46,7 @@ function calculateTotalDecisions(metrics) {
         const avgDecisions = Math.round((metrics.total_games * 3) / metrics.total_players);
         return avgDecisions;
     }
-    return 287; // Valor por defecto
+    return 0;
 }
 
 function updateStat(elementId, value) {
@@ -63,6 +62,13 @@ function updateChange(elementId, value, isPositive) {
     if (element) {
         element.textContent = value;
         element.className = isPositive ? 'stat-change positive' : 'stat-change negative';
+    }
+}
+
+function hideChange(elementId) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.style.display = 'none';
     }
 }
 
@@ -88,17 +94,17 @@ function animateValue(element, start, end, duration) {
 }
 
 function showPlaceholderData() {
-    // Mostrar datos de ejemplo si la API no está disponible
-    updateStat('totalPlayers', 1974);
-    updateStat('totalDecisions', 287);
-    updateStat('totalRelics', 8430);
-    updateStat('forestHealth', '75%');
+    // Mostrar 0 si la API no está disponible (sin datos falsos)
+    updateStat('totalPlayers', 0);
+    updateStat('totalDecisions', 0);
+    updateStat('totalRelics', 0);
+    updateStat('forestHealth', '0%');
 
     const progressBar = document.getElementById('forestProgress');
     if (progressBar) {
-        progressBar.style.width = '75%';
+        progressBar.style.width = '0%';
     }
 
-    updateChange('playersChange', '+12.5%', true);
-    updateChange('relicsChange', '-2.4%', false);
+    hideChange('playersChange');
+    hideChange('relicsChange');
 }

@@ -70,7 +70,7 @@ function calculateAvgDecisions(metrics) {
         // Asumiendo ~3 decisiones por partida
         return Math.round((metrics.total_games * 3) / metrics.total_players);
     }
-    return 287;
+    return 0;
 }
 
 function calculateTotalRelics(metrics) {
@@ -82,7 +82,7 @@ function calculateTotalRelics(metrics) {
     if (metrics.completed_games) {
         return metrics.completed_games * 5; // ~5 reliquias por juego completado
     }
-    return 8430;
+    return 0;
 }
 
 function updateMetric(elementId, value) {
@@ -112,15 +112,16 @@ function animateValue(element, start, end, duration) {
 }
 
 function showPlaceholderMetrics() {
-    updateMetric('totalPlayers', 1974);
-    updateMetric('totalDecisions', 287);
-    updateMetric('totalRelics', 8430);
-    updateMetric('forestHealth', '75%');
+    // Mostrar 0 si la API no está disponible (sin datos falsos)
+    updateMetric('totalPlayers', 0);
+    updateMetric('totalDecisions', 0);
+    updateMetric('totalRelics', 0);
+    updateMetric('forestHealth', '0%');
 
     const progressBar = document.getElementById('forestProgressBar');
     if (progressBar) {
         setTimeout(() => {
-            progressBar.style.width = '75%';
+            progressBar.style.width = '0%';
         }, 300);
     }
 }
@@ -245,78 +246,100 @@ function generateMoralAxesData() {
 }
 
 /**
- * Cargar eventos recientes
+ * Cargar eventos recientes desde la API
  */
 async function loadRecentEvents() {
     const tableBody = document.getElementById('eventsTableBody');
 
-    // Datos de ejemplo (en producción, estos vendrían de la API)
-    const events = [
-        {
-            name: 'Gigante Sanado',
-            player: '@elven_archer',
-            status: 'completed',
-            date: '14 Ene, 10:30',
-            icon: '🌿',
-            iconType: 'success'
-        },
-        {
-            name: 'Lirio Azul Encontrado',
-            player: '@mystic_mage',
-            status: 'rare',
-            date: '14 Ene, 09:15',
-            icon: '⚪',
-            iconType: 'info'
-        },
-        {
-            name: 'Bosque Quemado',
-            player: '@chaos_bringer',
-            status: 'critical',
-            date: '13 Ene, 23:45',
-            icon: '🔥',
-            iconType: 'danger'
-        },
-        {
-            name: 'Reliquia Antigua',
-            player: '@treasure_hunter',
-            status: 'rare',
-            date: '13 Ene, 18:20',
-            icon: '🏺',
-            iconType: 'info'
-        },
-        {
-            name: 'Guardián Corrupto',
-            player: '@dark_knight',
-            status: 'critical',
-            date: '13 Ene, 15:10',
-            icon: '⚔️',
-            iconType: 'warning'
-        }
-    ];
+    if (!tableBody) return;
 
-    if (tableBody) {
-        tableBody.innerHTML = events.map(event => `
+    try {
+        const response = await fetch('/web/dashboard/api/events');
+
+        if (!response.ok) {
+            showNoEventsMessage(tableBody);
+            return;
+        }
+
+        const events = await response.json();
+
+        if (!events || events.length === 0) {
+            showNoEventsMessage(tableBody);
+            return;
+        }
+
+        tableBody.innerHTML = events.map(event => {
+            const eventInfo = getEventDisplayInfo(event);
+            const formattedDate = formatEventDate(event.timestamp);
+
+            return `
             <tr>
                 <td>
                     <div class="event-name">
-                        <div class="event-icon ${event.iconType}">
-                            ${event.icon}
+                        <div class="event-icon ${eventInfo.iconType}">
+                            ${eventInfo.icon}
                         </div>
-                        <span>${event.name}</span>
+                        <span>${event.event_type || 'Evento'}</span>
                     </div>
                 </td>
-                <td>${event.player}</td>
+                <td>@${event.player_username || 'desconocido'}</td>
                 <td>
-                    <span class="event-status ${event.status}">
-                        ${event.status}
+                    <span class="event-status ${eventInfo.status}">
+                        ${eventInfo.status}
                     </span>
                 </td>
-                <td>${event.date}</td>
+                <td>${formattedDate}</td>
                 <td>
                     <button class="chart-action">→</button>
                 </td>
             </tr>
-        `).join('');
+        `;
+        }).join('');
+
+    } catch (error) {
+        console.error('Error loading events:', error);
+        showNoEventsMessage(tableBody);
+    }
+}
+
+function showNoEventsMessage(tableBody) {
+    tableBody.innerHTML = `
+        <tr>
+            <td colspan="5" style="text-align: center; color: #9ca3af; padding: 2rem;">
+                No hay eventos recientes
+            </td>
+        </tr>
+    `;
+}
+
+function getEventDisplayInfo(event) {
+    const eventType = (event.event_type || '').toLowerCase();
+
+    const eventTypes = {
+        'relic_found': { icon: '🏺', iconType: 'info', status: 'rare' },
+        'level_completed': { icon: '✓', iconType: 'success', status: 'completed' },
+        'death': { icon: '💀', iconType: 'danger', status: 'critical' },
+        'choice_made': { icon: '⚖️', iconType: 'warning', status: 'decision' },
+        'game_started': { icon: '🎮', iconType: 'info', status: 'started' },
+        'game_completed': { icon: '🏆', iconType: 'success', status: 'completed' }
+    };
+
+    return eventTypes[eventType] || { icon: '📝', iconType: 'info', status: 'event' };
+}
+
+function formatEventDate(timestamp) {
+    if (!timestamp) return 'Fecha desconocida';
+
+    try {
+        const date = new Date(timestamp);
+        return date.toLocaleDateString('es-ES', {
+            day: 'numeric',
+            month: 'short',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch {
+        return 'Fecha desconocida';
     }
 }
 
