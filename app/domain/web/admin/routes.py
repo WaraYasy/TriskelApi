@@ -2,10 +2,50 @@ import csv
 import io
 import json
 from datetime import datetime
+from functools import wraps
 
-from flask import Blueprint, Response, jsonify, render_template, request
+from flask import Blueprint, Response, g, jsonify, redirect, render_template, request, url_for
+from jose import JWTError, jwt
+
+from app.config.settings import settings
 
 admin_bp = Blueprint("admin", __name__, template_folder="../templates/admin")
+
+
+def login_required(f):
+    """
+    Decorador que protege rutas de admin.
+    Valida el JWT desde la cookie 'admin_token'.
+    Si no es válido, redirige al login.
+    """
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        token = request.cookies.get("admin_token")
+
+        if not token:
+            return redirect(url_for("admin.login"))
+
+        try:
+            payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+
+            # Verificar que sea un token de acceso
+            if payload.get("type") != "access":
+                return redirect(url_for("admin.login"))
+
+            # Guardar info del usuario en g para usarla en la vista
+            g.current_user = {
+                "id": payload.get("user_id"),
+                "username": payload.get("username"),
+                "role": payload.get("role"),
+            }
+
+        except JWTError:
+            return redirect(url_for("admin.login"))
+
+        return f(*args, **kwargs)
+
+    return decorated_function
 
 
 def _create_export_audit_log(
@@ -19,10 +59,16 @@ def _create_export_audit_log(
     """
     Crea un registro de auditoría para exportaciones.
     Si la base de datos SQL no está disponible, solo registra en logs.
+    Obtiene la información del usuario actual desde g.current_user.
     """
     from app.core.logger import logger
     from app.domain.auth.adapters.sql_repository import AuthSQLRepository
     from app.infrastructure.database.sql_client import get_db_session
+
+    # Obtener información del usuario actual
+    current_user = getattr(g, "current_user", None)
+    user_id = current_user.get("id") if current_user else None
+    username = current_user.get("username", "anonymous") if current_user else "anonymous"
 
     try:
         # Intentar obtener sesión SQL
@@ -40,8 +86,8 @@ def _create_export_audit_log(
             details["filename"] = filename
 
         repository.create_audit_log(
-            user_id=None,  # TODO: Obtener del JWT cuando se implemente autenticación en web
-            username="anonymous",  # Será el username real cuando se implemente autenticación
+            user_id=user_id,
+            username=username,
             action=f"export_{data_type}_csv",
             resource_type=data_type,
             ip_address=ip_address,
@@ -51,7 +97,7 @@ def _create_export_audit_log(
             error_message=error_message,
         )
 
-        logger.debug(f"Audit log creado para exportación: {data_type}")
+        logger.debug(f"Audit log creado para exportación: {data_type} por {username}")
 
     except Exception as e:
         # Si falla el audit log, solo logear pero no fallar la exportación
@@ -65,18 +111,21 @@ def login():
 
 
 @admin_bp.route("/dashboard")
+@login_required
 def dashboard():
     """Dashboard principal del admin"""
     return render_template("admin/dashboard.html")
 
 
 @admin_bp.route("/export")
+@login_required
 def export_page():
     """Página de exportación de datos"""
     return render_template("admin/export.html")
 
 
 @admin_bp.route("/export/download", methods=["POST"])
+@login_required
 def export_download():
     """Descarga datos en formato CSV"""
     from app.core.logger import logger
@@ -269,6 +318,7 @@ def export_download():
 
 
 @admin_bp.route("/migrations")
+@login_required
 def migrations_page():
     """Página de migraciones (placeholder)"""
     return render_template("admin/migrations.html")

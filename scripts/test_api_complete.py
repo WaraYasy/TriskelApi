@@ -7,10 +7,12 @@ Prueba todos los endpoints y funcionalidades:
 2. Login (autenticación)
 3. Obtener perfil
 4. Crear partida
-5. Jugar niveles completos
-6. Crear eventos
-7. Completar juego
-8. Verificar estadísticas
+5. Iniciar/terminar sesiones (Windows y Android)
+6. Jugar niveles completos
+7. Crear eventos
+8. Obtener sesiones del jugador y de la partida
+9. Completar juego
+10. Verificar estadísticas
 
 Uso:
     python scripts/test_api_complete.py [--base-url URL] [--no-cleanup]
@@ -256,9 +258,7 @@ class TriskelAPIClient:
 
     def start_level(self, game_id: str, level_name: str) -> dict[str, Any]:
         """Inicia un nivel"""
-        return self._request(
-            "POST", f"/v1/games/{game_id}/level/start", {"level": level_name}
-        )
+        return self._request("POST", f"/v1/games/{game_id}/level/start", {"level": level_name})
 
     def complete_level(
         self,
@@ -318,9 +318,26 @@ class TriskelAPIClient:
         self, game_id: str, event_type: str, limit: int = 100
     ) -> list[dict[str, Any]]:
         """Obtiene eventos de una partida filtrados por tipo"""
-        return self._request(
-            "GET", f"/v1/events/game/{game_id}/type/{event_type}?limit={limit}"
-        )
+        return self._request("GET", f"/v1/events/game/{game_id}/type/{event_type}?limit={limit}")
+
+    # ========== SESSIONS ==========
+
+    def start_session(self, game_id: str, platform: str = "windows") -> dict[str, Any]:
+        """Inicia una sesión de juego"""
+        data = {"game_id": game_id, "platform": platform}
+        return self._request("POST", "/v1/sessions", data)
+
+    def end_session(self, session_id: str) -> dict[str, Any]:
+        """Termina una sesión de juego"""
+        return self._request("PATCH", f"/v1/sessions/{session_id}/end", {})
+
+    def get_player_sessions(self, player_id: str, limit: int = 100) -> list[dict[str, Any]]:
+        """Obtiene sesiones de un jugador"""
+        return self._request("GET", f"/v1/sessions/player/{player_id}?limit={limit}")
+
+    def get_game_sessions(self, game_id: str, limit: int = 100) -> list[dict[str, Any]]:
+        """Obtiene sesiones de una partida"""
+        return self._request("GET", f"/v1/sessions/game/{game_id}?limit={limit}")
 
 
 # ============================================================================
@@ -524,6 +541,94 @@ def test_get_events(client: TriskelAPIClient, game_id: str) -> bool:
         return False
 
 
+def test_start_session(
+    client: TriskelAPIClient, game_id: str, platform: str = "windows"
+) -> str | None:
+    """Prueba iniciar una sesión de juego"""
+    print_step("🎮", f"Iniciando sesión de juego (platform: {platform})...")
+
+    try:
+        session = client.start_session(game_id, platform)
+
+        print_success("Sesión iniciada")
+        print_info(f"session_id: {session['session_id']}")
+        print_info(f"platform: {session['platform']}")
+        print_info(f"is_active: {session['is_active']}")
+
+        return session["session_id"]
+
+    except APIError as e:
+        print_error(f"Error iniciando sesión: {e}")
+        return None
+
+
+def test_end_session(client: TriskelAPIClient, session_id: str) -> bool:
+    """Prueba terminar una sesión de juego"""
+    print_step("⏹️", "Terminando sesión de juego...")
+
+    try:
+        # Esperar un poco para que haya duración
+        time.sleep(2)
+
+        session = client.end_session(session_id)
+
+        print_success("Sesión terminada")
+        print_info(f"session_id: {session['session_id']}")
+        print_info(f"duration_seconds: {session['duration_seconds']}s")
+        print_info(f"is_active: {session['is_active']}")
+
+        return True
+
+    except APIError as e:
+        print_error(f"Error terminando sesión: {e}")
+        return False
+
+
+def test_get_player_sessions(client: TriskelAPIClient, player_id: str) -> bool:
+    """Prueba obtener sesiones de un jugador"""
+    print_step("📊", "Obteniendo sesiones del jugador...")
+
+    try:
+        sessions = client.get_player_sessions(player_id)
+
+        print_success(f"Sesiones del jugador obtenidas: {len(sessions)}")
+
+        if sessions:
+            for i, session in enumerate(sessions[:3], 1):  # Mostrar max 3
+                print_info(
+                    f"  Sesión {i}: {session['session_id'][:20]}... ({session['duration_seconds']}s)"
+                )
+
+        return True
+
+    except APIError as e:
+        print_error(f"Error obteniendo sesiones del jugador: {e}")
+        return False
+
+
+def test_get_game_sessions(client: TriskelAPIClient, game_id: str) -> bool:
+    """Prueba obtener sesiones de una partida"""
+    print_step("🎯", "Obteniendo sesiones de la partida...")
+
+    try:
+        sessions = client.get_game_sessions(game_id)
+
+        print_success(f"Sesiones de la partida obtenidas: {len(sessions)}")
+
+        # Contar sesiones activas vs cerradas
+        active = sum(1 for s in sessions if s["is_active"])
+        closed = len(sessions) - active
+
+        print_info(f"  Sesiones activas: {active}")
+        print_info(f"  Sesiones cerradas: {closed}")
+
+        return True
+
+    except APIError as e:
+        print_error(f"Error obteniendo sesiones de la partida: {e}")
+        return False
+
+
 def test_complete_game(client: TriskelAPIClient, game_id: str) -> bool:
     """Prueba completar el juego"""
     print_step(7, "Completando el juego...")
@@ -626,20 +731,29 @@ def run_full_test(base_url: str, cleanup: bool = True):
     results.append(("Crear partida", game_id is not None))
 
     if game_id:
-        # 5. Jugar niveles
-        results.append(
-            ("Nivel: hub_central", test_play_level(client, game_id, "hub_central"))
-        )
+        # 5. Iniciar sesión (Windows)
+        session_id_1 = test_start_session(client, game_id, "windows")
+        results.append(("Iniciar sesión (Windows)", session_id_1 is not None))
+
+        # 6. Jugar niveles con sesión activa
+        results.append(("Nivel: hub_central", test_play_level(client, game_id, "hub_central")))
 
         results.append(
             (
                 "Nivel: senda_ebano",
-                test_play_level(
-                    client, game_id, "senda_ebano", choice="sanar", relic="lirio"
-                ),
+                test_play_level(client, game_id, "senda_ebano", choice="sanar", relic="lirio"),
             )
         )
 
+        # 7. Terminar primera sesión
+        if session_id_1:
+            results.append(("Terminar sesión (Windows)", test_end_session(client, session_id_1)))
+
+        # 8. Iniciar segunda sesión (Android)
+        session_id_2 = test_start_session(client, game_id, "android")
+        results.append(("Iniciar sesión (Android)", session_id_2 is not None))
+
+        # 9. Continuar jugando niveles
         results.append(
             (
                 "Nivel: fortaleza_gigantes",
@@ -653,10 +767,10 @@ def run_full_test(base_url: str, cleanup: bool = True):
             )
         )
 
-        # 6. Guardar progreso
+        # 10. Guardar progreso
         results.append(("Guardar progreso", test_save_progress(client, game_id)))
 
-        # 7. Más niveles
+        # 11. Más niveles
         results.append(
             (
                 "Nivel: aquelarre_sombras",
@@ -670,20 +784,34 @@ def run_full_test(base_url: str, cleanup: bool = True):
             )
         )
 
-        results.append(
-            ("Nivel: claro_almas", test_play_level(client, game_id, "claro_almas"))
-        )
+        results.append(("Nivel: claro_almas", test_play_level(client, game_id, "claro_almas")))
 
-        # 8. Obtener eventos
+        # 12. Obtener sesiones del jugador
+        if client.credentials:
+            results.append(
+                (
+                    "Obtener sesiones del jugador",
+                    test_get_player_sessions(client, client.credentials.player_id),
+                )
+            )
+
+        # 13. Obtener sesiones de la partida
+        results.append(("Obtener sesiones de la partida", test_get_game_sessions(client, game_id)))
+
+        # 14. Terminar segunda sesión
+        if session_id_2:
+            results.append(("Terminar sesión (Android)", test_end_session(client, session_id_2)))
+
+        # 15. Obtener eventos
         results.append(("Obtener eventos", test_get_events(client, game_id)))
 
-        # 9. Completar juego (final 1 = bueno)
+        # 16. Completar juego (final 1 = bueno)
         results.append(("Completar juego", test_complete_game(client, game_id)))
 
-        # 10. Estadísticas finales
+        # 17. Estadísticas finales
         results.append(("Estadísticas finales", test_final_stats(client)))
 
-        # 11. Cleanup (opcional)
+        # 18. Cleanup (opcional)
         if cleanup:
             results.append(("Eliminar partida", test_delete_game(client, game_id)))
 
@@ -695,9 +823,7 @@ def run_full_test(base_url: str, cleanup: bool = True):
 
     for name, result in results:
         status = (
-            f"{Colors.GREEN}✓ PASS{Colors.ENDC}"
-            if result
-            else f"{Colors.RED}✗ FAIL{Colors.ENDC}"
+            f"{Colors.GREEN}✓ PASS{Colors.ENDC}" if result else f"{Colors.RED}✗ FAIL{Colors.ENDC}"
         )
         print(f"  [{status}] {name}")
 

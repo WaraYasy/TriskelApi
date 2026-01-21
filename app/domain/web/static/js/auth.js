@@ -3,6 +3,21 @@
 const AUTH_API_URL = '/v1/auth';
 
 /**
+ * Set a cookie with the given name and value
+ */
+function setCookie(name, value, days = 1) {
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Strict`;
+}
+
+/**
+ * Delete a cookie by name
+ */
+function deleteCookie(name) {
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+}
+
+/**
  * Login user with username and password
  */
 async function login(username, password) {
@@ -20,11 +35,14 @@ async function login(username, password) {
     }
 
     const data = await response.json();
-    
-    // Save tokens
+
+    // Save tokens in localStorage
     localStorage.setItem('access_token', data.access_token);
     localStorage.setItem('refresh_token', data.refresh_token);
-    
+
+    // Save access token in cookie for server-side validation
+    setCookie('admin_token', data.access_token, 1);
+
     return data;
 }
 
@@ -47,10 +65,13 @@ async function logout() {
         }
     }
 
-    // Clear tokens
+    // Clear tokens from localStorage
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
-    
+
+    // Clear cookie
+    deleteCookie('admin_token');
+
     // Redirect to login
     window.location.href = '/web/admin/login';
 }
