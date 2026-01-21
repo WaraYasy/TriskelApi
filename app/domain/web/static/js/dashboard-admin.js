@@ -1,12 +1,98 @@
 // Dashboard Admin - JavaScript
-// Carga métricas y datos para el panel de administración
+// Carga métricas y datos para el panel de administración con actualización en tiempo real
+
+const METRICS_REFRESH_INTERVAL = 30000; // 30 segundos
+const EVENTS_REFRESH_INTERVAL = 15000; // 15 segundos
+let metricsPollingInterval = null;
+let eventsPollingInterval = null;
+let lastMetrics = null;
+let lastEventsHash = null;
 
 document.addEventListener('DOMContentLoaded', async function () {
     await loadUserInfo();
     await loadDashboardMetrics();
     await loadCharts();
     await loadRecentEvents();
+    startPolling();
 });
+
+/**
+ * Inicia el polling para actualización en tiempo real
+ */
+function startPolling() {
+    if (!metricsPollingInterval) {
+        metricsPollingInterval = setInterval(refreshMetrics, METRICS_REFRESH_INTERVAL);
+    }
+    if (!eventsPollingInterval) {
+        eventsPollingInterval = setInterval(refreshEvents, EVENTS_REFRESH_INTERVAL);
+    }
+    console.log('Polling iniciado: métricas cada 30s, eventos cada 15s');
+}
+
+/**
+ * Detiene el polling
+ */
+function stopPolling() {
+    if (metricsPollingInterval) {
+        clearInterval(metricsPollingInterval);
+        metricsPollingInterval = null;
+    }
+    if (eventsPollingInterval) {
+        clearInterval(eventsPollingInterval);
+        eventsPollingInterval = null;
+    }
+    console.log('Polling detenido');
+}
+
+/**
+ * Refresca métricas sin animación completa
+ */
+async function refreshMetrics() {
+    try {
+        const response = await fetch('/web/dashboard/api/metrics');
+        if (!response.ok) return;
+
+        const metrics = await response.json();
+
+        if (JSON.stringify(metrics) !== JSON.stringify(lastMetrics)) {
+            updateMetricSmooth('totalPlayers', metrics.total_players || 0);
+            updateMetricSmooth('totalDecisions', calculateAvgDecisions(metrics));
+            updateMetricSmooth('totalRelics', calculateTotalRelics(metrics));
+            updateMetricDirect('forestHealth', `${metrics.completion_rate || 0}%`);
+
+            const progressBar = document.getElementById('forestProgressBar');
+            if (progressBar) {
+                progressBar.style.width = `${metrics.completion_rate || 0}%`;
+            }
+
+            lastMetrics = metrics;
+            updateLastRefreshIndicator();
+        }
+    } catch (error) {
+        console.error('Error refreshing metrics:', error);
+    }
+}
+
+/**
+ * Refresca eventos
+ */
+async function refreshEvents() {
+    try {
+        const response = await fetch('/web/dashboard/api/events');
+        if (!response.ok) return;
+
+        const events = await response.json();
+        const eventsHash = JSON.stringify(events);
+
+        if (eventsHash !== lastEventsHash) {
+            lastEventsHash = eventsHash;
+            renderEvents(events);
+            updateLastRefreshIndicator();
+        }
+    } catch (error) {
+        console.error('Error refreshing events:', error);
+    }
+}
 
 /**
  * Cargar información del usuario autenticado
@@ -17,7 +103,6 @@ async function loadUserInfo() {
 
         if (!user) return;
 
-        // Actualizar información del usuario en el sidebar
         const userName = document.getElementById('userName');
         const userEmail = document.getElementById('userEmail');
 
@@ -30,7 +115,7 @@ async function loadUserInfo() {
 }
 
 /**
- * Cargar métricas del dashboard
+ * Cargar métricas del dashboard (carga inicial con animación)
  */
 async function loadDashboardMetrics() {
     try {
@@ -43,21 +128,22 @@ async function loadDashboardMetrics() {
         }
 
         const metrics = await response.json();
+        lastMetrics = metrics;
 
-        // Actualizar métricas
         updateMetric('totalPlayers', metrics.total_players || 0);
         updateMetric('totalDecisions', calculateAvgDecisions(metrics));
         updateMetric('totalRelics', calculateTotalRelics(metrics));
-        updateMetric('forestHealth', `${metrics.completion_rate || 75}%`);
+        updateMetric('forestHealth', `${metrics.completion_rate || 0}%`);
 
-        // Actualizar barra de progreso
         const progressBar = document.getElementById('forestProgressBar');
         if (progressBar) {
-            const percentage = metrics.completion_rate || 75;
+            const percentage = metrics.completion_rate || 0;
             setTimeout(() => {
                 progressBar.style.width = `${percentage}%`;
             }, 300);
         }
+
+        updateLastRefreshIndicator();
 
     } catch (error) {
         console.error('Error fetching dashboard metrics:', error);
@@ -67,24 +153,24 @@ async function loadDashboardMetrics() {
 
 function calculateAvgDecisions(metrics) {
     if (metrics.total_games && metrics.total_players) {
-        // Asumiendo ~3 decisiones por partida
         return Math.round((metrics.total_games * 3) / metrics.total_players);
     }
     return 0;
 }
 
 function calculateTotalRelics(metrics) {
-    // Si tenemos datos de reliquias, usarlos
     if (metrics.total_relics) {
         return metrics.total_relics;
     }
-    // Estimación basada en partidas completadas
     if (metrics.completed_games) {
-        return metrics.completed_games * 5; // ~5 reliquias por juego completado
+        return metrics.completed_games * 5;
     }
     return 0;
 }
 
+/**
+ * Actualiza métrica con animación completa (carga inicial)
+ */
 function updateMetric(elementId, value) {
     const element = document.getElementById(elementId);
     if (element) {
@@ -96,8 +182,33 @@ function updateMetric(elementId, value) {
     }
 }
 
+/**
+ * Actualiza métrica con transición suave (polling)
+ */
+function updateMetricSmooth(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        const currentValue = parseInt(element.textContent.replace(/,/g, '')) || 0;
+        if (currentValue !== value) {
+            animateValue(element, currentValue, value, 500);
+        }
+    }
+}
+
+/**
+ * Actualiza métrica directamente sin animación
+ */
+function updateMetricDirect(elementId, value) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = value;
+    }
+}
+
 function animateValue(element, start, end, duration) {
     const range = end - start;
+    if (range === 0) return;
+
     const increment = range / (duration / 16);
     let current = start;
 
@@ -112,11 +223,10 @@ function animateValue(element, start, end, duration) {
 }
 
 function showPlaceholderMetrics() {
-    // Mostrar 0 si la API no está disponible (sin datos falsos)
-    updateMetric('totalPlayers', 0);
-    updateMetric('totalDecisions', 0);
-    updateMetric('totalRelics', 0);
-    updateMetric('forestHealth', '0%');
+    updateMetricDirect('totalPlayers', '0');
+    updateMetricDirect('totalDecisions', '0');
+    updateMetricDirect('totalRelics', '0');
+    updateMetricDirect('forestHealth', '0%');
 
     const progressBar = document.getElementById('forestProgressBar');
     if (progressBar) {
@@ -130,7 +240,6 @@ function showPlaceholderMetrics() {
  * Cargar gráficos con Plotly
  */
 async function loadCharts() {
-    // Gráfico de tendencia de afinidad
     const affinityData = generateAffinityTrendData();
     const affinityLayout = {
         paper_bgcolor: 'transparent',
@@ -160,7 +269,6 @@ async function loadCharts() {
         displayModeBar: false
     });
 
-    // Gráfico de ejes morales
     const moralData = generateMoralAxesData();
     const moralLayout = {
         paper_bgcolor: 'transparent',
@@ -186,7 +294,6 @@ function generateAffinityTrendData() {
         date.setDate(date.getDate() - i);
         dates.push(date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }));
 
-        // Generar datos simulados con tendencia
         const baseAffinity = 50 + Math.sin(i / 5) * 15 + (days - i) * 0.5;
         const baseCorruption = 30 + Math.cos(i / 4) * 10 + (i) * 0.2;
 
@@ -250,7 +357,6 @@ function generateMoralAxesData() {
  */
 async function loadRecentEvents() {
     const tableBody = document.getElementById('eventsTableBody');
-
     if (!tableBody) return;
 
     try {
@@ -262,47 +368,58 @@ async function loadRecentEvents() {
         }
 
         const events = await response.json();
-
-        if (!events || events.length === 0) {
-            showNoEventsMessage(tableBody);
-            return;
-        }
-
-        tableBody.innerHTML = events.map(event => {
-            const eventInfo = getEventDisplayInfo(event);
-            const formattedDate = formatEventDate(event.timestamp);
-
-            return `
-            <tr>
-                <td>
-                    <div class="event-name">
-                        <div class="event-icon ${eventInfo.iconType}">
-                            ${eventInfo.icon}
-                        </div>
-                        <span>${event.event_type || 'Evento'}</span>
-                    </div>
-                </td>
-                <td>@${event.player_username || 'desconocido'}</td>
-                <td>
-                    <span class="event-status ${eventInfo.status}">
-                        ${eventInfo.status}
-                    </span>
-                </td>
-                <td>${formattedDate}</td>
-                <td>
-                    <button class="chart-action">→</button>
-                </td>
-            </tr>
-        `;
-        }).join('');
+        lastEventsHash = JSON.stringify(events);
+        renderEvents(events);
 
     } catch (error) {
         console.error('Error loading events:', error);
-        showNoEventsMessage(tableBody);
+        showNoEventsMessage(document.getElementById('eventsTableBody'));
     }
 }
 
+/**
+ * Renderiza los eventos en la tabla
+ */
+function renderEvents(events) {
+    const tableBody = document.getElementById('eventsTableBody');
+    if (!tableBody) return;
+
+    if (!events || events.length === 0) {
+        showNoEventsMessage(tableBody);
+        return;
+    }
+
+    tableBody.innerHTML = events.map(event => {
+        const eventInfo = getEventDisplayInfo(event);
+        const formattedDate = formatEventDate(event.timestamp);
+
+        return `
+        <tr>
+            <td>
+                <div class="event-name">
+                    <div class="event-icon ${eventInfo.iconType}">
+                        ${eventInfo.icon}
+                    </div>
+                    <span>${event.event_type || 'Evento'}</span>
+                </div>
+            </td>
+            <td>@${event.player_username || 'desconocido'}</td>
+            <td>
+                <span class="event-status ${eventInfo.status}">
+                    ${eventInfo.status}
+                </span>
+            </td>
+            <td>${formattedDate}</td>
+            <td>
+                <button class="chart-action">→</button>
+            </td>
+        </tr>
+    `;
+    }).join('');
+}
+
 function showNoEventsMessage(tableBody) {
+    if (!tableBody) return;
     tableBody.innerHTML = `
         <tr>
             <td colspan="5" style="text-align: center; color: #9ca3af; padding: 2rem;">
@@ -344,6 +461,19 @@ function formatEventDate(timestamp) {
 }
 
 /**
+ * Actualiza el indicador de última actualización
+ */
+function updateLastRefreshIndicator() {
+    const indicator = document.getElementById('lastRefresh');
+    if (indicator) {
+        const now = new Date();
+        indicator.textContent = `Actualizado: ${now.toLocaleTimeString('es-ES')}`;
+        indicator.classList.add('pulse');
+        setTimeout(() => indicator.classList.remove('pulse'), 1000);
+    }
+}
+
+/**
  * Función de logout
  */
 function logout() {
@@ -351,3 +481,14 @@ function logout() {
     localStorage.removeItem('user_data');
     window.location.href = '/web/admin/login';
 }
+
+// Pausar polling cuando la pestaña no está visible
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        stopPolling();
+    } else {
+        refreshMetrics();
+        refreshEvents();
+        startPolling();
+    }
+});
