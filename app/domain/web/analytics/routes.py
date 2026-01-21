@@ -22,7 +22,9 @@ from .service import AnalyticsService
 analytics_bp = Blueprint("analytics", __name__, template_folder="templates")
 
 # Instanciar servicio con API Key
-analytics_service = AnalyticsService(api_base_url="http://localhost:8000", api_key=settings.api_key)
+analytics_service = AnalyticsService(
+    api_base_url="http://localhost:8000", api_key=settings.api_key
+)
 
 
 @analytics_bp.route("/")
@@ -48,7 +50,9 @@ def index():
     all_events = []
     for player in players:
         try:
-            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
+            response = analytics_service.client.get(
+                f"/v1/events/player/{player['player_id']}"
+            )
             response.raise_for_status()
             events_data = response.json()
             all_events.extend(events_data)
@@ -110,7 +114,9 @@ def games():
     # Generar gráfico de muertes por nivel
     deaths_chart = analytics_service.create_deaths_per_level_chart(games_data)
 
-    return render_template("analytics/games.html", games=games_data, deaths_chart=deaths_chart)
+    return render_template(
+        "analytics/games.html", games=games_data, deaths_chart=deaths_chart
+    )
 
 
 @analytics_bp.route("/choices")
@@ -150,7 +156,9 @@ def events():
 
     for player in players:
         try:
-            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
+            response = analytics_service.client.get(
+                f"/v1/events/player/{player['player_id']}"
+            )
             response.raise_for_status()
             events_data = response.json()
             all_events.extend(events_data)
@@ -193,7 +201,9 @@ def export():
         data = []
         for player in players:
             try:
-                response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
+                response = analytics_service.client.get(
+                    f"/v1/events/player/{player['player_id']}"
+                )
                 response.raise_for_status()
                 data.extend(response.json())
             except Exception:
@@ -206,7 +216,9 @@ def export():
         # Exportar a CSV
         filepath = analytics_service.export_to_csv(data, filename)
         if filepath:
-            return send_file(filepath, as_attachment=True, download_name=f"{filename}.csv")
+            return send_file(
+                filepath, as_attachment=True, download_name=f"{filename}.csv"
+            )
         else:
             return jsonify({"error": "Error al exportar datos"}), 500
     elif export_format == "json":
@@ -292,7 +304,9 @@ def api_events():
 
     for player in players:
         try:
-            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
+            response = analytics_service.client.get(
+                f"/v1/events/player/{player['player_id']}"
+            )
             response.raise_for_status()
             events_data = response.json()
             # Agregar username del jugador a cada evento

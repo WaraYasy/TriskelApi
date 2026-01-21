@@ -75,7 +75,9 @@ def sample_player_stats() -> PlayerStats:
 
 
 @pytest.fixture
-def sample_player(player_id, player_token, fixed_datetime, sample_player_stats) -> Player:
+def sample_player(
+    player_id, player_token, fixed_datetime, sample_player_stats
+) -> Player:
     """Jugador completo con estadísticas"""
     return Player(
         player_id=player_id,
@@ -430,7 +432,9 @@ def expired_jwt_token():
         "type": "access",
         "exp": datetime.utcnow() - timedelta(hours=1),  # Expirado hace 1 hora
     }
-    return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
+    return jwt.encode(
+        payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm
+    )
 
 
 @pytest.fixture

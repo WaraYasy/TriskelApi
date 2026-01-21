@@ -54,7 +54,9 @@ def get_current_admin(
 def require_permission(permission: str):
     def check_permission(current_user: dict = Depends(get_current_admin)) -> dict:
         if permission not in current_user.get("permissions", []):
-            raise HTTPException(status_code=403, detail=f"Permiso '{permission}' requerido")
+            raise HTTPException(
+                status_code=403, detail=f"Permiso '{permission}' requerido"
+            )
         return current_user
 
     return check_permission
@@ -74,7 +76,9 @@ def login(
 ):
     ip_address, user_agent = get_client_info(request)
     try:
-        result = service.login(login_data.username, login_data.password, ip_address, user_agent)
+        result = service.login(
+            login_data.username, login_data.password, ip_address, user_agent
+        )
         return TokenResponse(
             access_token=result["access_token"],
             refresh_token=result["refresh_token"],
@@ -84,7 +88,9 @@ def login(
     except ValueError as e:
         error_msg = str(e)
         if "72 caracteres" in error_msg:
-            raise HTTPException(status_code=400, detail="Password excede longitud máxima")
+            raise HTTPException(
+                status_code=400, detail="Password excede longitud máxima"
+            )
         elif "Credenciales inválidas" in error_msg or "Password inválido" in error_msg:
             raise HTTPException(status_code=401, detail="Credenciales inválidas")
         elif "desactivado" in error_msg.lower():
@@ -101,7 +107,9 @@ def refresh_token(
 ):
     ip_address, user_agent = get_client_info(request)
     try:
-        result = service.refresh_access_token(refresh_data.refresh_token, ip_address, user_agent)
+        result = service.refresh_access_token(
+            refresh_data.refresh_token, ip_address, user_agent
+        )
         return TokenResponse(
             access_token=result["access_token"],
             refresh_token=result["refresh_token"],

@@ -95,7 +95,9 @@ class TestAuthService:
         service = AuthService(repository=None)
         token = service.create_access_token(user_id=1, username="admin", role="admin")
 
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
+        )
         assert payload["type"] == "access"
         assert payload["user_id"] == 1
         assert payload["username"] == "admin"
@@ -105,7 +107,9 @@ class TestAuthService:
         service = AuthService(repository=None)
         token = service.create_refresh_token(user_id=1, username="admin")
 
-        payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+        payload = jwt.decode(
+            token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
+        )
         assert payload["type"] == "refresh"
         assert payload["user_id"] == 1
         assert payload["username"] == "admin"

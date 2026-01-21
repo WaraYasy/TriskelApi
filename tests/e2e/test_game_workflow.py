@@ -14,7 +14,9 @@ class TestGameWorkflow:
     """Tests de flujo completo de partida"""
 
     @patch("app.infrastructure.database.firebase_client.get_firestore_client")
-    def test_complete_game_lifecycle(self, mock_firestore, api_client, player_id, player_token):
+    def test_complete_game_lifecycle(
+        self, mock_firestore, api_client, player_id, player_token
+    ):
         """
         Flujo completo: Crear partida → Jugar niveles → Finalizar partida
         """
@@ -37,7 +39,9 @@ class TestGameWorkflow:
         assert response.status_code in [201, 401]  # 401 si falla autenticación
 
     @pytest.mark.edge_case
-    def test_cannot_create_multiple_active_games(self, api_client, player_id, player_token):
+    def test_cannot_create_multiple_active_games(
+        self, api_client, player_id, player_token
+    ):
         """No permitir crear segunda partida activa"""
         with patch(
             "app.infrastructure.database.firebase_client.get_firestore_client"
@@ -67,7 +71,9 @@ class TestLevelProgression:
     """Tests de progresión de niveles"""
 
     @pytest.mark.edge_case
-    def test_complete_level_with_invalid_data(self, api_client, game_id, player_id, player_token):
+    def test_complete_level_with_invalid_data(
+        self, api_client, game_id, player_id, player_token
+    ):
         """Rechazar completado de nivel con datos inválidos"""
         response = api_client.post(
             f"/v1/games/{game_id}/level/senda_ebano/complete",

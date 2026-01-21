@@ -258,7 +258,9 @@ class TriskelAPIClient:
 
     def start_level(self, game_id: str, level_name: str) -> dict[str, Any]:
         """Inicia un nivel"""
-        return self._request("POST", f"/v1/games/{game_id}/level/start", {"level": level_name})
+        return self._request(
+            "POST", f"/v1/games/{game_id}/level/start", {"level": level_name}
+        )
 
     def complete_level(
         self,
@@ -318,7 +320,9 @@ class TriskelAPIClient:
         self, game_id: str, event_type: str, limit: int = 100
     ) -> list[dict[str, Any]]:
         """Obtiene eventos de una partida filtrados por tipo"""
-        return self._request("GET", f"/v1/events/game/{game_id}/type/{event_type}?limit={limit}")
+        return self._request(
+            "GET", f"/v1/events/game/{game_id}/type/{event_type}?limit={limit}"
+        )
 
     # ========== SESSIONS ==========
 
@@ -331,7 +335,9 @@ class TriskelAPIClient:
         """Termina una sesión de juego"""
         return self._request("PATCH", f"/v1/sessions/{session_id}/end", {})
 
-    def get_player_sessions(self, player_id: str, limit: int = 100) -> list[dict[str, Any]]:
+    def get_player_sessions(
+        self, player_id: str, limit: int = 100
+    ) -> list[dict[str, Any]]:
         """Obtiene sesiones de un jugador"""
         return self._request("GET", f"/v1/sessions/player/{player_id}?limit={limit}")
 
@@ -736,18 +742,24 @@ def run_full_test(base_url: str, cleanup: bool = True):
         results.append(("Iniciar sesión (Windows)", session_id_1 is not None))
 
         # 6. Jugar niveles con sesión activa
-        results.append(("Nivel: hub_central", test_play_level(client, game_id, "hub_central")))
+        results.append(
+            ("Nivel: hub_central", test_play_level(client, game_id, "hub_central"))
+        )
 
         results.append(
             (
                 "Nivel: senda_ebano",
-                test_play_level(client, game_id, "senda_ebano", choice="sanar", relic="lirio"),
+                test_play_level(
+                    client, game_id, "senda_ebano", choice="sanar", relic="lirio"
+                ),
             )
         )
 
         # 7. Terminar primera sesión
         if session_id_1:
-            results.append(("Terminar sesión (Windows)", test_end_session(client, session_id_1)))
+            results.append(
+                ("Terminar sesión (Windows)", test_end_session(client, session_id_1))
+            )
 
         # 8. Iniciar segunda sesión (Android)
         session_id_2 = test_start_session(client, game_id, "android")
@@ -784,7 +796,9 @@ def run_full_test(base_url: str, cleanup: bool = True):
             )
         )
 
-        results.append(("Nivel: claro_almas", test_play_level(client, game_id, "claro_almas")))
+        results.append(
+            ("Nivel: claro_almas", test_play_level(client, game_id, "claro_almas"))
+        )
 
         # 12. Obtener sesiones del jugador
         if client.credentials:
@@ -796,11 +810,15 @@ def run_full_test(base_url: str, cleanup: bool = True):
             )
 
         # 13. Obtener sesiones de la partida
-        results.append(("Obtener sesiones de la partida", test_get_game_sessions(client, game_id)))
+        results.append(
+            ("Obtener sesiones de la partida", test_get_game_sessions(client, game_id))
+        )
 
         # 14. Terminar segunda sesión
         if session_id_2:
-            results.append(("Terminar sesión (Android)", test_end_session(client, session_id_2)))
+            results.append(
+                ("Terminar sesión (Android)", test_end_session(client, session_id_2))
+            )
 
         # 15. Obtener eventos
         results.append(("Obtener eventos", test_get_events(client, game_id)))
@@ -823,7 +841,9 @@ def run_full_test(base_url: str, cleanup: bool = True):
 
     for name, result in results:
         status = (
-            f"{Colors.GREEN}✓ PASS{Colors.ENDC}" if result else f"{Colors.RED}✗ FAIL{Colors.ENDC}"
+            f"{Colors.GREEN}✓ PASS{Colors.ENDC}"
+            if result
+            else f"{Colors.RED}✗ FAIL{Colors.ENDC}"
         )
         print(f"  [{status}] {name}")
 

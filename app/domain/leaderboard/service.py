@@ -53,7 +53,9 @@ class LeaderboardService:
         self.player_repo = player_repo or FirestorePlayerRepository()
         self.game_repo = game_repo or FirestoreGameRepository()
 
-    def get_leaderboard(self, leaderboard_type: LeaderboardType) -> Optional[Leaderboard]:
+    def get_leaderboard(
+        self, leaderboard_type: LeaderboardType
+    ) -> Optional[Leaderboard]:
         """Obtiene un leaderboard por tipo"""
         return self.repository.get_by_type(leaderboard_type)
 
@@ -89,7 +91,9 @@ class LeaderboardService:
         players = self.player_repo.get_all(limit=1000)
         eligible_players = [p for p in players if p.games_completed > 0]
 
-        logger.info(f"Procesando {len(eligible_players)} jugadores con partidas completadas")
+        logger.info(
+            f"Procesando {len(eligible_players)} jugadores con partidas completadas"
+        )
 
         # Calcular cada leaderboard
         self._refresh_speedrun(eligible_players)
@@ -114,7 +118,9 @@ class LeaderboardService:
         Criterio: Menor best_speedrun_seconds = mejor
         """
         # Filtrar jugadores con speedrun registrado
-        speedrun_players = [p for p in players if p.stats.best_speedrun_seconds is not None]
+        speedrun_players = [
+            p for p in players if p.stats.best_speedrun_seconds is not None
+        ]
 
         # Ordenar por tiempo (menor = mejor)
         speedrun_players.sort(key=lambda p: p.stats.best_speedrun_seconds)
@@ -148,7 +154,9 @@ class LeaderboardService:
                 )
             )
 
-        leaderboard = Leaderboard(leaderboard_id=LeaderboardType.SPEEDRUN, entries=entries)
+        leaderboard = Leaderboard(
+            leaderboard_id=LeaderboardType.SPEEDRUN, entries=entries
+        )
         self.repository.save(leaderboard)
 
     def _refresh_moral_good(self, players) -> None:
@@ -185,7 +193,9 @@ class LeaderboardService:
                 )
             )
 
-        leaderboard = Leaderboard(leaderboard_id=LeaderboardType.MORAL_GOOD, entries=entries)
+        leaderboard = Leaderboard(
+            leaderboard_id=LeaderboardType.MORAL_GOOD, entries=entries
+        )
         self.repository.save(leaderboard)
 
     def _refresh_moral_evil(self, players) -> None:
@@ -221,7 +231,9 @@ class LeaderboardService:
                 )
             )
 
-        leaderboard = Leaderboard(leaderboard_id=LeaderboardType.MORAL_EVIL, entries=entries)
+        leaderboard = Leaderboard(
+            leaderboard_id=LeaderboardType.MORAL_EVIL, entries=entries
+        )
         self.repository.save(leaderboard)
 
     def _refresh_completions(self, players) -> None:
@@ -254,5 +266,7 @@ class LeaderboardService:
                 )
             )
 
-        leaderboard = Leaderboard(leaderboard_id=LeaderboardType.COMPLETIONS, entries=entries)
+        leaderboard = Leaderboard(
+            leaderboard_id=LeaderboardType.COMPLETIONS, entries=entries
+        )
         self.repository.save(leaderboard)

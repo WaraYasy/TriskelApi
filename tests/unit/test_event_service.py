@@ -36,7 +36,9 @@ def mock_event_service_setup(mock_event_repository, sample_player):
 class TestEventServiceCreate:
     """Tests para crear eventos"""
 
-    def test_create_event_success(self, mock_event_service_setup, sample_event, player_id, game_id):
+    def test_create_event_success(
+        self, mock_event_service_setup, sample_event, player_id, game_id
+    ):
         """Crear evento exitosamente"""
         service = mock_event_service_setup
 
@@ -59,7 +61,9 @@ class TestEventServiceCreate:
         service.repository.create.assert_called_once()
 
     @pytest.mark.edge_case
-    def test_create_event_player_not_found(self, mock_event_repository, player_id, game_id):
+    def test_create_event_player_not_found(
+        self, mock_event_repository, player_id, game_id
+    ):
         """Rechazar evento si jugador no existe"""
         # Crear mocks
         mock_player_repo = MagicMock()
@@ -87,7 +91,9 @@ class TestEventServiceCreate:
 class TestEventServiceBatch:
     """Tests para creación batch de eventos"""
 
-    def test_create_batch_success(self, mock_event_service_setup, player_id, game_id, sample_event):
+    def test_create_batch_success(
+        self, mock_event_service_setup, player_id, game_id, sample_event
+    ):
         """Crear batch de eventos exitosamente"""
         service = mock_event_service_setup
 
@@ -118,7 +124,9 @@ class TestEventServiceBatch:
         service.repository.create_batch.assert_called_once()
 
     @pytest.mark.edge_case
-    def test_create_batch_validates_unique_players(self, mock_event_repository, sample_player):
+    def test_create_batch_validates_unique_players(
+        self, mock_event_repository, sample_player
+    ):
         """Validar jugadores únicos solo una vez en batch"""
         # Crear mocks
         mock_player_repo = MagicMock()

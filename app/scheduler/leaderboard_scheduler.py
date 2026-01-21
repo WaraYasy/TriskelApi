@@ -33,7 +33,9 @@ def refresh_leaderboards_job():
         # Ejecutar recalculo
         updated = service.refresh_all_leaderboards()
 
-        logger.info(f"=== Scheduler: Leaderboards actualizados exitosamente: {updated} ===")
+        logger.info(
+            f"=== Scheduler: Leaderboards actualizados exitosamente: {updated} ==="
+        )
 
     except Exception as e:
         logger.error(f"=== Scheduler: Error recalculando leaderboards: {e} ===")

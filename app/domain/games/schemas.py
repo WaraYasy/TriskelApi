@@ -23,7 +23,9 @@ class GameCreate(BaseModel):
     player_id: Optional[str] = None
 
     class Config:
-        json_schema_extra = {"example": {"player_id": "123e4567-e89b-12d3-a456-426614174000"}}
+        json_schema_extra = {
+            "example": {"player_id": "123e4567-e89b-12d3-a456-426614174000"}
+        }
 
 
 class GameUpdate(BaseModel):
@@ -48,7 +50,9 @@ class GameUpdate(BaseModel):
             return v
         valid_statuses = ["in_progress", "completed", "abandoned"]
         if v not in valid_statuses:
-            raise ValueError(f"Status '{v}' no válido. Válidos: {', '.join(valid_statuses)}")
+            raise ValueError(
+                f"Status '{v}' no válido. Válidos: {', '.join(valid_statuses)}"
+            )
         return v
 
     @field_validator("completion_percentage")

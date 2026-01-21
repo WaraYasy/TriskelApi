@@ -31,7 +31,9 @@ class TestGameServiceCreate:
         mock_game_repository.create.return_value = new_game
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         game_data = GameCreate(player_id=sample_player.player_id)
         result = service.create_game(game_data)
 
@@ -50,7 +52,9 @@ class TestGameServiceCreate:
         mock_player_repository.get_by_id.return_value = None
 
         # Ejecutar y verificar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         game_data = GameCreate(player_id="nonexistent-player")
 
         with pytest.raises(ValueError) as exc_info:
@@ -74,7 +78,9 @@ class TestGameServiceCreate:
         mock_game_repository.get_active_game.return_value = active_game
 
         # Ejecutar y verificar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         game_data = GameCreate(player_id=sample_player.player_id)
 
         with pytest.raises(ValueError) as exc_info:
@@ -101,7 +107,9 @@ class TestGameServiceLevels:
         mock_game_repository.start_level.return_value = active_game
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         level_data = LevelStart(level="aquelarre_sombras")
         result = service.start_level(active_game.game_id, level_data)
 
@@ -122,7 +130,9 @@ class TestGameServiceLevels:
         mock_game_repository.get_by_id.return_value = completed_game
 
         # Ejecutar y verificar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         level_data = LevelStart(level="senda_ebano")
 
         with pytest.raises(ValueError) as exc_info:
@@ -144,8 +154,12 @@ class TestGameServiceLevels:
         mock_game_repository.complete_level.return_value = active_game
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
-        level_data = LevelComplete(level="fortaleza_gigantes", time_seconds=300, deaths=2)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
+        level_data = LevelComplete(
+            level="fortaleza_gigantes", time_seconds=300, deaths=2
+        )
         result = service.complete_level(active_game.game_id, level_data)
 
         # Verificar
@@ -167,7 +181,9 @@ class TestGameServiceLevels:
         mock_game_repository.update.return_value = active_game
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         level_data = LevelComplete(
             level="claro_almas", time_seconds=600, deaths=5  # Nivel final (boss)
         )
@@ -203,7 +219,9 @@ class TestGameServiceFinish:
         mock_game_repository.update.return_value = completed
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         result = service.finish_game(active_game.game_id, completed=True)
 
         # Verificar
@@ -233,7 +251,9 @@ class TestGameServiceFinish:
         mock_game_repository.update.return_value = abandoned
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         service.finish_game(active_game.game_id, completed=False)
 
         # Verificar status="abandoned"
@@ -257,7 +277,9 @@ class TestGameServiceFinish:
         mock_game_repository.update.return_value = completed
 
         # Ejecutar
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         update_data = GameUpdate(status="completed")
         service.update_game(active_game.game_id, update_data)
 
@@ -277,7 +299,9 @@ class TestGameServiceFinish:
         mock_game_repository.update.return_value = active_game
 
         # Ejecutar (actualizar completion_percentage, NO status)
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         update_data = GameUpdate(completion_percentage=50.0)
         service.update_game(active_game.game_id, update_data)
 
@@ -300,7 +324,9 @@ class TestGameServiceGet:
         """Obtener partida que existe"""
         mock_game_repository.get_by_id.return_value = active_game
 
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         result = service.get_game(active_game.game_id)
 
         assert result == active_game
@@ -317,7 +343,9 @@ class TestGameServiceGet:
         """Obtener todas las partidas de un jugador"""
         mock_game_repository.get_by_player.return_value = [active_game, completed_game]
 
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         result = service.get_player_games(player_id)
 
         assert len(result) == 2
@@ -334,7 +362,9 @@ class TestGameServiceDelete:
         """Eliminar partida exitosamente"""
         mock_game_repository.delete.return_value = True
 
-        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        service = GameService(
+            mock_game_repository, mock_player_repository, mock_player_service
+        )
         result = service.delete_game("game-123")
 
         assert result is True

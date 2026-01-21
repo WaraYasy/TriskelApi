@@ -41,7 +41,9 @@ class EventCreate(BaseModel):
             "custom_event",
         ]
         if v not in valid_types:
-            raise ValueError(f"Tipo de evento '{v}' no válido. Válidos: {', '.join(valid_types)}")
+            raise ValueError(
+                f"Tipo de evento '{v}' no válido. Válidos: {', '.join(valid_types)}"
+            )
         return v
 
     @field_validator("level")

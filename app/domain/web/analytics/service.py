@@ -37,7 +37,9 @@ class AnalyticsService:
     - Gráficos con Plotly
     """
 
-    def __init__(self, api_base_url: str = "http://localhost:8000", api_key: str = None):
+    def __init__(
+        self, api_base_url: str = "http://localhost:8000", api_key: str = None
+    ):
         """
         Inicializa el servicio.
 
@@ -119,11 +121,15 @@ class AnalyticsService:
                 games = response.json()
                 all_games.extend(games)
             except Exception as e:
-                print(f"Error obteniendo partidas del jugador {player['player_id']}: {e}")
+                print(
+                    f"Error obteniendo partidas del jugador {player['player_id']}: {e}"
+                )
 
         return all_games
 
-    def calculate_global_metrics(self, players: List[Dict], games: List[Dict]) -> Dict[str, Any]:
+    def calculate_global_metrics(
+        self, players: List[Dict], games: List[Dict]
+    ) -> Dict[str, Any]:
         """
         Calcula métricas globales del juego.
 
@@ -179,7 +185,9 @@ class AnalyticsService:
             "total_games": len(games),
             "completed_games": len(completed_games),
             "avg_playtime": round(avg_playtime, 2),
-            "completion_rate": (round(len(completed_games) / len(games) * 100, 2) if games else 0),
+            "completion_rate": (
+                round(len(completed_games) / len(games) * 100, 2) if games else 0
+            ),
             "avg_deaths": round(avg_deaths, 2),
             "total_deaths": total_deaths,
             "total_relics": total_relics,
@@ -205,7 +213,9 @@ class AnalyticsService:
             for level_name, level_data in game.get("levels_data", {}).items():
                 choice = level_data.get("choice")
                 if choice:
-                    choices_data.append({"Nivel": level_name, "Decisión": choice, "count": 1})
+                    choices_data.append(
+                        {"Nivel": level_name, "Decisión": choice, "count": 1}
+                    )
 
         if not choices_data:
             return "<div>No hay decisiones morales registradas</div>"
@@ -482,7 +492,8 @@ class AnalyticsService:
 
         # Calcular porcentaje
         level_percentages = {
-            level: (count / total_games) * 100 for level, count in level_completions.items()
+            level: (count / total_games) * 100
+            for level, count in level_completions.items()
         }
 
         df = pd.DataFrame(

@@ -168,9 +168,9 @@ class SessionRepository:
         Returns:
             Numero de sesiones cerradas
         """
-        query = self.collection.where(filter=FieldFilter("player_id", "==", player_id)).where(
-            filter=FieldFilter("ended_at", "==", None)
-        )
+        query = self.collection.where(
+            filter=FieldFilter("player_id", "==", player_id)
+        ).where(filter=FieldFilter("ended_at", "==", None))
         docs = query.stream()
 
         closed_count = 0
@@ -181,6 +181,8 @@ class SessionRepository:
             closed_count += 1
 
         if closed_count > 0:
-            logger.warning(f"Cerradas {closed_count} sesiones huerfanas del jugador {player_id}")
+            logger.warning(
+                f"Cerradas {closed_count} sesiones huerfanas del jugador {player_id}"
+            )
 
         return closed_count

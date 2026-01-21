@@ -23,8 +23,12 @@ class PlayerStats(BaseModel):
     total_bad_choices: int = Field(default=0, ge=0)  # Decisiones morales malas (>= 0)
     total_deaths: int = Field(default=0, ge=0)  # Muertes acumuladas (>= 0)
     favorite_relic: Optional[str] = None  # lirio | hacha | manto
-    best_speedrun_seconds: Optional[int] = Field(default=None, ge=0)  # Mejor tiempo (>= 0)
-    moral_alignment: float = Field(default=0.0, ge=-1.0, le=1.0)  # De -1.0 (malo) a 1.0 (bueno)
+    best_speedrun_seconds: Optional[int] = Field(
+        default=None, ge=0
+    )  # Mejor tiempo (>= 0)
+    moral_alignment: float = Field(
+        default=0.0, ge=-1.0, le=1.0
+    )  # De -1.0 (malo) a 1.0 (bueno)
 
     @field_validator("favorite_relic")
     @classmethod

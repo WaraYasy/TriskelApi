@@ -123,7 +123,9 @@ def start_session(
     player_id = getattr(request.state, "player_id", None)
 
     if not player_id:
-        raise HTTPException(status_code=401, detail="Autenticacion de jugador requerida")
+        raise HTTPException(
+            status_code=401, detail="Autenticacion de jugador requerida"
+        )
 
     try:
         session = service.start_session(player_id, session_data)

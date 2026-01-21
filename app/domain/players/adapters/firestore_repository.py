@@ -52,7 +52,9 @@ class FirestorePlayerRepository(IPlayerRepository):
     def get_by_username(self, username: str) -> Optional[Player]:
         """Obtiene un jugador por su username"""
         # Query en Firestore: WHERE username == X LIMIT 1
-        query = self.collection.where(filter=FieldFilter("username", "==", username)).limit(1)
+        query = self.collection.where(
+            filter=FieldFilter("username", "==", username)
+        ).limit(1)
         docs = query.stream()
 
         for doc in docs:
@@ -91,7 +93,9 @@ class FirestorePlayerRepository(IPlayerRepository):
             doc_ref = self.collection.document(player_id)
             doc_ref.update(update_data)
 
-            logger.info(f"Jugador actualizado: {player_id} - {list(update_data.keys())}")
+            logger.info(
+                f"Jugador actualizado: {player_id} - {list(update_data.keys())}"
+            )
 
             # Retornar el jugador actualizado
             return self.get_by_id(player_id)

@@ -36,7 +36,9 @@ class TestLeaderboardServiceGet:
         result = service.get_leaderboard(LeaderboardType.SPEEDRUN)
 
         assert result == sample_leaderboard
-        mock_leaderboard_repository.get_by_type.assert_called_once_with(LeaderboardType.SPEEDRUN)
+        mock_leaderboard_repository.get_by_type.assert_called_once_with(
+            LeaderboardType.SPEEDRUN
+        )
 
     def test_get_leaderboard_not_found(
         self,

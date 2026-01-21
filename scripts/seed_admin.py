@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.infrastructure.database.sql_client import sql_manager, get_db_session
 from app.domain.auth.adapters.sql_repository import SQLAuthRepository
-from app.domain.auth.service import AuthService
 from app.domain.auth.schemas import AdminUserCreate
+from app.domain.auth.service import AuthService
+from app.infrastructure.database.sql_client import get_db_session, sql_manager
 
 
 def create_first_admin():
@@ -42,7 +42,7 @@ def create_first_admin():
             username="admin",
             email="admin@triskel.com",
             password="Admin123!",
-            role="admin"
+            role="admin",
         )
 
         user = service.create_admin(admin_data)
@@ -56,6 +56,7 @@ def create_first_admin():
     except Exception as e:
         print(f"   ❌ Error: {e}")
         import traceback
+
         traceback.print_exc()
         return
 

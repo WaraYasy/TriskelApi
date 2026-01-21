@@ -52,7 +52,9 @@ def check_event_creation_access(request: Request, event_data: EventCreate) -> No
 
     # Jugador solo puede crear eventos para sí mismo
     if event_data.player_id != authenticated_player_id:
-        raise HTTPException(status_code=403, detail="Solo puedes crear eventos para ti mismo")
+        raise HTTPException(
+            status_code=403, detail="Solo puedes crear eventos para ti mismo"
+        )
 
 
 def check_batch_creation_access(request: Request, batch_data: EventBatchCreate) -> None:

@@ -4,7 +4,16 @@ import json
 from datetime import datetime
 from functools import wraps
 
-from flask import Blueprint, Response, g, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Blueprint,
+    Response,
+    g,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    url_for,
+)
 from jose import JWTError, jwt
 
 from app.config.settings import settings
@@ -27,7 +36,9 @@ def login_required(f):
             return redirect(url_for("admin.login"))
 
         try:
-            payload = jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
+            payload = jwt.decode(
+                token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm]
+            )
 
             # Verificar que sea un token de acceso
             if payload.get("type") != "access":
@@ -68,13 +79,17 @@ def _create_export_audit_log(
     # Obtener información del usuario actual
     current_user = getattr(g, "current_user", None)
     user_id = current_user.get("id") if current_user else None
-    username = current_user.get("username", "anonymous") if current_user else "anonymous"
+    username = (
+        current_user.get("username", "anonymous") if current_user else "anonymous"
+    )
 
     try:
         # Intentar obtener sesión SQL
         session = get_db_session()
         if not session:
-            logger.warning("Base de datos SQL no disponible, no se puede registrar audit log")
+            logger.warning(
+                "Base de datos SQL no disponible, no se puede registrar audit log"
+            )
             return
 
         # Crear repositorio y registrar

@@ -23,7 +23,9 @@ class SessionCreate(BaseModel):
     platform: Platform = Field(..., description="Plataforma del cliente")
 
     class Config:
-        json_schema_extra = {"example": {"game_id": "abc-123-xyz", "platform": "windows"}}
+        json_schema_extra = {
+            "example": {"game_id": "abc-123-xyz", "platform": "windows"}
+        }
 
 
 class SessionEnd(BaseModel):

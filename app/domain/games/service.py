@@ -68,7 +68,9 @@ class GameService:
         # Verificar que no tenga partida activa
         active_game = self.game_repository.get_active_game(game_data.player_id)
         if active_game:
-            raise ValueError(f"El jugador ya tiene una partida activa: {active_game.game_id}")
+            raise ValueError(
+                f"El jugador ya tiene una partida activa: {active_game.game_id}"
+            )
 
         # Crear y retornar
         return self.game_repository.create(game_data)
@@ -121,7 +123,9 @@ class GameService:
 
         # Si la partida terminó, actualizar stats del jugador
         if game_update.status in ["completed", "abandoned"]:
-            self.player_service.update_player_stats_after_game(game.player_id, updated_game)
+            self.player_service.update_player_stats_after_game(
+                game.player_id, updated_game
+            )
 
         return updated_game
 

@@ -13,7 +13,9 @@ class PasswordValidator:
             )
 
         if len(password) > PasswordValidator.MAX_LENGTH:
-            raise ValueError(f"Password no puede exceder {PasswordValidator.MAX_LENGTH} caracteres")
+            raise ValueError(
+                f"Password no puede exceder {PasswordValidator.MAX_LENGTH} caracteres"
+            )
 
         if not re.search(r"[A-Z]", password):
             raise ValueError("Password debe contener al menos una mayúscula")

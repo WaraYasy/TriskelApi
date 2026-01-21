@@ -87,7 +87,9 @@ class PlayerService:
 
         # Crear Player con password hasheado
         player = Player(
-            username=player_data.username, password_hash=password_hashed, email=player_data.email
+            username=player_data.username,
+            password_hash=password_hashed,
+            email=player_data.email,
         )
 
         # Guardar en el repositorio usando el método save
@@ -149,7 +151,9 @@ class PlayerService:
         """
         return self.repository.get_all(limit=limit)
 
-    def update_player(self, player_id: str, player_update: PlayerUpdate) -> Optional[Player]:
+    def update_player(
+        self, player_id: str, player_update: PlayerUpdate
+    ) -> Optional[Player]:
         """
         Actualiza un jugador.
 

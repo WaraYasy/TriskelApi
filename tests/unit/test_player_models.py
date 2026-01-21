@@ -166,7 +166,9 @@ class TestPlayer:
     def test_negative_playtime_rejected(self):
         """Rechazar tiempo de juego negativo"""
         with pytest.raises(ValidationError):
-            Player(username="test", password_hash="test_hash", total_playtime_seconds=-100)
+            Player(
+                username="test", password_hash="test_hash", total_playtime_seconds=-100
+            )
 
     @pytest.mark.edge_case
     def test_negative_games_rejected(self):
@@ -207,7 +209,9 @@ class TestPlayer:
     def test_player_with_extreme_playtime(self):
         """Jugador con tiempo de juego extremo (1000 horas)"""
         player = Player(
-            username="hardcore_gamer", password_hash="test_hash", total_playtime_seconds=3_600_000
+            username="hardcore_gamer",
+            password_hash="test_hash",
+            total_playtime_seconds=3_600_000,
         )  # 1000 horas
         assert player.total_playtime_seconds == 3_600_000
 
@@ -215,7 +219,10 @@ class TestPlayer:
     def test_player_with_many_games(self):
         """Jugador con muchas partidas"""
         player = Player(
-            username="veteran", password_hash="test_hash", games_played=1000, games_completed=750
+            username="veteran",
+            password_hash="test_hash",
+            games_played=1000,
+            games_completed=750,
         )
         assert player.games_played == 1000
         assert player.games_completed == 750
@@ -238,7 +245,9 @@ class TestPlayer:
             moral_alignment=0.88,
         )
 
-        player = Player(username="good_player", password_hash="test_hash", stats=custom_stats)
+        player = Player(
+            username="good_player", password_hash="test_hash", stats=custom_stats
+        )
 
         assert player.stats.total_good_choices == 15
         assert player.stats.favorite_relic == "hacha"

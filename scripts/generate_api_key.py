@@ -32,6 +32,7 @@ Arquitectura:
 
 import secrets
 
+
 def generate_api_key():
     """
     Genera una API Key aleatoria y criptográficamente segura.
@@ -56,6 +57,7 @@ def generate_api_key():
         ```
     """
     return secrets.token_urlsafe(32)
+
 
 if __name__ == "__main__":
     api_key = generate_api_key()

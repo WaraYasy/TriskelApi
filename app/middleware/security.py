@@ -87,7 +87,9 @@ def get_current_player(
         )
 
     # Importar aquí para evitar circular import
-    from app.domain.players.adapters.firestore_repository import FirestorePlayerRepository
+    from app.domain.players.adapters.firestore_repository import (
+        FirestorePlayerRepository,
+    )
 
     repo = FirestorePlayerRepository()
     player = repo.get_by_id(player_id)
@@ -149,4 +151,6 @@ def get_current_player_or_admin(
 # Para usar como type hints en endpoints
 CurrentPlayer = Annotated[Player, Depends(get_current_player)]
 AdminApiKey = Annotated[str, Depends(get_api_key)]
-PlayerOrAdmin = Annotated[tuple[bool, Optional[Player]], Depends(get_current_player_or_admin)]
+PlayerOrAdmin = Annotated[
+    tuple[bool, Optional[Player]], Depends(get_current_player_or_admin)
+]
