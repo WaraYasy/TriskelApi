@@ -151,6 +151,4 @@ def get_current_player_or_admin(
 # Para usar como type hints en endpoints
 CurrentPlayer = Annotated[Player, Depends(get_current_player)]
 AdminApiKey = Annotated[str, Depends(get_api_key)]
-PlayerOrAdmin = Annotated[
-    tuple[bool, Optional[Player]], Depends(get_current_player_or_admin)
-]
+PlayerOrAdmin = Annotated[tuple[bool, Optional[Player]], Depends(get_current_player_or_admin)]

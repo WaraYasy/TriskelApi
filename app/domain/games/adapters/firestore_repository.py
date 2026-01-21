@@ -56,9 +56,7 @@ class FirestoreGameRepository(IGameRepository):
     def get_by_player(self, player_id: str, limit: int = 100) -> List[Game]:
         """Obtiene todas las partidas de un jugador"""
         # Query: WHERE player_id == X LIMIT N
-        query = self.collection.where(
-            filter=FieldFilter("player_id", "==", player_id)
-        ).limit(limit)
+        query = self.collection.where(filter=FieldFilter("player_id", "==", player_id)).limit(limit)
         docs = query.stream()
 
         games = []

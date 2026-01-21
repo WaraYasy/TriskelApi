@@ -38,9 +38,7 @@ class SQLAuthRepository(IAuthRepository):
 
     # ==================== Helper Methods ====================
 
-    def _user_to_dict(
-        self, user: AdminUser, include_password: bool = False
-    ) -> Dict[str, Any]:
+    def _user_to_dict(self, user: AdminUser, include_password: bool = False) -> Dict[str, Any]:
         """
         Convierte un AdminUser ORM model a dict.
 

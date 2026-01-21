@@ -37,9 +37,7 @@ class TestSessionServiceStart:
             player_repo=mock_player_repository,
             game_repo=mock_game_repository,
         )
-        session_data = SessionCreate(
-            game_id=active_game.game_id, platform=Platform.WINDOWS
-        )
+        session_data = SessionCreate(game_id=active_game.game_id, platform=Platform.WINDOWS)
         result = service.start_session(sample_player.player_id, session_data)
 
         # Verificar
@@ -92,9 +90,7 @@ class TestSessionServiceStart:
             player_repo=mock_player_repository,
             game_repo=mock_game_repository,
         )
-        session_data = SessionCreate(
-            game_id="nonexistent-game", platform=Platform.WINDOWS
-        )
+        session_data = SessionCreate(game_id="nonexistent-game", platform=Platform.WINDOWS)
 
         with pytest.raises(ValueError) as exc_info:
             service.start_session(sample_player.player_id, session_data)
@@ -125,9 +121,7 @@ class TestSessionServiceStart:
             player_repo=mock_player_repository,
             game_repo=mock_game_repository,
         )
-        session_data = SessionCreate(
-            game_id=active_game.game_id, platform=Platform.WINDOWS
-        )
+        session_data = SessionCreate(game_id=active_game.game_id, platform=Platform.WINDOWS)
 
         with pytest.raises(ValueError) as exc_info:
             service.start_session(sample_player.player_id, session_data)
@@ -157,9 +151,7 @@ class TestSessionServiceStart:
             player_repo=mock_player_repository,
             game_repo=mock_game_repository,
         )
-        session_data = SessionCreate(
-            game_id=active_game.game_id, platform=Platform.WINDOWS
-        )
+        session_data = SessionCreate(game_id=active_game.game_id, platform=Platform.WINDOWS)
         service.start_session(sample_player.player_id, session_data)
 
         # Verificar que se llamó close_stale_sessions
@@ -191,9 +183,7 @@ class TestSessionServiceEnd:
             player_repo=mock_player_repository,
             game_repo=mock_game_repository,
         )
-        result = service.end_session(
-            sample_session.session_id, sample_session.player_id
-        )
+        result = service.end_session(sample_session.session_id, sample_session.player_id)
 
         # Verificar
         assert result == ended_session

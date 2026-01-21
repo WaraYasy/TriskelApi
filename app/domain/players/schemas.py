@@ -51,9 +51,7 @@ class PlayerUpdate(BaseModel):
     last_login: Optional[datetime] = None
 
     class Config:
-        json_schema_extra = {
-            "example": {"total_playtime_seconds": 7200, "games_played": 10}
-        }
+        json_schema_extra = {"example": {"total_playtime_seconds": 7200, "games_played": 10}}
 
 
 class PlayerAuthResponse(BaseModel):
@@ -84,9 +82,7 @@ class PlayerLoginRequest(BaseModel):
     password: str = Field(..., min_length=6, max_length=72)
 
     class Config:
-        json_schema_extra = {
-            "example": {"username": "player123", "password": "mi_password"}
-        }
+        json_schema_extra = {"example": {"username": "player123", "password": "mi_password"}}
 
 
 class PlayerLoginResponse(BaseModel):

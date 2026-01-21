@@ -115,9 +115,7 @@ def get_game_repository() -> IGameRepository:
 
 
 @router.post("", response_model=PlayerAuthResponse, status_code=201)
-def create_player(
-    player_data: PlayerCreate, service: PlayerService = Depends(get_player_service)
-):
+def create_player(player_data: PlayerCreate, service: PlayerService = Depends(get_player_service)):
     """
     Crear un nuevo jugador.
 

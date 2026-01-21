@@ -166,9 +166,7 @@ class TestPlayer:
     def test_negative_playtime_rejected(self):
         """Rechazar tiempo de juego negativo"""
         with pytest.raises(ValidationError):
-            Player(
-                username="test", password_hash="test_hash", total_playtime_seconds=-100
-            )
+            Player(username="test", password_hash="test_hash", total_playtime_seconds=-100)
 
     @pytest.mark.edge_case
     def test_negative_games_rejected(self):
@@ -245,9 +243,7 @@ class TestPlayer:
             moral_alignment=0.88,
         )
 
-        player = Player(
-            username="good_player", password_hash="test_hash", stats=custom_stats
-        )
+        player = Player(username="good_player", password_hash="test_hash", stats=custom_stats)
 
         assert player.stats.total_good_choices == 15
         assert player.stats.favorite_relic == "hacha"

@@ -36,9 +36,7 @@ def validate_username(username: str) -> None:
 
     # Solo permite: letras, números y _ (guión bajo)
     if not re.match(r"^[a-zA-Z0-9_]+$", username):
-        raise ValidationException(
-            "El username solo puede contener letras, números y guiones bajos"
-        )
+        raise ValidationException("El username solo puede contener letras, números y guiones bajos")
 
 
 def validate_email(email: Optional[str]) -> None:
@@ -82,9 +80,7 @@ def validate_level_name(level: str) -> None:
     ]
 
     if level not in valid_levels:
-        raise ValidationException(
-            f"Nivel '{level}' no válido. Válidos: {', '.join(valid_levels)}"
-        )
+        raise ValidationException(f"Nivel '{level}' no válido. Válidos: {', '.join(valid_levels)}")
 
 
 def validate_choice(level: str, choice: str) -> None:
@@ -112,8 +108,7 @@ def validate_choice(level: str, choice: str) -> None:
 
     if choice not in valid_choices:
         raise ValidationException(
-            f"Elección '{choice}' no válida para '{level}'. "
-            f"Válidas: {', '.join(valid_choices)}"
+            f"Elección '{choice}' no válida para '{level}'. " f"Válidas: {', '.join(valid_choices)}"
         )
 
 

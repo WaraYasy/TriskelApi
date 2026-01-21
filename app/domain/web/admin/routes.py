@@ -79,17 +79,13 @@ def _create_export_audit_log(
     # Obtener información del usuario actual
     current_user = getattr(g, "current_user", None)
     user_id = current_user.get("id") if current_user else None
-    username = (
-        current_user.get("username", "anonymous") if current_user else "anonymous"
-    )
+    username = current_user.get("username", "anonymous") if current_user else "anonymous"
 
     try:
         # Intentar obtener sesión SQL
         session = get_db_session()
         if not session:
-            logger.warning(
-                "Base de datos SQL no disponible, no se puede registrar audit log"
-            )
+            logger.warning("Base de datos SQL no disponible, no se puede registrar audit log")
             return
 
         # Crear repositorio y registrar

@@ -49,9 +49,7 @@ class LeaderboardListResponse(BaseModel):
     Lista de leaderboards disponibles.
     """
 
-    leaderboards: List[dict] = Field(
-        ..., description="Lista de leaderboards con info basica"
-    )
+    leaderboards: List[dict] = Field(..., description="Lista de leaderboards con info basica")
 
     class Config:
         json_schema_extra = {
