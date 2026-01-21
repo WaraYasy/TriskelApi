@@ -64,7 +64,7 @@ def _create_export_audit_log(
     Obtiene la información del usuario actual desde g.current_user.
     """
     from app.core.logger import logger
-    from app.domain.auth.adapters.sql_repository import AuthSQLRepository
+    from app.domain.auth.adapters.sql_repository import SQLAuthRepository
     from app.infrastructure.database.sql_client import get_db_session
 
     # Obtener información del usuario actual
@@ -80,7 +80,7 @@ def _create_export_audit_log(
             return
 
         # Crear repositorio y registrar
-        repository = AuthSQLRepository(session)
+        repository = SQLAuthRepository(session)
 
         # Crear detalles JSON
         details = {"data_type": data_type, "format": "csv"}
