@@ -4,16 +4,7 @@ import json
 from datetime import datetime
 from functools import wraps
 
-from flask import (
-    Blueprint,
-    Response,
-    g,
-    jsonify,
-    redirect,
-    render_template,
-    request,
-    url_for,
-)
+from flask import Blueprint, Response, g, jsonify, redirect, render_template, request, url_for
 from jose import JWTError, jwt
 
 from app.config.settings import settings

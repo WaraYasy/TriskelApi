@@ -87,9 +87,7 @@ def get_current_player(
         )
 
     # Importar aquí para evitar circular import
-    from app.domain.players.adapters.firestore_repository import (
-        FirestorePlayerRepository,
-    )
+    from app.domain.players.adapters.firestore_repository import FirestorePlayerRepository
 
     repo = FirestorePlayerRepository()
     player = repo.get_by_id(player_id)
