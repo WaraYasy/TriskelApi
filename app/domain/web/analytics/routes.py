@@ -29,140 +29,33 @@ analytics_service = AnalyticsService(api_base_url="http://localhost:8000", api_k
 def index():
     """
     Dashboard principal con métricas globales.
-
-    Muestra:
-    - Total de jugadores
-    - Total de partidas
-    - Tiempo promedio de juego
-    - Distribución de decisiones morales
-    - Gráficos con Plotly
+    Renderiza la página inmediatamente, los datos se cargan via AJAX.
     """
-    # Obtener datos de la API
-    players = analytics_service.get_all_players()
-    games = analytics_service.get_all_games()
-
-    # Calcular métricas
-    metrics = analytics_service.calculate_global_metrics(players, games)
-
-    # Obtener total de eventos
-    all_events = []
-    for player in players:
-        try:
-            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
-            response.raise_for_status()
-            events_data = response.json()
-            all_events.extend(events_data)
-        except Exception:
-            pass
-
-    metrics["total_events"] = len(all_events)
-
-    # Generar gráficos
-    moral_chart = analytics_service.create_moral_choices_chart(games)
-    deaths_chart = analytics_service.create_deaths_per_level_chart(games)
-    alignment_chart = analytics_service.create_moral_alignment_chart(players)
-
-    return render_template(
-        "analytics/index.html",
-        metrics=metrics,
-        moral_chart=moral_chart,
-        deaths_chart=deaths_chart,
-        alignment_chart=alignment_chart,
-    )
+    return render_template("analytics/index.html")
 
 
 @analytics_bp.route("/players")
 def players():
-    """
-    Análisis detallado de jugadores.
-
-    Muestra:
-    - Lista de jugadores
-    - Stats individuales
-    - Distribución de alineación moral
-    - Tiempo de juego por jugador
-    """
-    # Obtener datos
-    players_data = analytics_service.get_all_players()
-
-    # Generar gráfico de distribución de tiempo
-    playtime_chart = analytics_service.create_playtime_distribution(players_data)
-
-    return render_template(
-        "analytics/players.html", players=players_data, playtime_chart=playtime_chart
-    )
+    """Análisis detallado de jugadores. Datos se cargan via AJAX."""
+    return render_template("analytics/players.html")
 
 
 @analytics_bp.route("/games")
 def games():
-    """
-    Análisis de partidas y progresión.
-
-    Muestra:
-    - Lista de partidas completadas
-    - Tiempo por nivel
-    - Muertes por nivel
-    - Tasa de completado
-    """
-    # Obtener datos
-    games_data = analytics_service.get_all_games()
-
-    # Generar gráfico de muertes por nivel
-    deaths_chart = analytics_service.create_deaths_per_level_chart(games_data)
-
-    return render_template("analytics/games.html", games=games_data, deaths_chart=deaths_chart)
+    """Análisis de partidas y progresión. Datos se cargan via AJAX."""
+    return render_template("analytics/games.html")
 
 
 @analytics_bp.route("/choices")
 def choices():
-    """
-    Análisis de decisiones morales.
-
-    Muestra:
-    - Distribución de decisiones por nivel
-    - Porcentaje buenas vs malas
-    - Correlación con completado del juego
-    - Gráficos de barras con Plotly
-    """
-    # Obtener datos
-    games_data = analytics_service.get_all_games()
-
-    # Generar gráfico de decisiones morales
-    moral_chart = analytics_service.create_moral_choices_chart(games_data)
-
-    return render_template("analytics/choices.html", moral_chart=moral_chart)
+    """Análisis de decisiones morales. Datos se cargan via AJAX."""
+    return render_template("analytics/choices.html")
 
 
 @analytics_bp.route("/events")
 def events():
-    """
-    Análisis de eventos de gameplay.
-
-    Muestra:
-    - Total de eventos registrados
-    - Distribución por tipo de evento
-    - Eventos por nivel
-    - Timeline de eventos
-    """
-    # Obtener eventos de todos los jugadores
-    players = analytics_service.get_all_players()
-    all_events = []
-
-    for player in players:
-        try:
-            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
-            response.raise_for_status()
-            events_data = response.json()
-            all_events.extend(events_data)
-        except Exception as e:
-            print(f"Error obteniendo eventos del jugador {player['player_id']}: {e}")
-
-    # Generar gráfico de eventos por tipo
-    events_chart = analytics_service.create_events_by_type_chart(all_events)
-
-    return render_template(
-        "analytics/events.html", total_events=len(all_events), events_chart=events_chart
-    )
+    """Análisis de eventos de gameplay. Datos se cargan via AJAX."""
+    return render_template("analytics/events.html")
 
 
 @analytics_bp.route("/export")
@@ -217,49 +110,8 @@ def export():
 
 @analytics_bp.route("/advanced")
 def advanced():
-    """
-    Dashboard avanzado con métricas adicionales.
-
-    Muestra:
-    - Reliquias más obtenidas
-    - Tasa de completado por nivel
-    - Tiempo promedio por nivel
-    - Estadísticas detalladas
-    """
-    # Obtener datos
-    games_data = analytics_service.get_all_games()
-    players_data = analytics_service.get_all_players()
-
-    # Generar gráficos adicionales
-    relics_chart = analytics_service.create_relics_distribution_chart(games_data)
-    completion_chart = analytics_service.create_level_completion_chart(games_data)
-    playtime_chart = analytics_service.create_playtime_per_level_chart(games_data)
-
-    # Calcular métricas adicionales
-    total_relics = sum(len(g.get("relics", [])) for g in games_data)
-    total_deaths = sum(g.get("metrics", {}).get("total_deaths", 0) for g in games_data)
-    avg_completion = (
-        sum(g.get("completion_percentage", 0) for g in games_data) / len(games_data)
-        if games_data
-        else 0
-    )
-
-    advanced_metrics = {
-        "total_relics": total_relics,
-        "total_deaths": total_deaths,
-        "avg_completion_percentage": round(avg_completion, 2),
-        "total_games": len(games_data),
-        "total_players": len(players_data),
-    }
-
-    return render_template(
-        "analytics/advanced.html",
-        metrics=advanced_metrics,
-        relics_chart=relics_chart,
-        completion_chart=completion_chart,
-        playtime_chart=playtime_chart,
-        games=games_data,
-    )
+    """Dashboard avanzado con métricas adicionales. Datos se cargan via AJAX."""
+    return render_template("analytics/advanced.html")
 
 
 @analytics_bp.route("/api/metrics")
@@ -276,7 +128,132 @@ def api_metrics():
     games = analytics_service.get_all_games()
     metrics = analytics_service.calculate_global_metrics(players, games)
 
+    # Obtener total de eventos
+    total_events = 0
+    for player in players:
+        try:
+            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
+            response.raise_for_status()
+            events_data = response.json()
+            total_events += len(events_data)
+        except Exception:
+            pass
+
+    metrics["total_events"] = total_events
+
     return jsonify(metrics)
+
+
+@analytics_bp.route("/api/charts/moral")
+def api_chart_moral():
+    """API endpoint para gráfico de decisiones morales."""
+    games = analytics_service.get_all_games()
+    chart_html = analytics_service.create_moral_choices_chart(games)
+    return jsonify({"html": chart_html})
+
+
+@analytics_bp.route("/api/charts/deaths")
+def api_chart_deaths():
+    """API endpoint para gráfico de muertes por nivel."""
+    games = analytics_service.get_all_games()
+    chart_html = analytics_service.create_deaths_per_level_chart(games)
+    return jsonify({"html": chart_html})
+
+
+@analytics_bp.route("/api/charts/alignment")
+def api_chart_alignment():
+    """API endpoint para gráfico de alineación moral."""
+    players = analytics_service.get_all_players()
+    chart_html = analytics_service.create_moral_alignment_chart(players)
+    return jsonify({"html": chart_html})
+
+
+@analytics_bp.route("/api/players")
+def api_players():
+    """API endpoint para lista de jugadores."""
+    players_data = analytics_service.get_all_players()
+    return jsonify(players_data)
+
+
+@analytics_bp.route("/api/games")
+def api_games():
+    """API endpoint para lista de partidas."""
+    games_data = analytics_service.get_all_games()
+    return jsonify(games_data)
+
+
+@analytics_bp.route("/api/charts/playtime")
+def api_chart_playtime():
+    """API endpoint para gráfico de distribución de tiempo de juego."""
+    players = analytics_service.get_all_players()
+    chart_html = analytics_service.create_playtime_distribution(players)
+    return jsonify({"html": chart_html})
+
+
+@analytics_bp.route("/api/charts/events")
+def api_chart_events():
+    """API endpoint para gráfico de eventos por tipo."""
+    players = analytics_service.get_all_players()
+    all_events = []
+    for player in players:
+        try:
+            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
+            response.raise_for_status()
+            all_events.extend(response.json())
+        except Exception:
+            pass
+    chart_html = analytics_service.create_events_by_type_chart(all_events)
+    return jsonify({"html": chart_html, "total": len(all_events)})
+
+
+@analytics_bp.route("/api/charts/relics")
+def api_chart_relics():
+    """API endpoint para gráfico de distribución de reliquias."""
+    games = analytics_service.get_all_games()
+    chart_html = analytics_service.create_relics_distribution_chart(games)
+    return jsonify({"html": chart_html})
+
+
+@analytics_bp.route("/api/charts/completion")
+def api_chart_completion():
+    """API endpoint para gráfico de tasa de completado por nivel."""
+    games = analytics_service.get_all_games()
+    chart_html = analytics_service.create_level_completion_chart(games)
+    return jsonify({"html": chart_html})
+
+
+@analytics_bp.route("/api/charts/playtime-level")
+def api_chart_playtime_level():
+    """API endpoint para gráfico de tiempo promedio por nivel."""
+    games = analytics_service.get_all_games()
+    chart_html = analytics_service.create_playtime_per_level_chart(games)
+    return jsonify({"html": chart_html})
+
+
+@analytics_bp.route("/api/advanced")
+def api_advanced():
+    """API endpoint para métricas avanzadas."""
+    games_data = analytics_service.get_all_games()
+    players_data = analytics_service.get_all_players()
+
+    total_relics = sum(len(g.get("relics", [])) for g in games_data)
+    total_deaths = sum(g.get("metrics", {}).get("total_deaths", 0) for g in games_data)
+    avg_completion = (
+        sum(g.get("completion_percentage", 0) for g in games_data) / len(games_data)
+        if games_data
+        else 0
+    )
+
+    return jsonify(
+        {
+            "total_relics": total_relics,
+            "total_deaths": total_deaths,
+            "avg_completion_percentage": round(avg_completion, 2),
+            "total_games": len(games_data),
+            "total_players": len(players_data),
+            "games": games_data[:20],
+        }
+    )
 
 
 @analytics_bp.route("/api/events")

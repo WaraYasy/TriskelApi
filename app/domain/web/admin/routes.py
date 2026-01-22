@@ -112,13 +112,6 @@ def login():
     return render_template("admin/login.html")
 
 
-@admin_bp.route("/dashboard")
-@login_required
-def dashboard():
-    """Dashboard principal del admin"""
-    return render_template("admin/dashboard.html")
-
-
 @admin_bp.route("/export")
 @login_required
 def export_page():
