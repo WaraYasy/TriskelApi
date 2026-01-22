@@ -1,102 +1,334 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TRISKEL - La Balada del Último Guardián</title>
+    <meta name="description"
+        content="Dashboard y analytics para TRISKEL: La Balada del Último Guardián. Monitorea el pulso del bosque digital.">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-admin.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
 </head>
-<body class="public-body">
-    <!-- Header con logo -->
-    <header class="public-header">
-        <div class="header-brand">
-            <span class="brand-icon">✦</span>
-            <span class="brand-name">Mandrágora</span>
+
+<body class="dashboard-body">
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema claro/oscuro">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+        </svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+        </svg>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-brand">
+                <span class="brand-icon">✦</span>
+                <div class="brand-text">
+                    <span class="brand-company">Mandrágora</span>
+                    <span class="brand-role">Triskel</span>
+                </div>
+            </div>
         </div>
-        <a href="/web/admin/login" class="btn-login">
-            <span>Acceso Admin</span>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M8 1L15 8L8 15M15 8H1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </a>
-    </header>
 
-    <!-- Hero Section -->
-    <main class="public-main">
-        <div class="hero-section">
-            <div class="hero-symbol">✦</div>
-            <h1 class="hero-title">TRISKEL</h1>
-            <p class="hero-subtitle">La Balada del Último Guardián</p>
-            <div class="hero-divider"></div>
+        <nav class="sidebar-nav">
+            <a href="/web/" class="nav-item active">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>Inicio</span>
+            </a>
+            <a href="/web/dashboard" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <rect x="3" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" />
+                    <rect x="11" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" />
+                    <rect x="3" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" />
+                    <rect x="11" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+                <span>Analytics</span>
+            </a>
+            <a href="/web/dashboard/players" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5" />
+                    <path d="M16 17a6 6 0 10-12 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+                <span>Jugadores</span>
+            </a>
+            <a href="/web/dashboard/games" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <rect x="2" y="6" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.5" />
+                    <path d="M6 9v4M4 11h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    <circle cx="13" cy="10" r="1" fill="currentColor" />
+                    <circle cx="15" cy="12" r="1" fill="currentColor" />
+                </svg>
+                <span>Partidas</span>
+            </a>
+            <a href="/web/dashboard/choices" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M10 3v14M6 6l8 0M4 9l4-3v6l-4-3zM16 9l-4-3v6l4-3z" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>Decisiones</span>
+            </a>
+            <a href="/web/dashboard/events" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M3 10h4l3-6 4 12 3-6h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                        stroke-linejoin="round" />
+                </svg>
+                <span>Eventos</span>
+            </a>
+            <a href="/web/dashboard/advanced" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M3 17V10M7 17V7M11 17V12M15 17V5M19 17V8" stroke="currentColor" stroke-width="1.5"
+                        stroke-linecap="round" />
+                </svg>
+                <span>Avanzado</span>
+            </a>
+            <a href="/docs" target="_blank" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <rect x="4" y="2" width="12" height="16" rx="1" stroke="currentColor" stroke-width="1.5" />
+                    <path d="M7 6h6M7 10h6M7 14h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                </svg>
+                <span>API Docs</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/web/admin/login" class="btn-admin-access">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <span>Acceso Admin</span>
+            </a>
         </div>
+    </aside>
 
-        <!-- Global Stats -->
-        <section class="stats-section">
-            <h2 class="section-title">Métricas del Bosque</h2>
-            <div class="stats-grid-public">
-                <div class="stat-card-public">
-                    <div class="stat-icon">👥</div>
-                    <div class="stat-value" id="totalPlayers">-</div>
-                    <div class="stat-label">Guardianes Activos</div>
-                    <div class="stat-change" id="playersChange" style="display: none;"></div>
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Hero Section -->
+        <section class="hero-main">
+            <div class="hero-eyebrow">
+                <span class="line"></span>
+                <span>El Bosque Respira</span>
+                <span class="line"></span>
+            </div>
+
+            <h1 class="hero-title">The Forest<br><em>Breathes.</em></h1>
+
+            <p class="hero-subtitle">
+                Dashboard y analytics de TRISKEL. Monitorización en tiempo real del pulso del ecosistema digital.
+            </p>
+
+            <a href="/web/dashboard" class="hero-cta">
+                <span>Explorar Métricas</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+            </a>
+        </section>
+
+        <!-- The Pulse Section -->
+        <section class="pulse-section">
+            <h2 class="section-label">The Pulse</h2>
+            <p class="section-sublabel">Métricas en tiempo real</p>
+
+            <div class="pulse-grid">
+                <div class="pulse-card">
+                    <span class="pulse-card-label">Afinidad Activa</span>
+                    <p class="pulse-card-title">Afinidad Biomética</p>
+                    <div class="pulse-card-value">
+                        <span id="pulseAffinity">88.2</span>
+                        <span class="unit">%</span>
+                    </div>
+                    <span class="pulse-card-change positive">↑ 2.3%</span>
                 </div>
 
-                <div class="stat-card-public">
-                    <div class="stat-icon">⚖️</div>
-                    <div class="stat-value" id="totalDecisions">-</div>
-                    <div class="stat-label">Decisiones Tomadas</div>
-                    <div class="stat-sublabel">Media por jugador</div>
+                <div class="pulse-card">
+                    <span class="pulse-card-label">Guardianes</span>
+                    <p class="pulse-card-title">Jugadores Activos</p>
+                    <div class="pulse-card-value">
+                        <span id="pulsePlayers">12.4</span>
+                        <span class="unit">K</span>
+                    </div>
+                    <span class="pulse-card-change positive">↑ 5.8%</span>
                 </div>
 
-                <div class="stat-card-public">
-                    <div class="stat-icon">🏺</div>
-                    <div class="stat-value" id="totalRelics">-</div>
-                    <div class="stat-label">Reliquias Totales</div>
-                    <div class="stat-change" id="relicsChange" style="display: none;"></div>
+                <div class="pulse-card">
+                    <span class="pulse-card-label">Decisiones</span>
+                    <p class="pulse-card-title">Elecciones Morales</p>
+                    <div class="pulse-card-value">
+                        <span id="pulseDecisions">45.1</span>
+                        <span class="unit">K</span>
+                    </div>
+                    <span class="pulse-card-change positive">↑ 12.1%</span>
                 </div>
 
-                <div class="stat-card-public">
-                    <div class="stat-icon">🌲</div>
-                    <div class="stat-value" id="forestHealth">-</div>
-                    <div class="stat-label">Bosque Restaurado</div>
-                    <div class="stat-progress">
-                        <div class="stat-progress-bar" id="forestProgress"></div>
+                <div class="pulse-card">
+                    <span class="pulse-card-label">Salud</span>
+                    <p class="pulse-card-title">Integridad del Bosque</p>
+                    <div class="pulse-card-value">
+                        <span id="pulseHealth">76.8</span>
+                        <span class="unit">%</span>
+                    </div>
+                    <span class="pulse-card-change positive">↑ 3.2%</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Moral Duality Section -->
+        <section class="duality-section">
+            <div class="duality-header">
+                <div>
+                    <h2 class="duality-title">Moral Duality</h2>
+                    <p class="duality-description">
+                        El equilibrio de la moralidad global refleja las decisiones colectivas de los Guardianes.
+                        Cada elección afecta el destino del bosque.
+                    </p>
+                </div>
+
+                <div class="duality-scale">
+                    <div class="duality-axis">
+                        <span class="duality-label">Caos</span>
+                        <div class="duality-bar">
+                            <div class="duality-bar-fill chaos" style="width: 35%;"></div>
+                            <div class="duality-bar-fill order" style="width: 65%;"></div>
+                        </div>
+                        <span class="duality-label right">Orden</span>
+                    </div>
+
+                    <div class="duality-icons">
+                        <div class="duality-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 3v18M3 12h18M7.5 7.5l9 9M16.5 7.5l-9 9" />
+                            </svg>
+                            <span>Misterio</span>
+                        </div>
+                        <div class="duality-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M4 15l4-8 4 6 4-4 4 8" />
+                                <path d="M4 19h16" />
+                            </svg>
+                            <span>Pasión</span>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Quick Info -->
-        <section class="info-section">
-            <div class="info-card">
-                <h3 class="info-title">Sobre el Juego</h3>
-                <p class="info-text">
-                    RPG de aventura narrativa donde tus decisiones morales moldean el destino del bosque sagrado.
-                    Explora, combate y descubre los secretos del último guardián.
-                </p>
+        <!-- The Vault Section -->
+        <section class="vault-section">
+            <div class="vault-header">
+                <h2 class="vault-title">The Vault</h2>
+                <a href="/web/dashboard" class="vault-link">Ver más reliquias →</a>
             </div>
-            <div class="info-card">
-                <h3 class="info-title">Desarrollado por</h3>
-                <p class="info-text">
-                    <strong>Mandrágora</strong> - Estudio independiente dedicado a crear experiencias narrativas inmersivas.
-                </p>
+
+            <div class="vault-grid">
+                <div class="vault-card">
+                    <div class="vault-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M2 4l3 12h14l3-12" />
+                            <path d="M5 16l-1 4h16l-1-4" />
+                            <circle cx="12" cy="8" r="2" />
+                            <path d="M7 4v2M12 4v2M17 4v2" />
+                        </svg>
+                    </div>
+                    <div class="vault-card-info">
+                        <span class="vault-card-type">Reliquia Rara</span>
+                        <span class="vault-card-name">Corona del Guardián</span>
+                    </div>
+                </div>
+
+                <div class="vault-card">
+                    <div class="vault-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                            <path d="M12 8v8M8 12h8" />
+                        </svg>
+                    </div>
+                    <div class="vault-card-info">
+                        <span class="vault-card-type">Reliquia Mítica</span>
+                        <span class="vault-card-name">Corazón Esmeralda</span>
+                    </div>
+                </div>
+
+                <div class="vault-card">
+                    <div class="vault-card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.5 17.5L3 6V3h3l11.5 11.5" />
+                            <path d="M13 19l6-6" />
+                            <path d="M16 16l4 4" />
+                            <path d="M19 21l2-2" />
+                            <circle cx="17" cy="7" r="4" />
+                        </svg>
+                    </div>
+                    <div class="vault-card-info">
+                        <span class="vault-card-type">Reliquia Épica</span>
+                        <span class="vault-card-name">Espada Ancestral</span>
+                    </div>
+                </div>
             </div>
         </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <h2 class="cta-title">Stay Rooted.</h2>
+
+            <div class="cta-input-group">
+                <input type="email" class="cta-input" placeholder="triskel@mandragora.gg">
+                <button class="cta-button">Suscribirse</button>
+            </div>
+
+            <p class="cta-subtext">
+                Recibe actualizaciones del bosque. <a href="#">Más información</a>
+            </p>
+        </section>
+
+        <!-- Footer -->
+        <footer class="landing-footer">
+            <span class="footer-copyright">© 2026 Mandrágora. All rights reserved.</span>
+
+            <nav class="footer-nav">
+                <a href="#">Twitter</a>
+                <a href="#">Discord</a>
+                <a href="#">GitHub</a>
+            </nav>
+
+            <div class="footer-social">
+                <span>Status:</span>
+                <a href="#">Operational</a>
+            </div>
+        </footer>
     </main>
 
-    <!-- Footer -->
-    <footer class="public-footer">
-        <p>Triskel: La Balada del Último Guardián © 2026 - Mandrágora</p>
-        <div class="footer-links">
-            <a href="/docs" target="_blank">API Docs</a>
-            <a href="/web/dashboard">Analytics</a>
-        </div>
-    </footer>
-
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
     <script src="{{ url_for('static', filename='js/public.js') }}"></script>
 </body>
+
 </html>

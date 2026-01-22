@@ -193,6 +193,29 @@ body {
     color: #10b981 !important;
 }
 
+.base-nav-link:hover .nav-icon,
+.base-nav-brand:hover .nav-icon {
+    color: #10b981;
+}
+
+/* Navigation Icons */
+.nav-icon {
+    flex-shrink: 0;
+    transition: color 0.3s ease;
+}
+
+.base-nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+}
+
+.base-nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .base-main {
     max-width: 1400px;
     margin: 0 auto;

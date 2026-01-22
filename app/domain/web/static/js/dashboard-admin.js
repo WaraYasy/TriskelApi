@@ -432,16 +432,27 @@ function showNoEventsMessage(tableBody) {
 function getEventDisplayInfo(event) {
     const eventType = (event.event_type || '').toLowerCase();
 
-    const eventTypes = {
-        'relic_found': { icon: '🏺', iconType: 'info', status: 'rare' },
-        'level_completed': { icon: '✓', iconType: 'success', status: 'completed' },
-        'death': { icon: '💀', iconType: 'danger', status: 'critical' },
-        'choice_made': { icon: '⚖️', iconType: 'warning', status: 'decision' },
-        'game_started': { icon: '🎮', iconType: 'info', status: 'started' },
-        'game_completed': { icon: '🏆', iconType: 'success', status: 'completed' }
+    // SVG icons para cada tipo de evento
+    const icons = {
+        relic: `<svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2L3 6v8l7 4 7-4V6l-7-4z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 10v6" stroke="currentColor" stroke-width="1.5"/></svg>`,
+        check: `<svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M4 10l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        skull: `<svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="9" r="6" stroke="currentColor" stroke-width="1.5"/><circle cx="7" cy="8" r="1.5" fill="currentColor"/><circle cx="13" cy="8" r="1.5" fill="currentColor"/><path d="M7 18v-3M10 18v-3M13 18v-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+        scale: `<svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M6 6l8 0M4 9l4-3v6l-4-3zM16 9l-4-3v6l4-3z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+        gamepad: `<svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="2" y="6" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M6 9v4M4 11h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="13" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/></svg>`,
+        trophy: `<svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M6 3h8v5a4 4 0 01-8 0V3z" stroke="currentColor" stroke-width="1.5"/><path d="M6 5H4a2 2 0 000 4h2M14 5h2a2 2 0 010 4h-2" stroke="currentColor" stroke-width="1.5"/><path d="M10 12v3M7 17h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`,
+        note: `<svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="4" y="2" width="12" height="16" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M7 6h6M7 10h6M7 14h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>`
     };
 
-    return eventTypes[eventType] || { icon: '📝', iconType: 'info', status: 'event' };
+    const eventTypes = {
+        'relic_found': { icon: icons.relic, iconType: 'info', status: 'rare' },
+        'level_completed': { icon: icons.check, iconType: 'success', status: 'completed' },
+        'death': { icon: icons.skull, iconType: 'danger', status: 'critical' },
+        'choice_made': { icon: icons.scale, iconType: 'warning', status: 'decision' },
+        'game_started': { icon: icons.gamepad, iconType: 'info', status: 'started' },
+        'game_completed': { icon: icons.trophy, iconType: 'success', status: 'completed' }
+    };
+
+    return eventTypes[eventType] || { icon: icons.note, iconType: 'info', status: 'event' };
 }
 
 function formatEventDate(timestamp) {

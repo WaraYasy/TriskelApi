@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analytics - Triskel Dashboard</title>
+    <title>Partidas - Triskel Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-admin.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/public.css') }}">
@@ -57,7 +57,7 @@
                 </svg>
                 <span>Inicio</span>
             </a>
-            <a href="/web/dashboard" class="nav-item active">
+            <a href="/web/dashboard" class="nav-item">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <rect x="3" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" />
                     <rect x="11" y="3" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" />
@@ -73,7 +73,7 @@
                 </svg>
                 <span>Jugadores</span>
             </a>
-            <a href="/web/dashboard/games" class="nav-item">
+            <a href="/web/dashboard/games" class="nav-item active">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                     <rect x="2" y="6" width="16" height="10" rx="2" stroke="currentColor" stroke-width="1.5" />
                     <path d="M6 9v4M4 11h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
@@ -128,118 +128,25 @@
         <!-- Top Bar -->
         <header class="top-bar">
             <div class="top-bar-left">
-                <h1 class="page-title">Analytics Dashboard</h1>
-                <p class="page-subtitle">Métricas y visualizaciones del juego</p>
+                <h1 class="page-title">Partidas</h1>
+                <p class="page-subtitle">Análisis de partidas y progresión</p>
             </div>
         </header>
 
         <!-- Stats Grid -->
         <section class="stats-section">
-            <div class="stat-card-admin">
-                <div class="stat-header">
-                    <span class="stat-title">Jugadores</span>
-                </div>
-                <div class="stat-body">
-                    <div class="stat-number">{{ metrics.total_players }}</div>
-                    <div class="stat-meta">Total registrados</div>
-                </div>
-            </div>
-
-            <div class="stat-card-admin">
-                <div class="stat-header">
-                    <span class="stat-title">Partidas</span>
-                </div>
-                <div class="stat-body">
-                    <div class="stat-number">{{ metrics.total_games }}</div>
-                    <div class="stat-meta">Total jugadas</div>
-                </div>
-            </div>
-
-            <div class="stat-card-admin">
-                <div class="stat-header">
-                    <span class="stat-title">Tiempo Promedio</span>
-                </div>
-                <div class="stat-body">
-                    <div class="stat-number">{{ "%.1f"|format(metrics.avg_playtime / 3600) }}h</div>
-                    <div class="stat-meta">Por partida</div>
-                </div>
-            </div>
-
             <div class="stat-card-admin highlight">
                 <div class="stat-header">
-                    <span class="stat-title">Completado</span>
+                    <span class="stat-title">Total Partidas</span>
                 </div>
                 <div class="stat-body">
-                    <div class="stat-number-large">{{ metrics.completion_rate }}%</div>
-                    <div class="stat-meta">Tasa de completado</div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Segunda fila de stats -->
-        <section class="stats-section">
-            <div class="stat-card-admin">
-                <div class="stat-header">
-                    <span class="stat-title">Muertes</span>
-                </div>
-                <div class="stat-body">
-                    <div class="stat-number">{{ metrics.total_deaths }}</div>
-                    <div class="stat-meta">Total en el juego</div>
-                </div>
-            </div>
-
-            <div class="stat-card-admin">
-                <div class="stat-header">
-                    <span class="stat-title">Eventos</span>
-                </div>
-                <div class="stat-body">
-                    <div class="stat-number">{{ metrics.total_events }}</div>
-                    <div class="stat-meta">Registrados</div>
-                </div>
-            </div>
-
-            <div class="stat-card-admin">
-                <div class="stat-header">
-                    <span class="stat-title">Muertes/Partida</span>
-                </div>
-                <div class="stat-body">
-                    <div class="stat-number">{{ "%.1f"|format(metrics.avg_deaths) }}</div>
-                    <div class="stat-meta">Promedio</div>
-                </div>
-            </div>
-
-            <div class="stat-card-admin">
-                <div class="stat-header">
-                    <span class="stat-title">Completadas</span>
-                </div>
-                <div class="stat-body">
-                    <div class="stat-number">{{ metrics.completed_games }}</div>
-                    <div class="stat-meta">Partidas terminadas</div>
+                    <div class="stat-number-large">{{ games|length }}</div>
+                    <div class="stat-meta">Registradas en el sistema</div>
                 </div>
             </div>
         </section>
 
         <!-- Charts Section -->
-        <section class="charts-section">
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3 class="chart-title">Distribución de Decisiones Morales</h3>
-                </div>
-                <div class="chart-body">
-                    {{ moral_chart|safe }}
-                </div>
-            </div>
-
-            <div class="chart-card">
-                <div class="chart-header">
-                    <h3 class="chart-title">Alineación Moral de Jugadores</h3>
-                </div>
-                <div class="chart-body">
-                    {{ alignment_chart|safe }}
-                </div>
-            </div>
-        </section>
-
         <section class="charts-section">
             <div class="chart-card large">
                 <div class="chart-header">
@@ -251,9 +158,56 @@
             </div>
         </section>
 
+        <!-- Games Table -->
+        <section class="events-section">
+            <div class="section-header">
+                <h2 class="section-title">Lista de Partidas</h2>
+            </div>
+            <div class="events-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>GAME ID</th>
+                            <th>JUGADOR</th>
+                            <th>ESTADO</th>
+                            <th>COMPLETADO</th>
+                            <th>MUERTES</th>
+                            <th>INICIO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for game in games %}
+                        <tr>
+                            <td style="font-family: monospace;">{{ game.game_id[:8] }}...</td>
+                            <td style="font-family: monospace;">{{ game.player_id[:8] }}...</td>
+                            <td>
+                                {% if game.status == 'completed' %}
+                                <span class="event-status completed">completado</span>
+                                {% elif game.status == 'in_progress' %}
+                                <span class="event-status started">en progreso</span>
+                                {% else %}
+                                <span class="event-status event">{{ game.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ game.completion_percentage|round(1) }}%</td>
+                            <td>{{ game.metrics.total_deaths }}</td>
+                            <td style="color: #9ca3af;">{{ game.started_at }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: #9ca3af; padding: 2rem;">
+                                No hay partidas disponibles
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <!-- Footer -->
         <footer class="main-footer">
-            <p>Triskel Analytics Dashboard © 2026 - Mandrágora</p>
+            <p>Triskel Analytics - Partidas © 2026 - Mandrágora</p>
         </footer>
     </main>
 

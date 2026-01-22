@@ -55,7 +55,8 @@ async function refreshMetrics() {
             updateStatSmooth('totalRelics', metrics.total_relics || 0);
             updateStatDirect('forestHealth', metrics.completion_rate ? `${metrics.completion_rate}%` : '0%');
 
-            const progressBar = document.getElementById('forestProgress');
+            // Actualizar barra de progreso (soporta ambos IDs)
+            const progressBar = document.getElementById('forestProgress') || document.getElementById('forestProgressBar');
             if (progressBar && metrics.completion_rate) {
                 progressBar.style.width = `${metrics.completion_rate}%`;
             }
@@ -91,8 +92,8 @@ async function loadPublicMetrics() {
         updateStat('totalRelics', metrics.total_relics || 0);
         updateStat('forestHealth', metrics.completion_rate ? `${metrics.completion_rate}%` : '0%');
 
-        // Actualizar barra de progreso
-        const progressBar = document.getElementById('forestProgress');
+        // Actualizar barra de progreso (soporta ambos IDs)
+        const progressBar = document.getElementById('forestProgress') || document.getElementById('forestProgressBar');
         if (progressBar && metrics.completion_rate) {
             progressBar.style.width = `${metrics.completion_rate}%`;
         }
@@ -193,7 +194,7 @@ function showPlaceholderData() {
     updateStatDirect('totalRelics', '0');
     updateStatDirect('forestHealth', '0%');
 
-    const progressBar = document.getElementById('forestProgress');
+    const progressBar = document.getElementById('forestProgress') || document.getElementById('forestProgressBar');
     if (progressBar) {
         progressBar.style.width = '0%';
     }

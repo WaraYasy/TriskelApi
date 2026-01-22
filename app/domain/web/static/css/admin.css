@@ -48,9 +48,10 @@
 
 .login-symbol {
     text-align: center;
+    margin-bottom: 1.5rem;
     font-size: 3rem;
     color: #34d399;
-    margin-bottom: 1.5rem;
+    animation: float 3s ease-in-out infinite;
 }
 
 @keyframes float {
@@ -362,7 +363,7 @@
     flex-direction: column;
 }
 
-.export-option input[type="radio"]:checked + .option-card {
+.export-option input[type="radio"]:checked+.option-card {
     border-color: #34d399;
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%);
 }
@@ -527,7 +528,7 @@
     margin-bottom: 1rem;
 }
 
-.placeholder-container > p {
+.placeholder-container>p {
     font-size: 1.1rem;
     color: #9ca3af;
     margin-bottom: 0.5rem;
