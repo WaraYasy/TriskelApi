@@ -598,3 +598,66 @@ body {
 [data-theme="light"] .events-table tr:hover {
     background: var(--accent-bg);
 }
+
+/* Export page theme */
+[data-theme="light"] .export-header h2 {
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .export-header p {
+    color: var(--text-secondary);
+}
+
+[data-theme="light"] .option-card {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+[data-theme="light"] .option-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .option-card h3 {
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .option-card p {
+    color: var(--text-secondary);
+}
+
+[data-theme="light"] .option-icon {
+    color: var(--accent);
+}
+
+[data-theme="light"] .field-tag {
+    background: var(--accent-bg);
+    color: var(--accent);
+    border-color: rgba(13, 148, 136, 0.3);
+}
+
+[data-theme="light"] .info-card {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+[data-theme="light"] .info-card h4 {
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .info-card li {
+    color: var(--text-secondary);
+}
+
+[data-theme="light"] .confirm-content {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+[data-theme="light"] .confirm-title {
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .confirm-message {
+    color: var(--text-secondary);
+}
