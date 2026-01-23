@@ -65,7 +65,7 @@ def _create_export_audit_log(
     """
     from app.core.logger import logger
     from app.domain.auth.adapters.sql_repository import SQLAuthRepository
-    from app.infrastructure.database.sql_client import get_db_session
+    from app.infrastructure.database.sql_client import sql_manager
 
     # Obtener información del usuario actual
     current_user = getattr(g, "current_user", None)
@@ -73,8 +73,8 @@ def _create_export_audit_log(
     username = current_user.get("username", "anonymous") if current_user else "anonymous"
 
     try:
-        # Intentar obtener sesión SQL
-        session = get_db_session()
+        # Intentar obtener sesión SQL directamente del manager
+        session = sql_manager.get_session()
         if not session:
             logger.warning("Base de datos SQL no disponible, no se puede registrar audit log")
             return
@@ -99,6 +99,7 @@ def _create_export_audit_log(
             error_message=error_message,
         )
 
+        session.close()
         logger.debug(f"Audit log creado para exportación: {data_type} por {username}")
 
     except Exception as e:
