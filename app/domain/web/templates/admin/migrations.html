@@ -13,6 +13,332 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
+    <style>
+        .migrations-container {
+            padding: 1.5rem;
+            max-width: 1200px;
+        }
+
+        .status-card {
+            background: var(--card-bg, #1a1a2e);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border-color, #2d2d44);
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .status-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary, #fff);
+        }
+
+        .status-badge {
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-badge.connected {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+
+        .status-badge.disconnected {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .status-badge.pending {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+        }
+
+        .status-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .status-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .status-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary, #a0a0b0);
+        }
+
+        .status-value {
+            font-size: 1rem;
+            color: var(--text-primary, #fff);
+            font-family: monospace;
+        }
+
+        .migrations-table {
+            background: var(--card-bg, #1a1a2e);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color, #2d2d44);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color, #2d2d44);
+        }
+
+        .table-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary, #fff);
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #6366f1;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #5457e5;
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        .btn-secondary {
+            background: var(--bg-secondary, #2d2d44);
+            color: var(--text-primary, #fff);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: var(--bg-hover, #3d3d54);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+        }
+
+        th {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary, #a0a0b0);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: var(--bg-secondary, #12121f);
+        }
+
+        td {
+            font-size: 0.9rem;
+            color: var(--text-primary, #fff);
+            border-bottom: 1px solid var(--border-color, #2d2d44);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .revision-code {
+            font-family: monospace;
+            background: var(--bg-secondary, #2d2d44);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .migration-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.applied {
+            background: #22c55e;
+        }
+
+        .status-dot.pending {
+            background: #fbbf24;
+        }
+
+        .log-section {
+            margin-top: 1.5rem;
+            background: var(--card-bg, #1a1a2e);
+            border-radius: 12px;
+            border: 1px solid var(--border-color, #2d2d44);
+        }
+
+        .log-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color, #2d2d44);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .log-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary, #fff);
+        }
+
+        .log-content {
+            padding: 1rem 1.5rem;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary, #a0a0b0);
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .log-content .success {
+            color: #22c55e;
+        }
+
+        .log-content .error {
+            color: #ef4444;
+        }
+
+        .log-content .info {
+            color: #6366f1;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary, #a0a0b0);
+        }
+
+        .empty-state svg {
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            color: var(--text-secondary, #a0a0b0);
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border-color, #2d2d44);
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 0.75rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .confirm-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+        }
+
+        .confirm-dialog.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .confirm-content {
+            background: var(--card-bg, #1a1a2e);
+            border-radius: 12px;
+            padding: 1.5rem;
+            max-width: 400px;
+            width: 90%;
+            border: 1px solid var(--border-color, #2d2d44);
+        }
+
+        .confirm-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary, #fff);
+            margin-bottom: 0.75rem;
+        }
+
+        .confirm-message {
+            color: var(--text-secondary, #a0a0b0);
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .confirm-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+    </style>
 </head>
 
 <body class="dashboard-body">
@@ -40,9 +366,9 @@
     <aside class="sidebar">
         <div class="sidebar-header">
             <div class="sidebar-brand">
-                <span class="brand-icon">✦</span>
+                <span class="brand-icon">&#10022;</span>
                 <div class="brand-text">
-                    <span class="brand-company">Mandrágora</span>
+                    <span class="brand-company">Mandragora</span>
                     <span class="brand-role">Admin</span>
                 </div>
             </div>
@@ -63,7 +389,7 @@
                     <rect x="3" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" />
                     <rect x="11" y="11" width="6" height="6" rx="1" stroke="currentColor" stroke-width="1.5" />
                 </svg>
-                <span>Estadísticas</span>
+                <span>Estadisticas</span>
             </a>
             <a href="/web/dashboard/advanced" class="nav-item">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -154,108 +480,280 @@
         <header class="top-bar">
             <div class="top-bar-left">
                 <h1 class="page-title">Migraciones de Base de Datos</h1>
-                <p class="page-subtitle">Gestiona las migraciones y actualizaciones del esquema de datos</p>
+                <p class="page-subtitle">Gestiona las migraciones SQL con Alembic</p>
             </div>
             <div class="top-bar-right">
-                <div class="search-box">
-                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                        <circle cx="8" cy="8" r="5" stroke="currentColor" stroke-width="1.5" />
-                        <path d="M12 12l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                    </svg>
-                    <input type="text" placeholder="Buscar...">
-                </div>
-                <button class="btn-icon" title="Notificaciones">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M15 7a5 5 0 10-10 0c0 5-2 7-2 7h14s-2-2-2-7zM11.73 17a2 2 0 01-3.46 0"
-                            stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    <span class="notification-badge">3</span>
-                </button>
-                <button class="btn-icon" title="Modo oscuro">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M17 10.5A7 7 0 119.5 3a6 6 0 007.5 7.5z" stroke="currentColor" stroke-width="1.5"
-                            stroke-linecap="round" stroke-linejoin="round" />
+                <button class="btn btn-secondary" onclick="refreshData()" title="Actualizar">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
                     </svg>
                 </button>
             </div>
         </header>
 
         <!-- Migrations Content -->
-        <section class="migrations-section">
-            <div class="placeholder-container">
-                <div class="placeholder-icon">
-                    <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                        <path d="M16 28h48M16 52h48M16 40h48M36 16v48" stroke="currentColor" stroke-width="3"
-                            stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
+        <section class="migrations-container">
+            <!-- Status Card -->
+            <div class="status-card">
+                <div class="status-header">
+                    <span class="status-title">Estado de la Base de Datos</span>
+                    <span id="connectionStatus" class="status-badge disconnected">Verificando...</span>
                 </div>
-                <h2>Migraciones - En Construcción</h2>
-                <p>Esta sección estará disponible próximamente.</p>
-                <p class="placeholder-description">
-                    Aquí podrás gestionar migraciones de datos entre diferentes esquemas,
-                    actualizar estructuras de colecciones y realizar transformaciones masivas de datos.
-                </p>
-
-                <div class="placeholder-features">
-                    <h3>Funcionalidades planificadas:</h3>
-                    <ul>
-                        <li>
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" />
-                            </svg>
-                            Crear y ejecutar scripts de migración
-                        </li>
-                        <li>
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" />
-                            </svg>
-                            Historial de migraciones aplicadas
-                        </li>
-                        <li>
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" />
-                            </svg>
-                            Rollback de cambios
-                        </li>
-                        <li>
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" />
-                            </svg>
-                            Validación de datos antes de migrar
-                        </li>
-                        <li>
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path d="M7 10l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                                <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" />
-                            </svg>
-                            Backup automático antes de cambios
-                        </li>
-                    </ul>
+                <div class="status-info">
+                    <div class="status-item">
+                        <span class="status-label">Revision Actual</span>
+                        <span id="currentRevision" class="status-value">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Migraciones Pendientes</span>
+                        <span id="pendingCount" class="status-value">-</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">Estado</span>
+                        <span id="statusMessage" class="status-value">Conectando...</span>
+                    </div>
                 </div>
+            </div>
 
-                <button class="btn-back" onclick="window.location.href='/web/dashboard'">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M12 5l-7 7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                            stroke-linejoin="round" />
-                    </svg>
-                    Volver al Dashboard
-                </button>
+            <!-- Migrations Table -->
+            <div class="migrations-table">
+                <div class="table-header">
+                    <span class="table-title">Historial de Migraciones</span>
+                    <div class="table-actions">
+                        <button id="btnDowngrade" class="btn btn-danger" onclick="confirmDowngrade()" disabled>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 12a9 9 0 1018 0 9 9 0 10-18 0M12 8v4M12 16h.01" />
+                            </svg>
+                            Revertir
+                        </button>
+                        <button id="btnUpgrade" class="btn btn-primary" onclick="confirmUpgrade()" disabled>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 19V5M5 12l7-7 7 7" />
+                            </svg>
+                            Aplicar Migraciones
+                        </button>
+                    </div>
+                </div>
+                <div id="migrationsContent">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <span>Cargando migraciones...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Log Section -->
+            <div class="log-section">
+                <div class="log-header">
+                    <span class="log-title">Registro de Operaciones</span>
+                    <button class="btn btn-secondary" onclick="clearLog()" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">
+                        Limpiar
+                    </button>
+                </div>
+                <div id="logContent" class="log-content">Esperando operaciones...</div>
             </div>
         </section>
     </main>
 
+    <!-- Confirm Dialog -->
+    <div id="confirmDialog" class="confirm-dialog">
+        <div class="confirm-content">
+            <h3 id="confirmTitle" class="confirm-title">Confirmar Accion</h3>
+            <p id="confirmMessage" class="confirm-message">Esta seguro?</p>
+            <div class="confirm-actions">
+                <button class="btn btn-secondary" onclick="closeConfirmDialog()">Cancelar</button>
+                <button id="confirmBtn" class="btn btn-primary" onclick="executeConfirmedAction()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <script src="{{ url_for('static', filename='js/sidebar.js') }}"></script>
     <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+
+    <script>
+        let pendingAction = null;
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshData();
+        });
+
+        async function refreshData() {
+            await Promise.all([loadStatus(), loadMigrations()]);
+        }
+
+        async function loadStatus() {
+            try {
+                const response = await fetch('/web/admin/migrations/api/status');
+                const data = await response.json();
+
+                const statusBadge = document.getElementById('connectionStatus');
+                const currentRevision = document.getElementById('currentRevision');
+                const pendingCount = document.getElementById('pendingCount');
+                const statusMessage = document.getElementById('statusMessage');
+
+                if (data.connected) {
+                    statusBadge.textContent = 'Conectado';
+                    statusBadge.className = 'status-badge connected';
+                    currentRevision.textContent = data.current_revision || 'Sin migraciones';
+                    pendingCount.textContent = data.pending_count || '0';
+                    statusMessage.textContent = data.message;
+
+                    // Habilitar botones si hay conexion
+                    document.getElementById('btnUpgrade').disabled = false;
+                    document.getElementById('btnDowngrade').disabled = !data.current_revision;
+                } else {
+                    statusBadge.textContent = data.configured ? 'Error' : 'No configurado';
+                    statusBadge.className = 'status-badge disconnected';
+                    currentRevision.textContent = '-';
+                    pendingCount.textContent = '-';
+                    statusMessage.textContent = data.message;
+                }
+            } catch (error) {
+                document.getElementById('connectionStatus').textContent = 'Error';
+                document.getElementById('connectionStatus').className = 'status-badge disconnected';
+                document.getElementById('statusMessage').textContent = error.message;
+            }
+        }
+
+        async function loadMigrations() {
+            const container = document.getElementById('migrationsContent');
+
+            try {
+                const response = await fetch('/web/admin/migrations/api/list');
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Error al cargar migraciones');
+                }
+
+                const data = await response.json();
+
+                if (!data.migrations || data.migrations.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M4 7h12M4 13h12M4 10h12M9 4v12" />
+                            </svg>
+                            <p>No hay migraciones disponibles</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Estado</th>
+                                <th>Revision</th>
+                                <th>Descripcion</th>
+                                <th>Fecha</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.migrations.map(m => `
+                                <tr>
+                                    <td>
+                                        <div class="migration-status">
+                                            <span class="status-dot ${m.is_applied ? 'applied' : 'pending'}"></span>
+                                            ${m.is_applied ? 'Aplicada' : 'Pendiente'}
+                                        </div>
+                                    </td>
+                                    <td><code class="revision-code">${m.revision}</code></td>
+                                    <td>${m.description}</td>
+                                    <td>${m.date || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p style="color: #ef4444;">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function confirmUpgrade() {
+            pendingAction = 'upgrade';
+            document.getElementById('confirmTitle').textContent = 'Aplicar Migraciones';
+            document.getElementById('confirmMessage').textContent =
+                'Se aplicaran todas las migraciones pendientes. Esta accion modificara la estructura de la base de datos.';
+            document.getElementById('confirmBtn').className = 'btn btn-primary';
+            document.getElementById('confirmDialog').classList.add('show');
+        }
+
+        function confirmDowngrade() {
+            pendingAction = 'downgrade';
+            document.getElementById('confirmTitle').textContent = 'Revertir Migracion';
+            document.getElementById('confirmMessage').textContent =
+                'Se revertira la ultima migracion aplicada. Esto puede causar perdida de datos. Esta seguro?';
+            document.getElementById('confirmBtn').className = 'btn btn-danger';
+            document.getElementById('confirmDialog').classList.add('show');
+        }
+
+        function closeConfirmDialog() {
+            document.getElementById('confirmDialog').classList.remove('show');
+            pendingAction = null;
+        }
+
+        async function executeConfirmedAction() {
+            closeConfirmDialog();
+
+            if (!pendingAction) return;
+
+            const action = pendingAction;
+            const endpoint = action === 'upgrade'
+                ? '/web/admin/migrations/api/upgrade'
+                : '/web/admin/migrations/api/downgrade';
+
+            addLog(`Ejecutando ${action}...`, 'info');
+
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    addLog(result.message, 'success');
+                } else {
+                    addLog(result.message || result.error, 'error');
+                }
+
+                // Recargar datos
+                await refreshData();
+            } catch (error) {
+                addLog(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        function addLog(message, type = 'info') {
+            const logContent = document.getElementById('logContent');
+            const timestamp = new Date().toLocaleTimeString();
+            const line = `[${timestamp}] <span class="${type}">${message}</span>\n`;
+
+            if (logContent.textContent === 'Esperando operaciones...') {
+                logContent.innerHTML = line;
+            } else {
+                logContent.innerHTML += line;
+            }
+
+            // Scroll al final
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('logContent').innerHTML = 'Esperando operaciones...';
+        }
+    </script>
 </body>
 
 </html>

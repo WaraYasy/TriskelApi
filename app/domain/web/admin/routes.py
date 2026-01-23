@@ -315,5 +315,133 @@ def export_download():
 @admin_bp.route("/migrations")
 @login_required
 def migrations_page():
-    """Página de migraciones (placeholder)"""
+    """Página de migraciones de base de datos"""
     return render_template("admin/migrations.html")
+
+
+# ==================== API de Migraciones ====================
+
+
+def admin_required(f):
+    """
+    Decorador que requiere rol 'admin' para acceder.
+    Debe usarse después de @login_required.
+    """
+
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        current_user = getattr(g, "current_user", None)
+        if not current_user or current_user.get("role") != "admin":
+            return jsonify({"error": "Acceso denegado. Se requiere rol admin."}), 403
+        return f(*args, **kwargs)
+
+    return decorated_function
+
+
+@admin_bp.route("/migrations/api/status")
+@login_required
+@admin_required
+def migrations_status():
+    """Obtiene el estado de la base de datos y migraciones."""
+    from app.domain.web.migrations.service import MigrationService
+
+    service = MigrationService()
+    status = service.get_database_status()
+    return jsonify(status)
+
+
+@admin_bp.route("/migrations/api/list")
+@login_required
+@admin_required
+def migrations_list():
+    """Lista todas las migraciones disponibles."""
+    from app.domain.web.migrations.service import MigrationService
+
+    service = MigrationService()
+
+    if not service.is_database_configured():
+        return jsonify({"error": "Base de datos no configurada"}), 400
+
+    try:
+        migrations = service.get_migration_history()
+        return jsonify(
+            {
+                "migrations": [
+                    {
+                        "revision": m.revision,
+                        "description": m.description,
+                        "date": m.date,
+                        "is_applied": m.is_applied,
+                    }
+                    for m in migrations
+                ]
+            }
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@admin_bp.route("/migrations/api/upgrade", methods=["POST"])
+@login_required
+@admin_required
+def migrations_upgrade():
+    """Aplica migraciones pendientes."""
+    from app.core.logger import logger
+    from app.domain.web.migrations.service import MigrationService
+
+    service = MigrationService()
+
+    if not service.is_database_configured():
+        return jsonify({"error": "Base de datos no configurada"}), 400
+
+    # Obtener revisión objetivo (default: head)
+    data = request.get_json() or {}
+    revision = data.get("revision", "head")
+
+    current_user = getattr(g, "current_user", {})
+    logger.info(
+        f"Upgrade de migraciones iniciado por {current_user.get('username')}",
+        revision=revision,
+    )
+
+    result = service.upgrade(revision)
+
+    if result["success"]:
+        logger.info("Upgrade completado", **result)
+    else:
+        logger.error("Error en upgrade", **result)
+
+    return jsonify(result)
+
+
+@admin_bp.route("/migrations/api/downgrade", methods=["POST"])
+@login_required
+@admin_required
+def migrations_downgrade():
+    """Revierte la última migración aplicada."""
+    from app.core.logger import logger
+    from app.domain.web.migrations.service import MigrationService
+
+    service = MigrationService()
+
+    if not service.is_database_configured():
+        return jsonify({"error": "Base de datos no configurada"}), 400
+
+    # Obtener revisión objetivo (default: -1, revertir una)
+    data = request.get_json() or {}
+    revision = data.get("revision", "-1")
+
+    current_user = getattr(g, "current_user", {})
+    logger.info(
+        f"Downgrade de migraciones iniciado por {current_user.get('username')}",
+        revision=revision,
+    )
+
+    result = service.downgrade(revision)
+
+    if result["success"]:
+        logger.info("Downgrade completado", **result)
+    else:
+        logger.error("Error en downgrade", **result)
+
+    return jsonify(result)
