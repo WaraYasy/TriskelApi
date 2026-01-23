@@ -20,11 +20,11 @@
         }
 
         .status-card {
-            background: var(--card-bg, #1a1a2e);
+            background: var(--bg-card);
             border-radius: 12px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
-            border: 1px solid var(--border-color, #2d2d44);
+            border: 1px solid var(--border-color);
         }
 
         .status-header {
@@ -37,7 +37,7 @@
         .status-title {
             font-size: 1.1rem;
             font-weight: 600;
-            color: var(--text-primary, #fff);
+            color: var(--text-primary);
         }
 
         .status-badge {
@@ -76,20 +76,20 @@
 
         .status-label {
             font-size: 0.8rem;
-            color: var(--text-secondary, #a0a0b0);
+            color: var(--text-secondary);
         }
 
         .status-value {
             font-size: 1rem;
-            color: var(--text-primary, #fff);
+            color: var(--text-primary);
             font-family: monospace;
         }
 
         .migrations-table {
-            background: var(--card-bg, #1a1a2e);
+            background: var(--bg-card);
             border-radius: 12px;
             overflow: hidden;
-            border: 1px solid var(--border-color, #2d2d44);
+            border: 1px solid var(--border-color);
         }
 
         .table-header {
@@ -97,13 +97,13 @@
             justify-content: space-between;
             align-items: center;
             padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-color, #2d2d44);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .table-title {
             font-size: 1.1rem;
             font-weight: 600;
-            color: var(--text-primary, #fff);
+            color: var(--text-primary);
         }
 
         .table-actions {
@@ -130,12 +130,12 @@
         }
 
         .btn-primary {
-            background: #6366f1;
+            background: var(--accent);
             color: white;
         }
 
         .btn-primary:hover:not(:disabled) {
-            background: #5457e5;
+            background: var(--accent-hover);
         }
 
         .btn-danger {
@@ -149,12 +149,33 @@
         }
 
         .btn-secondary {
-            background: var(--bg-secondary, #2d2d44);
-            color: var(--text-primary, #fff);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
         }
 
         .btn-secondary:hover:not(:disabled) {
-            background: var(--bg-hover, #3d3d54);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-refresh {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.6rem;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            margin-right: 60px; /* Espacio para el theme-toggle flotante */
+        }
+
+        .btn-refresh:hover {
+            border-color: var(--accent);
+            color: var(--accent);
         }
 
         table {
@@ -170,16 +191,16 @@
         th {
             font-size: 0.8rem;
             font-weight: 600;
-            color: var(--text-secondary, #a0a0b0);
+            color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            background: var(--bg-secondary, #12121f);
+            background: var(--bg-secondary);
         }
 
         td {
             font-size: 0.9rem;
-            color: var(--text-primary, #fff);
-            border-bottom: 1px solid var(--border-color, #2d2d44);
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
         }
 
         tr:last-child td {
@@ -188,10 +209,11 @@
 
         .revision-code {
             font-family: monospace;
-            background: var(--bg-secondary, #2d2d44);
+            background: var(--bg-secondary);
             padding: 0.2rem 0.5rem;
             border-radius: 4px;
             font-size: 0.85rem;
+            color: var(--text-primary);
         }
 
         .migration-status {
@@ -216,14 +238,14 @@
 
         .log-section {
             margin-top: 1.5rem;
-            background: var(--card-bg, #1a1a2e);
+            background: var(--bg-card);
             border-radius: 12px;
-            border: 1px solid var(--border-color, #2d2d44);
+            border: 1px solid var(--border-color);
         }
 
         .log-header {
             padding: 1rem 1.5rem;
-            border-bottom: 1px solid var(--border-color, #2d2d44);
+            border-bottom: 1px solid var(--border-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -232,17 +254,19 @@
         .log-title {
             font-size: 1rem;
             font-weight: 600;
-            color: var(--text-primary, #fff);
+            color: var(--text-primary);
         }
 
         .log-content {
             padding: 1rem 1.5rem;
             font-family: monospace;
             font-size: 0.85rem;
-            color: var(--text-secondary, #a0a0b0);
+            color: var(--text-secondary);
             max-height: 200px;
             overflow-y: auto;
             white-space: pre-wrap;
+            background: var(--bg-secondary);
+            border-radius: 0 0 12px 12px;
         }
 
         .log-content .success {
@@ -254,13 +278,13 @@
         }
 
         .log-content .info {
-            color: #6366f1;
+            color: var(--accent);
         }
 
         .empty-state {
             text-align: center;
             padding: 3rem;
-            color: var(--text-secondary, #a0a0b0);
+            color: var(--text-secondary);
         }
 
         .empty-state svg {
@@ -273,14 +297,14 @@
             align-items: center;
             justify-content: center;
             padding: 2rem;
-            color: var(--text-secondary, #a0a0b0);
+            color: var(--text-secondary);
         }
 
         .spinner {
             width: 24px;
             height: 24px;
-            border: 2px solid var(--border-color, #2d2d44);
-            border-top-color: #6366f1;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent);
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-right: 0.75rem;
@@ -312,23 +336,23 @@
         }
 
         .confirm-content {
-            background: var(--card-bg, #1a1a2e);
+            background: var(--bg-card);
             border-radius: 12px;
             padding: 1.5rem;
             max-width: 400px;
             width: 90%;
-            border: 1px solid var(--border-color, #2d2d44);
+            border: 1px solid var(--border-color);
         }
 
         .confirm-title {
             font-size: 1.1rem;
             font-weight: 600;
-            color: var(--text-primary, #fff);
+            color: var(--text-primary);
             margin-bottom: 0.75rem;
         }
 
         .confirm-message {
-            color: var(--text-secondary, #a0a0b0);
+            color: var(--text-secondary);
             margin-bottom: 1.5rem;
             line-height: 1.5;
         }
@@ -483,8 +507,8 @@
                 <p class="page-subtitle">Gestiona las migraciones SQL con Alembic</p>
             </div>
             <div class="top-bar-right">
-                <button class="btn btn-secondary" onclick="refreshData()" title="Actualizar">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <button class="btn-refresh" onclick="refreshData()" title="Actualizar">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15" />
                     </svg>
                 </button>
@@ -720,18 +744,25 @@
                     body: JSON.stringify({})
                 });
 
+                // Verificar si la respuesta es OK
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
                 const result = await response.json();
 
                 if (result.success) {
                     addLog(result.message, 'success');
                 } else {
-                    addLog(result.message || result.error, 'error');
+                    addLog(result.message || result.error || 'Error desconocido', 'error');
                 }
 
                 // Recargar datos
                 await refreshData();
             } catch (error) {
                 addLog(`Error: ${error.message}`, 'error');
+                console.error('Migration error:', error);
             }
         }
 
