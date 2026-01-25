@@ -1,8 +1,42 @@
 # Documentación de Triskel-API
 
-Bienvenido a la documentación de Triskel-API. Aquí encontrarás toda la información necesaria para desplegar y usar la API.
+Bienvenido a la documentación de Triskel-API. Aquí encontrarás toda la información necesaria para desplegar, usar e integrar la API.
 
-## Índice de Documentación
+## 🚀 Integración del Juego (Comienza aquí)
+
+**📍 COMIENZA AQUÍ:** Lee [INDICE_COMPLETO.md](./INDICE_COMPLETO.md) para una guía visual de toda la documentación y navegación.
+
+**Para integrar el juego con la API, lee estos archivos en orden:**
+
+1. **[GAME_INTEGRATION_API.md](./GAME_INTEGRATION_API.md)** ⭐ **PRINCIPAL**
+   - Cómo hacer llamadas HTTP a la API
+   - Endpoints completos con ejemplos
+   - Flujo de login, partidas y sesiones
+   - **Sección especial: "Retomar Partida"** (¡lo más importante!)
+   - Ejemplos en C# y Python
+
+2. **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Referencia rápida
+   - Tabla de todos los endpoints
+   - Cuerpos de request y response
+   - Códigos de error y soluciones
+   - Tipos de eventos disponibles
+   - Decisiones morales y niveles
+
+3. **[UNITY_QUICK_START.md](./UNITY_QUICK_START.md)** - Guía práctica para Unity
+   - Implementación paso a paso en Unity C#
+   - Código listo para copiar y usar
+   - Cómo retomar partidas en Unity
+   - Menú principal con detectar partida activa
+   - Guardado automático de progreso
+
+4. **[RESUMEGAME_FLOWCHART.md](./RESUMEGAME_FLOWCHART.md)** - Diagramas visuales
+   - Flujos de primer inicio vs reabrir
+   - Árbol de decisión del menú
+   - Secuencia de llamadas API
+   - Checklist de implementación
+   - Errores comunes a evitar
+
+### Índice de Documentación
 
 ### 📦 Despliegue
 
@@ -21,7 +55,7 @@ Bienvenido a la documentación de Triskel-API. Aquí encontrarás toda la inform
 
 ### 🎮 Integración con Unity
 
-- **[UNITY_INTEGRATION.md](./UNITY_INTEGRATION.md)** - Guía para conectar Unity con la API
+- **[UNITY_INTEGRATION.md](./UNITY_INTEGRATION.md)** - Guía antigua (ver UNITY_QUICK_START.md)
   - Configuración para Unity Nativo vs WebGL
   - Ejemplos de código C# completos
   - Endpoints principales y cómo usarlos
@@ -29,6 +63,32 @@ Bienvenido a la documentación de Triskel-API. Aquí encontrarás toda la inform
   - Debugging y errores comunes
 
 ## Inicio Rápido
+
+### Para Integrar el Juego
+
+1. **Lee primero:** [GAME_INTEGRATION_API.md](./GAME_INTEGRATION_API.md)
+   - Especialmente la sección "Cómo Hacer Llamadas a la API"
+   - Y "Retomar Partida (Lo Más Importante)"
+
+2. **Copia código:** [UNITY_QUICK_START.md](./UNITY_QUICK_START.md)
+   - Clase `TriskelAPIClient` lista para usar
+   - Métodos para login, crear partida, cargar partida, etc.
+
+3. **Implementa en tu proyecto Unity:**
+   ```csharp
+   // Crear cuenta
+   yield return apiClient.Register("jugador123", "password123");
+   
+   // Login
+   yield return apiClient.Login("jugador123", "password123");
+   
+   // Cargar partida activa
+   if (tienePartidaActiva) {
+       yield return apiClient.LoadGame(gameID);
+   }
+   ```
+
+4. **Mantén esta tabla a mano:** [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
 
 ### Para Desplegar en Railway
 
@@ -44,10 +104,11 @@ Bienvenido a la documentación de Triskel-API. Aquí encontrarás toda la inform
 
 ### Para Conectar Unity
 
-1. Lee [UNITY_INTEGRATION.md](./UNITY_INTEGRATION.md)
-2. Copia la clase `TriskelAPIClient` en tu proyecto Unity
-3. Actualiza la `API_URL` con tu URL de Railway
+1. Lee [GAME_INTEGRATION_API.md](./GAME_INTEGRATION_API.md)
+2. Copia la clase `TriskelAPIClient` desde [UNITY_QUICK_START.md](./UNITY_QUICK_START.md)
+3. Actualiza la `baseURL` con tu URL de la API
 4. Úsala en tu código
+
 
 ## Estructura del Proyecto
 
