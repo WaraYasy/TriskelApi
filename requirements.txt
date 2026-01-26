@@ -27,7 +27,7 @@ pandas==2.1.4                    # Procesamiento de datos
 plotly==5.18.0                   # Visualizaciones interactivas
 
 # ==================== Configuración ====================
-python-dotenv==1.0.0             # Variables de entorno
+python-dotenv==1.2.1             # Variables de entorno
 
 # ==================== Autenticación y Seguridad ====================
 python-jose[cryptography]==3.3.0   # JWT token handling
