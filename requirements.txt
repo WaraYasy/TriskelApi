@@ -23,7 +23,7 @@ alembic==1.13.1                  # Migraciones de base de datos
 # ==================== Dashboard Web (Flask) ====================
 flask==3.0.0                     # Framework web
 httpx==0.25.2                    # Cliente HTTP para consumir API REST
-pandas==2.1.4                    # Procesamiento de datos
+pandas==3.0.0                    # Procesamiento de datos
 plotly==5.18.0                   # Visualizaciones interactivas
 
 # ==================== Configuración ====================
