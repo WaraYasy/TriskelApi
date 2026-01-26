@@ -33,7 +33,7 @@ python-dotenv==1.0.0             # Variables de entorno
 python-jose[cryptography]==3.3.0   # JWT token handling
 passlib[bcrypt]==1.7.4             # Password hashing con bcrypt
 bcrypt==4.0.1                        # Versión fijada compatible con passlib 1.7.4
-python-multipart==0.0.6            # Form data parsing para login
+python-multipart==0.0.22            # Form data parsing para login
 
 # ==================== Producción ====================
 gunicorn==21.2.0                 # WSGI server (producción)
