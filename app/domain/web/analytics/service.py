@@ -12,7 +12,6 @@ Esto mantiene el desacoplamiento y asegura que:
 - Más fácil de escalar (puede estar en otro servidor)
 """
 
-import json
 import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -41,7 +40,12 @@ class AnalyticsService:
     - Gráficos con Plotly
     """
 
-    def __init__(self, api_base_url: str = "http://localhost:8000", api_key: str = None, use_mock_data: bool = False):
+    def __init__(
+        self,
+        api_base_url: str = "http://localhost:8000",
+        api_key: str = None,
+        use_mock_data: bool = False,
+    ):
         """
         Inicializa el servicio.
 
@@ -113,6 +117,7 @@ class AnalyticsService:
     def _generate_mock_events(self) -> List[Dict[str, Any]]:
         """Genera datos mock de eventos para pruebas sin Firebase."""
         from datetime import datetime, timedelta
+
         base_date = datetime.now()
 
         return [
@@ -122,7 +127,7 @@ class AnalyticsService:
                 "player_id": "player001",
                 "level": "1",
                 "timestamp": (base_date - timedelta(days=2)).isoformat(),
-                "player_username": "TestPlayer1"
+                "player_username": "TestPlayer1",
             },
             {
                 "event_id": "evt002",
@@ -130,7 +135,7 @@ class AnalyticsService:
                 "player_id": "player001",
                 "level": "1",
                 "timestamp": (base_date - timedelta(days=2)).isoformat(),
-                "player_username": "TestPlayer1"
+                "player_username": "TestPlayer1",
             },
             {
                 "event_id": "evt003",
@@ -138,7 +143,7 @@ class AnalyticsService:
                 "player_id": "player002",
                 "level": "2",
                 "timestamp": (base_date - timedelta(days=1)).isoformat(),
-                "player_username": "TestPlayer2"
+                "player_username": "TestPlayer2",
             },
             {
                 "event_id": "evt004",
@@ -146,7 +151,7 @@ class AnalyticsService:
                 "player_id": "player002",
                 "level": "2",
                 "timestamp": (base_date - timedelta(days=1)).isoformat(),
-                "player_username": "TestPlayer2"
+                "player_username": "TestPlayer2",
             },
             {
                 "event_id": "evt005",
@@ -154,7 +159,7 @@ class AnalyticsService:
                 "player_id": "player003",
                 "level": "1",
                 "timestamp": base_date.isoformat(),
-                "player_username": "TestPlayer3"
+                "player_username": "TestPlayer3",
             },
             {
                 "event_id": "evt006",
@@ -162,7 +167,7 @@ class AnalyticsService:
                 "player_id": "player003",
                 "level": "3",
                 "timestamp": base_date.isoformat(),
-                "player_username": "TestPlayer3"
+                "player_username": "TestPlayer3",
             },
         ]
 
@@ -222,7 +227,9 @@ class AnalyticsService:
 
             # Guardar en cache
             self._set_cache(cache_key, players)
-            print(f"[Analytics] Fetched {len(players)} players from API (cached for {self._cache_ttl}s)")
+            print(
+                f"[Analytics] Fetched {len(players)} players from API (cached for {self._cache_ttl}s)"
+            )
 
             return players
         except Exception as e:

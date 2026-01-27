@@ -23,7 +23,9 @@ analytics_bp = Blueprint("analytics", __name__, template_folder="templates")
 
 # Instanciar servicio con API Key
 # Usa la URL configurada en settings (auto-detecta producción vs desarrollo)
-analytics_service = AnalyticsService(api_base_url=settings.api_base_url, api_key=settings.api_key, use_mock_data=False)
+analytics_service = AnalyticsService(
+    api_base_url=settings.api_base_url, api_key=settings.api_key, use_mock_data=False
+)
 
 
 @analytics_bp.route("/")
@@ -208,6 +210,7 @@ def api_chart_events():
     except Exception as e:
         print(f"[ERROR] /api/charts/events failed: {e}")
         import traceback
+
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
@@ -222,6 +225,7 @@ def api_chart_events_timeline():
     except Exception as e:
         print(f"[ERROR] /api/charts/events/timeline failed: {e}")
         import traceback
+
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
@@ -236,6 +240,7 @@ def api_chart_events_deaths():
     except Exception as e:
         print(f"[ERROR] /api/charts/events/deaths failed: {e}")
         import traceback
+
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
