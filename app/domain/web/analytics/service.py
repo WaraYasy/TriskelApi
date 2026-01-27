@@ -52,7 +52,11 @@ class AnalyticsService:
             headers = {}
             if api_key:
                 headers["X-API-Key"] = api_key
-            self.client = httpx.Client(base_url=api_base_url, headers=headers)
+            # Configurar timeout extendido para peticiones lentas de Firebase
+            # timeout=60s para requests individuales, 120s para todo el proceso
+            self.client = httpx.Client(
+                base_url=api_base_url, headers=headers, timeout=httpx.Timeout(60.0, connect=10.0)
+            )
         else:
             self.client = None
 
@@ -110,18 +114,30 @@ class AnalyticsService:
 
         # Por ahora, recopilamos partidas de todos los jugadores
         # En el futuro podríamos tener un endpoint admin /v1/games
-        players = self.get_all_players()
-        all_games = []
+        import time
 
-        for player in players:
+        start_time = time.time()
+
+        players = self.get_all_players()
+        print(f"[Analytics] Fetched {len(players)} players in {time.time() - start_time:.2f}s")
+
+        all_games = []
+        player_fetch_start = time.time()
+
+        for idx, player in enumerate(players):
             try:
                 response = self.client.get(f"/v1/games/player/{player['player_id']}")
                 response.raise_for_status()
                 games = response.json()
                 all_games.extend(games)
+                if (idx + 1) % 5 == 0:  # Log cada 5 jugadores
+                    print(
+                        f"[Analytics] Processed {idx + 1}/{len(players)} players ({time.time() - player_fetch_start:.2f}s elapsed)"
+                    )
             except Exception as e:
                 print(f"Error obteniendo partidas del jugador {player['player_id']}: {e}")
 
+        print(f"[Analytics] Total games fetch time: {time.time() - start_time:.2f}s")
         return all_games
 
     def get_all_events(self) -> List[Dict[str, Any]]:
@@ -134,10 +150,16 @@ class AnalyticsService:
         if not self.client:
             return []
 
+        import time
+
+        start_time = time.time()
+
         players = self.get_all_players()
+        print(f"[Analytics] Fetching events for {len(players)} players...")
+
         all_events = []
 
-        for player in players:
+        for idx, player in enumerate(players):
             try:
                 response = self.client.get(f"/v1/events/player/{player['player_id']}")
                 response.raise_for_status()
@@ -146,10 +168,17 @@ class AnalyticsService:
                 for event in events:
                     event["player_username"] = player.get("username", "Unknown")
                 all_events.extend(events)
+                if (idx + 1) % 5 == 0:  # Log cada 5 jugadores
+                    print(
+                        f"[Analytics] Processed events for {idx + 1}/{len(players)} players ({time.time() - start_time:.2f}s elapsed)"
+                    )
             except Exception:
                 # Silenciosamente ignorar errores de eventos individuales
                 pass
 
+        print(
+            f"[Analytics] Total events fetch time: {time.time() - start_time:.2f}s, fetched {len(all_events)} events"
+        )
         return all_events
 
     def calculate_global_metrics(self, players: List[Dict], games: List[Dict]) -> Dict[str, Any]:
@@ -276,7 +305,9 @@ class AnalyticsService:
         )
 
         fig.update_layout(self._get_dark_layout())
-        return fig.to_html(full_html=False, include_plotlyjs='cdn', config={"displayModeBar": False})
+        return fig.to_html(
+            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
+        )
 
     def create_global_good_vs_bad_chart(self, games: List[Dict]) -> str:
         """
@@ -316,7 +347,9 @@ class AnalyticsService:
 
         fig.update_layout(self._get_dark_layout())
         fig.update_traces(textinfo="percent+label", textfont_color="#ffffff")
-        return fig.to_html(full_html=False, include_plotlyjs='cdn', config={"displayModeBar": False})
+        return fig.to_html(
+            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
+        )
 
     def create_playtime_distribution(self, players: List[Dict]) -> str:
         """
@@ -348,7 +381,7 @@ class AnalyticsService:
             nbins=20,
         )
 
-        return fig.to_html(full_html=False, include_plotlyjs='cdn')
+        return fig.to_html(full_html=False, include_plotlyjs=False)
 
     def create_deaths_per_level_chart(self, games: List[Dict]) -> str:
         """
@@ -396,7 +429,9 @@ class AnalyticsService:
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None)
 
-        return fig.to_html(full_html=False, include_plotlyjs='cdn', config={"displayModeBar": False})
+        return fig.to_html(
+            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
+        )
 
     def create_events_by_type_chart(self, events: List[Dict]) -> str:
         """
@@ -439,7 +474,9 @@ class AnalyticsService:
         fig.update_layout(title=None, showlegend=True)
         fig.update_traces(textfont_color="#ffffff")
 
-        return fig.to_html(full_html=False, include_plotlyjs='cdn', config={"displayModeBar": False})
+        return fig.to_html(
+            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
+        )
 
     def create_events_timeline_chart(self, events: List[Dict]) -> str:
         """
@@ -490,7 +527,9 @@ class AnalyticsService:
         fig.update_traces(line_color="#3b82f6")
         fig.update_layout(self._get_dark_layout())
 
-        return fig.to_html(full_html=False, include_plotlyjs='cdn', config={"displayModeBar": False})
+        return fig.to_html(
+            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
+        )
 
     def create_deaths_event_chart(self, events: List[Dict]) -> str:
         """
@@ -533,7 +572,9 @@ class AnalyticsService:
 
         fig.update_layout(self._get_dark_layout())
 
-        return fig.to_html(full_html=False, include_plotlyjs='cdn', config={"displayModeBar": False})
+        return fig.to_html(
+            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
+        )
 
     def create_moral_alignment_chart(self, players: List[Dict]) -> str:
         """
@@ -564,7 +605,9 @@ class AnalyticsService:
 
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None, bargap=0.1)
-        return fig.to_html(full_html=False, include_plotlyjs='cdn', config={"displayModeBar": False})
+        return fig.to_html(
+            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
+        )
 
     def create_relics_distribution_chart(self, games: List[Dict]) -> str:
         """
@@ -608,7 +651,9 @@ class AnalyticsService:
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None, showlegend=False)
 
-        return fig.to_html(full_html=False, include_plotlyjs='cdn', config={"displayModeBar": False})
+        return fig.to_html(
+            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
+        )
 
     def create_level_completion_chart(self, games: List[Dict]) -> str:
         """
@@ -660,7 +705,9 @@ class AnalyticsService:
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None)
 
-        return fig.to_html(full_html=False, include_plotlyjs='cdn', config={"displayModeBar": False})
+        return fig.to_html(
+            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
+        )
 
     def create_playtime_per_level_chart(self, games: List[Dict]) -> str:
         """
@@ -714,7 +761,9 @@ class AnalyticsService:
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None)
 
-        return fig.to_html(full_html=False, include_plotlyjs='cdn', config={"displayModeBar": False})
+        return fig.to_html(
+            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
+        )
 
     def create_active_players_chart(self, events: List[Dict]) -> str:
         """
@@ -779,7 +828,9 @@ class AnalyticsService:
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None)
 
-        return fig.to_html(full_html=False, include_plotlyjs='cdn', config={"displayModeBar": False})
+        return fig.to_html(
+            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
+        )
 
     def export_to_csv(self, data: List[Dict], filename: str) -> str:
         """

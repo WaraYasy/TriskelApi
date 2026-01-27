@@ -59,8 +59,17 @@
 
 {% block extra_scripts %}
 <script>
+    // Esperar a que Plotly esté disponible antes de cargar gráficos
+    function waitForPlotly(callback) {
+        if (typeof Plotly !== 'undefined') {
+            callback();
+        } else {
+            setTimeout(() => waitForPlotly(callback), 100);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
-        loadDashboard();
+        waitForPlotly(loadDashboard);
     });
 
     async function loadDashboard() {
@@ -71,12 +80,22 @@
 
     async function loadChart(url, containerId) {
         try {
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Error network');
+            console.log(`Loading chart from: ${url}`);
+            const response = await fetch(url, {
+                signal: AbortSignal.timeout(30000) // 30 segundos timeout
+            });
+            console.log(`Response status for ${url}: ${response.status}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
+            console.log(`Data received for ${url}, html length: ${data.html?.length || 0}`);
+
             document.getElementById(containerId).innerHTML = data.html;
         } catch (error) {
-            console.error("Error loading chart:", error);
+            console.error(`Error loading chart from ${url}:`, error);
             document.getElementById(containerId).innerHTML =
                 '<div class="chart-loader"><span>Error al cargar datos</span></div>';
         }

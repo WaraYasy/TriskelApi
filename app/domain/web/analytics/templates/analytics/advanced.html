@@ -85,9 +85,18 @@
 
 {% block extra_scripts %}
 <script>
+    // Esperar a que Plotly esté disponible antes de cargar gráficos
+    function waitForPlotly(callback) {
+        if (typeof Plotly !== 'undefined') {
+            callback();
+        } else {
+            setTimeout(() => waitForPlotly(callback), 100);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         loadAdvancedMetrics();
-        loadCharts();
+        waitForPlotly(loadCharts);
     });
 
     async function loadAdvancedMetrics() {
