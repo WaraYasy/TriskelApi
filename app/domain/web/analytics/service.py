@@ -221,14 +221,40 @@ class AnalyticsService:
         if not ANALYTICS_AVAILABLE or not games:
             return "<div>No hay datos disponibles</div>"
 
+        # Mapeo de decisiones a good/bad
+        good_choices = {"sanar", "construir", "revelar"}
+        bad_choices = {"forzar", "destruir", "ocultar"}
+
+        # Nombres amigables para niveles
+        level_names = {
+            "senda_ebano": "Senda del Ébano",
+            "fortaleza_gigantes": "Fortaleza de Gigantes",
+            "aquelarre_sombras": "Aquelarre de Sombras"
+        }
+
         # Recopilar decisiones por nivel
         choices_data = []
 
         for game in games:
-            for level_name, level_data in game.get("levels_data", {}).items():
-                choice = level_data.get("choice")  # good / bad
-                if choice in ["good", "bad"]:
-                    choices_data.append({"Nivel": level_name, "Decisión": choice, "count": 1})
+            choices = game.get("choices", {})
+
+            # Procesar cada nivel
+            for level_key, choice_value in choices.items():
+                if choice_value:  # Si hay decisión
+                    # Determinar si es buena o mala
+                    if choice_value in good_choices:
+                        decision_type = "Buena"
+                    elif choice_value in bad_choices:
+                        decision_type = "Mala"
+                    else:
+                        continue  # Ignorar decisiones no reconocidas
+
+                    level_name = level_names.get(level_key, level_key)
+                    choices_data.append({
+                        "Nivel": level_name,
+                        "Decisión": decision_type,
+                        "count": 1
+                    })
 
         if not choices_data:
             return "<div>No hay decisiones morales registradas</div>"
@@ -243,11 +269,11 @@ class AnalyticsService:
             y="count",
             color="Decisión",
             title="Decisiones por Nivel (Buenas vs Malas)",
-            labels={"count": "Cantidad de Jugadores", "Decisión": "Tipo"},
+            labels={"count": "Cantidad", "Decisión": "Tipo"},
             barmode="stack",
             color_discrete_map={
-                "good": "#10b981",  # Green
-                "bad": "#ef4444",  # Red
+                "Buena": "#10b981",  # Green
+                "Mala": "#ef4444",  # Red
             },
         )
 
@@ -261,15 +287,19 @@ class AnalyticsService:
         if not ANALYTICS_AVAILABLE or not games:
             return "<div>No hay datos disponibles</div>"
 
+        # Mapeo de decisiones a good/bad
+        good_choices = {"sanar", "construir", "revelar"}
+        bad_choices = {"forzar", "destruir", "ocultar"}
+
         good_count = 0
         bad_count = 0
 
         for game in games:
-            for level_data in game.get("levels_data", {}).values():
-                choice = level_data.get("choice")
-                if choice == "good":
+            choices = game.get("choices", {})
+            for choice_value in choices.values():
+                if choice_value in good_choices:
                     good_count += 1
-                elif choice == "bad":
+                elif choice_value in bad_choices:
                     bad_count += 1
 
         if good_count == 0 and bad_count == 0:
@@ -287,7 +317,7 @@ class AnalyticsService:
         )
 
         fig.update_layout(self._get_dark_layout())
-        fig.update_traces(textinfo="percent+label")
+        fig.update_traces(textinfo="percent+label", textfont_color="#ffffff")
         return fig.to_html(full_html=False, config={"displayModeBar": False})
 
     def create_playtime_distribution(self, players: List[Dict]) -> str:
@@ -484,7 +514,7 @@ class AnalyticsService:
             return "<div>No hay eventos de muerte registrados</div>"
 
         # Agrupar por nivel
-        level_counts = Counter([e.get("level_id", "Unknown") for e in death_events])
+        level_counts = Counter([e.get("level", "Unknown") for e in death_events])
 
         df = pd.DataFrame(
             {
