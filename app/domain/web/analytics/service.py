@@ -12,7 +12,9 @@ Esto mantiene el desacoplamiento y asegura que:
 - Más fácil de escalar (puede estar en otro servidor)
 """
 
+import time
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
@@ -114,7 +116,6 @@ class AnalyticsService:
 
         # Por ahora, recopilamos partidas de todos los jugadores
         # En el futuro podríamos tener un endpoint admin /v1/games
-        import time
 
         start_time = time.time()
 
@@ -124,20 +125,30 @@ class AnalyticsService:
         all_games = []
         player_fetch_start = time.time()
 
-        for idx, player in enumerate(players):
+        # Función helper para obtener juegos de un jugador
+        def fetch_player_games(player):
             try:
                 response = self.client.get(f"/v1/games/player/{player['player_id']}")
                 response.raise_for_status()
-                games = response.json()
-                all_games.extend(games)
-                if (idx + 1) % 5 == 0:  # Log cada 5 jugadores
-                    print(
-                        f"[Analytics] Processed {idx + 1}/{len(players)} players ({time.time() - player_fetch_start:.2f}s elapsed)"
-                    )
+                return response.json()
             except Exception as e:
                 print(f"Error obteniendo partidas del jugador {player['player_id']}: {e}")
+                return []
 
-        print(f"[Analytics] Total games fetch time: {time.time() - start_time:.2f}s")
+        # Paralelizar peticiones con ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = {executor.submit(fetch_player_games, player): player for player in players}
+            completed = 0
+            for future in as_completed(futures):
+                games = future.result()
+                all_games.extend(games)
+                completed += 1
+                if completed % 5 == 0:  # Log cada 5 jugadores
+                    print(
+                        f"[Analytics] Processed {completed}/{len(players)} players ({time.time() - player_fetch_start:.2f}s elapsed)"
+                    )
+
+        print(f"[Analytics] Total games fetch time: {time.time() - start_time:.2f}s (parallelized)")
         return all_games
 
     def get_all_events(self) -> List[Dict[str, Any]]:
@@ -150,7 +161,6 @@ class AnalyticsService:
         if not self.client:
             return []
 
-        import time
 
         start_time = time.time()
 
@@ -159,7 +169,8 @@ class AnalyticsService:
 
         all_events = []
 
-        for idx, player in enumerate(players):
+        # Función helper para obtener eventos de un jugador
+        def fetch_player_events(player):
             try:
                 response = self.client.get(f"/v1/events/player/{player['player_id']}")
                 response.raise_for_status()
@@ -167,17 +178,26 @@ class AnalyticsService:
                 # Enriquecer evento con datos del jugador
                 for event in events:
                     event["player_username"] = player.get("username", "Unknown")
-                all_events.extend(events)
-                if (idx + 1) % 5 == 0:  # Log cada 5 jugadores
-                    print(
-                        f"[Analytics] Processed events for {idx + 1}/{len(players)} players ({time.time() - start_time:.2f}s elapsed)"
-                    )
+                return events
             except Exception:
                 # Silenciosamente ignorar errores de eventos individuales
-                pass
+                return []
+
+        # Paralelizar peticiones con ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = {executor.submit(fetch_player_events, player): player for player in players}
+            completed = 0
+            for future in as_completed(futures):
+                events = future.result()
+                all_events.extend(events)
+                completed += 1
+                if completed % 5 == 0:  # Log cada 5 jugadores
+                    print(
+                        f"[Analytics] Processed events for {completed}/{len(players)} players ({time.time() - start_time:.2f}s elapsed)"
+                    )
 
         print(
-            f"[Analytics] Total events fetch time: {time.time() - start_time:.2f}s, fetched {len(all_events)} events"
+            f"[Analytics] Total events fetch time: {time.time() - start_time:.2f}s, fetched {len(all_events)} events (parallelized)"
         )
         return all_events
 
