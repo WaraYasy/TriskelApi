@@ -81,6 +81,18 @@ class Settings(BaseSettings):
             # Producción sin CORS_ORIGINS definido - modo restrictivo
             return ""
 
+    # ==================== API Interna (para Analytics) ====================
+    # URL base de la API para consumo interno por el dashboard
+    # En desarrollo: http://localhost:8000
+    # En producción Railway: http://localhost:{PORT}
+    @property
+    def api_base_url(self) -> str:
+        env_url = os.getenv("API_BASE_URL", "")
+        if env_url:
+            return env_url
+        # Usar localhost con el puerto correcto (importante en Railway donde el puerto varía)
+        return f"http://localhost:{self.port}"
+
     # ==================== Logging ====================
     # Nivel de logs configurables por entorno
     @property

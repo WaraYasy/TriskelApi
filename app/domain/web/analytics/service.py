@@ -229,7 +229,7 @@ class AnalyticsService:
         level_names = {
             "senda_ebano": "Senda del Ébano",
             "fortaleza_gigantes": "Fortaleza de Gigantes",
-            "aquelarre_sombras": "Aquelarre de Sombras"
+            "aquelarre_sombras": "Aquelarre de Sombras",
         }
 
         # Recopilar decisiones por nivel
@@ -250,11 +250,9 @@ class AnalyticsService:
                         continue  # Ignorar decisiones no reconocidas
 
                     level_name = level_names.get(level_key, level_key)
-                    choices_data.append({
-                        "Nivel": level_name,
-                        "Decisión": decision_type,
-                        "count": 1
-                    })
+                    choices_data.append(
+                        {"Nivel": level_name, "Decisión": decision_type, "count": 1}
+                    )
 
         if not choices_data:
             return "<div>No hay decisiones morales registradas</div>"
