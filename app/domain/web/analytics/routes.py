@@ -23,7 +23,7 @@ analytics_bp = Blueprint("analytics", __name__, template_folder="templates")
 
 # Instanciar servicio con API Key
 # Usa la URL configurada en settings (auto-detecta producción vs desarrollo)
-analytics_service = AnalyticsService(api_base_url=settings.api_base_url, api_key=settings.api_key)
+analytics_service = AnalyticsService(api_base_url=settings.api_base_url, api_key=settings.api_key, use_mock_data=False)
 
 
 @analytics_bp.route("/")
@@ -201,25 +201,43 @@ def api_chart_playtime():
 @analytics_bp.route("/api/charts/events")
 def api_chart_events():
     """API endpoint para gráfico de eventos por tipo."""
-    all_events = analytics_service.get_all_events()
-    chart_html = analytics_service.create_events_by_type_chart(all_events)
-    return jsonify({"html": chart_html, "total": len(all_events)})
+    try:
+        all_events = analytics_service.get_all_events()
+        chart_html = analytics_service.create_events_by_type_chart(all_events)
+        return jsonify({"html": chart_html, "total": len(all_events)})
+    except Exception as e:
+        print(f"[ERROR] /api/charts/events failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 
 @analytics_bp.route("/api/charts/events/timeline")
 def api_chart_events_timeline():
     """API endpoint para gráfico de línea temporal de eventos."""
-    all_events = analytics_service.get_all_events()
-    chart_html = analytics_service.create_events_timeline_chart(all_events)
-    return jsonify({"html": chart_html})
+    try:
+        all_events = analytics_service.get_all_events()
+        chart_html = analytics_service.create_events_timeline_chart(all_events)
+        return jsonify({"html": chart_html})
+    except Exception as e:
+        print(f"[ERROR] /api/charts/events/timeline failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 
 @analytics_bp.route("/api/charts/events/deaths")
 def api_chart_events_deaths():
     """API endpoint para gráfico de muertes por nivel (reportadas por eventos)."""
-    all_events = analytics_service.get_all_events()
-    chart_html = analytics_service.create_deaths_event_chart(all_events)
-    return jsonify({"html": chart_html})
+    try:
+        all_events = analytics_service.get_all_events()
+        chart_html = analytics_service.create_deaths_event_chart(all_events)
+        return jsonify({"html": chart_html})
+    except Exception as e:
+        print(f"[ERROR] /api/charts/events/deaths failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
 
 
 @analytics_bp.route("/api/charts/relics")

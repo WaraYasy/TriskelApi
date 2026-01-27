@@ -12,6 +12,7 @@ Esto mantiene el desacoplamiento y asegura que:
 - Más fácil de escalar (puede estar en otro servidor)
 """
 
+import json
 import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -40,16 +41,24 @@ class AnalyticsService:
     - Gráficos con Plotly
     """
 
-    def __init__(self, api_base_url: str = "http://localhost:8000", api_key: str = None):
+    def __init__(self, api_base_url: str = "http://localhost:8000", api_key: str = None, use_mock_data: bool = False):
         """
         Inicializa el servicio.
 
         Args:
             api_base_url: URL base de la API REST
             api_key: API Key para acceso admin
+            use_mock_data: Si True, usa datos ficticios en lugar de Firebase (para pruebas)
         """
         self.api_base_url = api_base_url
         self.api_key = api_key
+        self.use_mock_data = use_mock_data
+
+        # Sistema de caching con TTL
+        self._cache = {}
+        self._cache_timestamp = {}
+        self._cache_ttl = 300  # 5 minutos
+
         if ANALYTICS_AVAILABLE:
             headers = {}
             if api_key:
@@ -61,6 +70,101 @@ class AnalyticsService:
             )
         else:
             self.client = None
+
+    def _is_cache_valid(self, key: str) -> bool:
+        """
+        Verifica si el cache para una clave es válido (no expiró el TTL).
+
+        Args:
+            key: Clave del cache
+
+        Returns:
+            True si el cache es válido, False si expiró o no existe
+        """
+        if key not in self._cache_timestamp:
+            return False
+        return (time.time() - self._cache_timestamp[key]) < self._cache_ttl
+
+    def _get_from_cache(self, key: str):
+        """Obtiene un valor del cache."""
+        return self._cache.get(key)
+
+    def _set_cache(self, key: str, value):
+        """Guarda un valor en el cache con timestamp."""
+        self._cache[key] = value
+        self._cache_timestamp[key] = time.time()
+
+    def _generate_mock_players(self) -> List[Dict[str, Any]]:
+        """Genera datos mock de jugadores para pruebas sin Firebase."""
+        return [
+            {"player_id": "player001", "username": "TestPlayer1", "email": "test1@example.com"},
+            {"player_id": "player002", "username": "TestPlayer2", "email": "test2@example.com"},
+            {"player_id": "player003", "username": "TestPlayer3", "email": "test3@example.com"},
+        ]
+
+    def _generate_mock_games(self) -> List[Dict[str, Any]]:
+        """Genera datos mock de partidas para pruebas sin Firebase."""
+        return [
+            {"game_id": "game001", "player_id": "player001", "status": "completed"},
+            {"game_id": "game002", "player_id": "player002", "status": "in_progress"},
+            {"game_id": "game003", "player_id": "player003", "status": "completed"},
+        ]
+
+    def _generate_mock_events(self) -> List[Dict[str, Any]]:
+        """Genera datos mock de eventos para pruebas sin Firebase."""
+        from datetime import datetime, timedelta
+        base_date = datetime.now()
+
+        return [
+            {
+                "event_id": "evt001",
+                "event_type": "level_start",
+                "player_id": "player001",
+                "level": "1",
+                "timestamp": (base_date - timedelta(days=2)).isoformat(),
+                "player_username": "TestPlayer1"
+            },
+            {
+                "event_id": "evt002",
+                "event_type": "death",
+                "player_id": "player001",
+                "level": "1",
+                "timestamp": (base_date - timedelta(days=2)).isoformat(),
+                "player_username": "TestPlayer1"
+            },
+            {
+                "event_id": "evt003",
+                "event_type": "level_complete",
+                "player_id": "player002",
+                "level": "2",
+                "timestamp": (base_date - timedelta(days=1)).isoformat(),
+                "player_username": "TestPlayer2"
+            },
+            {
+                "event_id": "evt004",
+                "event_type": "death",
+                "player_id": "player002",
+                "level": "2",
+                "timestamp": (base_date - timedelta(days=1)).isoformat(),
+                "player_username": "TestPlayer2"
+            },
+            {
+                "event_id": "evt005",
+                "event_type": "level_start",
+                "player_id": "player003",
+                "level": "1",
+                "timestamp": base_date.isoformat(),
+                "player_username": "TestPlayer3"
+            },
+            {
+                "event_id": "evt006",
+                "event_type": "death",
+                "player_id": "player003",
+                "level": "3",
+                "timestamp": base_date.isoformat(),
+                "player_username": "TestPlayer3"
+            },
+        ]
 
     def _get_dark_layout(self):
         """
@@ -90,16 +194,37 @@ class AnalyticsService:
         """
         Obtiene todos los jugadores desde la API.
 
+        Usa cache con TTL de 5 minutos para evitar llamadas repetidas.
+
         Returns:
             Lista de jugadores con sus stats
         """
+        # 🎨 MODO MOCK: Retornar datos ficticios sin Firebase
+        if self.use_mock_data:
+            print("[Analytics] 🎨 Using MOCK players data (no Firebase)")
+            return self._generate_mock_players()
+
+        cache_key = "players"
+
+        # Verificar si hay cache válido
+        if self._is_cache_valid(cache_key):
+            age = time.time() - self._cache_timestamp[cache_key]
+            print(f"[Analytics] Using cached players (age: {age:.1f}s)")
+            return self._get_from_cache(cache_key)
+
         if not self.client:
             return []
 
         try:
             response = self.client.get("/v1/players")
             response.raise_for_status()
-            return response.json()
+            players = response.json()
+
+            # Guardar en cache
+            self._set_cache(cache_key, players)
+            print(f"[Analytics] Fetched {len(players)} players from API (cached for {self._cache_ttl}s)")
+
+            return players
         except Exception as e:
             print(f"Error obteniendo jugadores: {e}")
             return []
@@ -108,9 +233,25 @@ class AnalyticsService:
         """
         Obtiene todas las partidas desde la API (requiere admin).
 
+        Usa cache con TTL de 5 minutos para evitar llamadas repetidas.
+
         Returns:
             Lista de partidas
         """
+        # 🎨 MODO MOCK: Retornar datos ficticios sin Firebase
+        if self.use_mock_data:
+            print("[Analytics] 🎨 Using MOCK games data (no Firebase)")
+            return self._generate_mock_games()
+
+        cache_key = "games"
+
+        # Verificar si hay cache válido
+        if self._is_cache_valid(cache_key):
+            age = time.time() - self._cache_timestamp[cache_key]
+            cached_games = self._get_from_cache(cache_key)
+            print(f"[Analytics] Using cached games (age: {age:.1f}s, {len(cached_games)} games)")
+            return cached_games
+
         if not self.client:
             return []
 
@@ -136,7 +277,8 @@ class AnalyticsService:
                 return []
 
         # Paralelizar peticiones con ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        # Usar 3 workers para no exceder rate limits de Firebase
+        with ThreadPoolExecutor(max_workers=3) as executor:
             futures = {executor.submit(fetch_player_games, player): player for player in players}
             completed = 0
             for future in as_completed(futures):
@@ -149,18 +291,38 @@ class AnalyticsService:
                     )
 
         print(f"[Analytics] Total games fetch time: {time.time() - start_time:.2f}s (parallelized)")
+
+        # Guardar en cache
+        self._set_cache(cache_key, all_games)
+        print(f"[Analytics] Cached {len(all_games)} games for {self._cache_ttl}s")
+
         return all_games
 
     def get_all_events(self) -> List[Dict[str, Any]]:
         """
         Obtiene todos los eventos de todos los jugadores.
 
+        Usa cache con TTL de 5 minutos para evitar llamadas repetidas.
+
         Returns:
             Lista de eventos
         """
+        # 🎨 MODO MOCK: Retornar datos ficticios sin Firebase
+        if self.use_mock_data:
+            print("[Analytics] 🎨 Using MOCK events data (no Firebase)")
+            return self._generate_mock_events()
+
+        cache_key = "events"
+
+        # Verificar si hay cache válido
+        if self._is_cache_valid(cache_key):
+            age = time.time() - self._cache_timestamp[cache_key]
+            cached_events = self._get_from_cache(cache_key)
+            print(f"[Analytics] Using cached events (age: {age:.1f}s, {len(cached_events)} events)")
+            return cached_events
+
         if not self.client:
             return []
-
 
         start_time = time.time()
 
@@ -184,7 +346,8 @@ class AnalyticsService:
                 return []
 
         # Paralelizar peticiones con ThreadPoolExecutor
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        # Usar 3 workers para no exceder rate limits de Firebase
+        with ThreadPoolExecutor(max_workers=3) as executor:
             futures = {executor.submit(fetch_player_events, player): player for player in players}
             completed = 0
             for future in as_completed(futures):
@@ -199,6 +362,11 @@ class AnalyticsService:
         print(
             f"[Analytics] Total events fetch time: {time.time() - start_time:.2f}s, fetched {len(all_events)} events (parallelized)"
         )
+
+        # Guardar en cache
+        self._set_cache(cache_key, all_events)
+        print(f"[Analytics] Cached {len(all_events)} events for {self._cache_ttl}s")
+
         return all_events
 
     def calculate_global_metrics(self, players: List[Dict], games: List[Dict]) -> Dict[str, Any]:
@@ -494,9 +662,8 @@ class AnalyticsService:
         fig.update_layout(title=None, showlegend=True)
         fig.update_traces(textfont_color="#ffffff")
 
-        return fig.to_html(
-            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
-        )
+        # Retornar JSON para que el frontend use Plotly.newPlot()
+        return fig.to_json()
 
     def create_events_timeline_chart(self, events: List[Dict]) -> str:
         """
@@ -547,9 +714,8 @@ class AnalyticsService:
         fig.update_traces(line_color="#3b82f6")
         fig.update_layout(self._get_dark_layout())
 
-        return fig.to_html(
-            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
-        )
+        # Retornar JSON para que el frontend use Plotly.newPlot()
+        return fig.to_json()
 
     def create_deaths_event_chart(self, events: List[Dict]) -> str:
         """
@@ -592,9 +758,8 @@ class AnalyticsService:
 
         fig.update_layout(self._get_dark_layout())
 
-        return fig.to_html(
-            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
-        )
+        # Retornar JSON para que el frontend use Plotly.newPlot()
+        return fig.to_json()
 
     def create_moral_alignment_chart(self, players: List[Dict]) -> str:
         """
