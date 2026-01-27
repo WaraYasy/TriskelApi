@@ -13,6 +13,7 @@ Esto mantiene el desacoplamiento y asegura que:
 """
 
 from collections import Counter
+from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
 # Imports opcionales (instalar si se necesitan visualizaciones)
@@ -123,6 +124,34 @@ class AnalyticsService:
 
         return all_games
 
+    def get_all_events(self) -> List[Dict[str, Any]]:
+        """
+        Obtiene todos los eventos de todos los jugadores.
+
+        Returns:
+            Lista de eventos
+        """
+        if not self.client:
+            return []
+
+        players = self.get_all_players()
+        all_events = []
+
+        for player in players:
+            try:
+                response = self.client.get(f"/v1/events/player/{player['player_id']}")
+                response.raise_for_status()
+                events = response.json()
+                # Enriquecer evento con datos del jugador
+                for event in events:
+                    event["player_username"] = player.get("username", "Unknown")
+                all_events.extend(events)
+            except Exception:
+                # Silenciosamente ignorar errores de eventos individuales
+                pass
+
+        return all_events
+
     def calculate_global_metrics(self, players: List[Dict], games: List[Dict]) -> Dict[str, Any]:
         """
         Calcula métricas globales del juego.
@@ -187,30 +216,25 @@ class AnalyticsService:
 
     def create_moral_choices_chart(self, games: List[Dict]) -> str:
         """
-        Genera gráfico de distribución de decisiones morales.
-
-        Args:
-            games: Lista de partidas
-
-        Returns:
-            HTML del gráfico de Plotly
+        Genera gráfico de barras apiladas de buenas vs malas decisiones por nivel.
         """
         if not ANALYTICS_AVAILABLE or not games:
             return "<div>No hay datos disponibles</div>"
 
-        # Recopilar decisiones morales por nivel
+        # Recopilar decisiones por nivel
         choices_data = []
 
         for game in games:
             for level_name, level_data in game.get("levels_data", {}).items():
-                choice = level_data.get("choice")
-                if choice:
+                choice = level_data.get("choice")  # good / bad
+                if choice in ["good", "bad"]:
                     choices_data.append({"Nivel": level_name, "Decisión": choice, "count": 1})
 
         if not choices_data:
             return "<div>No hay decisiones morales registradas</div>"
 
         df = pd.DataFrame(choices_data)
+        # Agrupar por Nivel y Decisión
         df_grouped = df.groupby(["Nivel", "Decisión"]).count().reset_index()
 
         fig = px.bar(
@@ -218,18 +242,52 @@ class AnalyticsService:
             x="Nivel",
             y="count",
             color="Decisión",
-            labels={"count": "Cantidad de jugadores"},
-            barmode="group",
+            title="Decisiones por Nivel (Buenas vs Malas)",
+            labels={"count": "Cantidad de Jugadores", "Decisión": "Tipo"},
+            barmode="stack",
             color_discrete_map={
-                "good": "#10b981",
-                "bad": "#ef4444",
-                "neutral": "#6b7280",
+                "good": "#10b981",  # Green
+                "bad": "#ef4444",  # Red
             },
         )
 
         fig.update_layout(self._get_dark_layout())
-        fig.update_layout(showlegend=True, title=None)
+        return fig.to_html(full_html=False, config={"displayModeBar": False})
 
+    def create_global_good_vs_bad_chart(self, games: List[Dict]) -> str:
+        """
+        Genera Pie Chart de decisiones buenas vs malas totales.
+        """
+        if not ANALYTICS_AVAILABLE or not games:
+            return "<div>No hay datos disponibles</div>"
+
+        good_count = 0
+        bad_count = 0
+
+        for game in games:
+            for level_data in game.get("levels_data", {}).values():
+                choice = level_data.get("choice")
+                if choice == "good":
+                    good_count += 1
+                elif choice == "bad":
+                    bad_count += 1
+
+        if good_count == 0 and bad_count == 0:
+            return "<div>No hay decisiones registradas</div>"
+
+        df = pd.DataFrame({"Tipo": ["Buenas", "Malas"], "Cantidad": [good_count, bad_count]})
+
+        fig = px.pie(
+            df,
+            values="Cantidad",
+            names="Tipo",
+            title="Total Decisiones Buenas vs Malas",
+            color="Tipo",
+            color_discrete_map={"Buenas": "#10b981", "Malas": "#ef4444"},
+        )
+
+        fig.update_layout(self._get_dark_layout())
+        fig.update_traces(textinfo="percent+label")
         return fig.to_html(full_html=False, config={"displayModeBar": False})
 
     def create_playtime_distribution(self, players: List[Dict]) -> str:
@@ -355,59 +413,129 @@ class AnalyticsService:
 
         return fig.to_html(full_html=False, config={"displayModeBar": False})
 
-    def create_moral_alignment_chart(self, players: List[Dict]) -> str:
+    def create_events_timeline_chart(self, events: List[Dict]) -> str:
         """
-        Genera gráfico de distribución de alineación moral de jugadores.
+        Genera gráfico de línea temporal de eventos.
 
         Args:
-            players: Lista de jugadores
+            events: Lista de eventos
 
         Returns:
             HTML del gráfico
         """
-        if not ANALYTICS_AVAILABLE or not players:
-            return "<div>No hay datos disponibles</div>"
+        if not ANALYTICS_AVAILABLE or not events:
+            return "<div>No hay eventos registrados</div>"
 
-        # Clasificar jugadores por alineación moral
-        alignments = []
-        for player in players:
-            moral_alignment = player.get("stats", {}).get("moral_alignment", 0)
-            if moral_alignment > 0.3:
-                category = "Bueno"
-            elif moral_alignment < -0.3:
-                category = "Malo"
-            else:
-                category = "Neutral"
-            alignments.append(category)
+        # Procesar fechas
+        dates = []
+        for e in events:
+            ts = e.get("timestamp")
+            if ts:
+                try:
+                    # Convertir ISO string a datetime y truncar a fecha (o hora si se prefiere)
+                    dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                    dates.append(dt.date())
+                except ValueError:
+                    pass
 
-        if not alignments:
-            return "<div>No hay jugadores con alineación moral registrada</div>"
+        if not dates:
+            return "<div>No hay fechas válidas en los eventos</div>"
 
-        alignment_counts = Counter(alignments)
+        date_counts = Counter(dates)
 
         df = pd.DataFrame(
             {
-                "Alineación": list(alignment_counts.keys()),
-                "Jugadores": list(alignment_counts.values()),
+                "Fecha": list(date_counts.keys()),
+                "Cantidad": list(date_counts.values()),
+            }
+        ).sort_values("Fecha")
+
+        fig = px.line(
+            df,
+            x="Fecha",
+            y="Cantidad",
+            title="Actividad de Eventos en el Tiempo",
+            labels={"Cantidad": "Número de eventos"},
+            markers=True,
+        )
+
+        fig.update_traces(line_color="#3b82f6")
+        fig.update_layout(self._get_dark_layout())
+
+        return fig.to_html(full_html=False, config={"displayModeBar": False})
+
+    def create_deaths_event_chart(self, events: List[Dict]) -> str:
+        """
+        Genera gráfico de muertes por nivel basado en eventos.
+
+        Args:
+            events: Lista de eventos
+
+        Returns:
+            HTML del gráfico
+        """
+        if not ANALYTICS_AVAILABLE or not events:
+            return "<div>No hay eventos registrados</div>"
+
+        # Filtrar solo eventos de muerte ('death', 'player_death', etc.)
+        death_events = [e for e in events if "death" in str(e.get("event_type", "")).lower()]
+
+        if not death_events:
+            return "<div>No hay eventos de muerte registrados</div>"
+
+        # Agrupar por nivel
+        level_counts = Counter([e.get("level_id", "Unknown") for e in death_events])
+
+        df = pd.DataFrame(
+            {
+                "Nivel": list(level_counts.keys()),
+                "Muertes": list(level_counts.values()),
             }
         )
 
-        # Colores personalizados
-        colors = {"Bueno": "#10b981", "Neutral": "#6b7280", "Malo": "#ef4444"}
-        df["color"] = df["Alineación"].map(colors)
-
-        fig = px.pie(
+        fig = px.bar(
             df,
-            values="Jugadores",
-            names="Alineación",
-            color="Alineación",
-            color_discrete_map=colors,
+            x="Nivel",
+            y="Muertes",
+            title="Muertes por Nivel (Eventos)",
+            labels={"Muertes": "Cantidad de muertes"},
+            color="Muertes",
+            color_continuous_scale="Reds",
         )
 
         fig.update_layout(self._get_dark_layout())
-        fig.update_layout(title=None, showlegend=True)
-        fig.update_traces(textfont_color="#ffffff")
 
+        return fig.to_html(full_html=False, config={"displayModeBar": False})
+
+    def create_moral_alignment_chart(self, players: List[Dict]) -> str:
+        """
+        Genera Histograma de alineación moral (0-1).
+        """
+        if not ANALYTICS_AVAILABLE or not players:
+            return "<div>No hay datos disponibles</div>"
+
+        alignments = []
+        for player in players:
+            # Intentar obtener de stats.moral_alignment o directamente de moral_alignment
+            val = player.get("stats", {}).get("moral_alignment") or player.get("moral_alignment")
+            if val is not None:
+                alignments.append(val)
+
+        if not alignments:
+            return "<div>No hay datos de alineación moral</div>"
+
+        df = pd.DataFrame({"Align": alignments})
+
+        fig = px.histogram(
+            df,
+            x="Align",
+            nbins=20,
+            labels={"Align": "Alineación Moral (0=Malo, 1=Bueno)"},
+            color_discrete_sequence=["#8b5cf6"],
+        )
+
+        fig.update_layout(self._get_dark_layout())
+        fig.update_layout(title=None, bargap=0.1)
         return fig.to_html(full_html=False, config={"displayModeBar": False})
 
     def create_relics_distribution_chart(self, games: List[Dict]) -> str:
@@ -553,6 +681,71 @@ class AnalyticsService:
             labels={"Tiempo Promedio (min)": "Minutos"},
             color="Tiempo Promedio (min)",
             color_continuous_scale="Blues",
+        )
+
+        fig.update_layout(self._get_dark_layout())
+        fig.update_layout(title=None)
+
+        return fig.to_html(full_html=False, config={"displayModeBar": False})
+
+    def create_active_players_chart(self, events: List[Dict]) -> str:
+        """
+        Genera gráfico de jugadores activos en los últimos 7 días.
+
+        Args:
+            events: Lista de eventos
+
+        Returns:
+            HTML del gráfico
+        """
+        if not ANALYTICS_AVAILABLE or not events:
+            return "<div>No hay datos disponibles</div>"
+
+        # Calcular fecha límite (7 días atrás)
+        today = datetime.now().date()
+        seven_days_ago = today - timedelta(days=7)
+
+        # Agrupar eventos por fecha y contar jugadores únicos
+        daily_players = {}
+
+        for event in events:
+            ts = event.get("timestamp")
+            player_id = event.get("player_id")
+
+            if not ts or not player_id:
+                continue
+
+            try:
+                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                event_date = dt.date()
+
+                # Solo últimos 7 días
+                if event_date >= seven_days_ago and event_date <= today:
+                    if event_date not in daily_players:
+                        daily_players[event_date] = set()
+                    daily_players[event_date].add(player_id)
+            except ValueError:
+                continue
+
+        if not daily_players:
+            return "<div>No hay actividad en los últimos 7 días</div>"
+
+        # Asegurar que todos los días estén representados (incluso con 0)
+        all_dates = [seven_days_ago + timedelta(days=i) for i in range(8)]
+        data = []
+        for date in all_dates:
+            count = len(daily_players.get(date, set()))
+            data.append({"Fecha": date, "Jugadores": count})
+
+        df = pd.DataFrame(data)
+
+        fig = px.bar(
+            df,
+            x="Fecha",
+            y="Jugadores",
+            labels={"Jugadores": "Jugadores únicos"},
+            color="Jugadores",
+            color_continuous_scale="Greens",
         )
 
         fig.update_layout(self._get_dark_layout())

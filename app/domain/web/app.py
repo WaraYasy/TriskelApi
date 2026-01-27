@@ -22,7 +22,7 @@ from flask import Flask, render_template
 
 from app.config.settings import settings as app_settings
 
-from .analytics.routes import analytics_bp
+from .analytics.routes import analytics_bp, analytics_service
 
 
 def create_flask_app():
@@ -61,7 +61,25 @@ def create_flask_app():
     @app.route("/")
     def index():
         """Página de bienvenida del portal web"""
-        return render_template("index.html")
+        # Obtener métricas para el dashboard público
+        try:
+            players = analytics_service.get_all_players()
+            games = analytics_service.get_all_games()
+            metrics = analytics_service.calculate_global_metrics(players, games)
+            chart_active_players = analytics_service.create_active_players_chart(games)
+        except Exception as e:
+            print(f"Error obteniendo métricas: {e}")
+            metrics = {
+                "total_players": 0,
+                "total_games": 0,
+                "completion_rate": 0,
+                "avg_playtime": 0,
+            }
+            chart_active_players = "<div>No hay datos disponibles</div>"
+
+        return render_template(
+            "index.html", metrics=metrics, chart_active_players=chart_active_players
+        )
 
     # Handler de errores
     @app.errorhandler(404)

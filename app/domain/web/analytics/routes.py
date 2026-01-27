@@ -82,15 +82,7 @@ def export():
         filename = "games"
     elif export_type == "events":
         # Obtener todos los eventos
-        players = analytics_service.get_all_players()
-        data = []
-        for player in players:
-            try:
-                response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
-                response.raise_for_status()
-                data.extend(response.json())
-            except Exception:
-                pass
+        data = analytics_service.get_all_events()
         filename = "events"
     else:
         return jsonify({"error": "Tipo de exportación no válido"}), 400
@@ -129,17 +121,8 @@ def api_metrics():
     metrics = analytics_service.calculate_global_metrics(players, games)
 
     # Obtener total de eventos
-    total_events = 0
-    for player in players:
-        try:
-            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
-            response.raise_for_status()
-            events_data = response.json()
-            total_events += len(events_data)
-        except Exception:
-            pass
-
-    metrics["total_events"] = total_events
+    events_data = analytics_service.get_all_events()
+    metrics["total_events"] = len(events_data)
 
     return jsonify(metrics)
 
@@ -168,6 +151,30 @@ def api_chart_alignment():
     return jsonify({"html": chart_html})
 
 
+@analytics_bp.route("/api/charts/choices/global")
+def api_chart_choices_global():
+    """API endpoint para gráfico de distribución global de decisiones morales."""
+    games = analytics_service.get_all_games()
+    chart_html = analytics_service.create_global_good_vs_bad_chart(games)
+    return jsonify({"html": chart_html})
+
+
+@analytics_bp.route("/api/charts/choices/alignment")
+def api_chart_choices_alignment():
+    """API endpoint para gráfico de alineación moral de jugadores."""
+    players = analytics_service.get_all_players()
+    chart_html = analytics_service.create_moral_alignment_chart(players)
+    return jsonify({"html": chart_html})
+
+
+@analytics_bp.route("/api/charts/choices/levels")
+def api_chart_choices_levels():
+    """API endpoint para gráfico de decisiones morales por nivel."""
+    games = analytics_service.get_all_games()
+    chart_html = analytics_service.create_moral_choices_chart(games)
+    return jsonify({"html": chart_html})
+
+
 @analytics_bp.route("/api/players")
 def api_players():
     """API endpoint para lista de jugadores."""
@@ -193,17 +200,25 @@ def api_chart_playtime():
 @analytics_bp.route("/api/charts/events")
 def api_chart_events():
     """API endpoint para gráfico de eventos por tipo."""
-    players = analytics_service.get_all_players()
-    all_events = []
-    for player in players:
-        try:
-            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
-            response.raise_for_status()
-            all_events.extend(response.json())
-        except Exception:
-            pass
+    all_events = analytics_service.get_all_events()
     chart_html = analytics_service.create_events_by_type_chart(all_events)
     return jsonify({"html": chart_html, "total": len(all_events)})
+
+
+@analytics_bp.route("/api/charts/events/timeline")
+def api_chart_events_timeline():
+    """API endpoint para gráfico de línea temporal de eventos."""
+    all_events = analytics_service.get_all_events()
+    chart_html = analytics_service.create_events_timeline_chart(all_events)
+    return jsonify({"html": chart_html})
+
+
+@analytics_bp.route("/api/charts/events/deaths")
+def api_chart_events_deaths():
+    """API endpoint para gráfico de muertes por nivel (reportadas por eventos)."""
+    all_events = analytics_service.get_all_events()
+    chart_html = analytics_service.create_deaths_event_chart(all_events)
+    return jsonify({"html": chart_html})
 
 
 @analytics_bp.route("/api/charts/relics")
@@ -227,6 +242,14 @@ def api_chart_playtime_level():
     """API endpoint para gráfico de tiempo promedio por nivel."""
     games = analytics_service.get_all_games()
     chart_html = analytics_service.create_playtime_per_level_chart(games)
+    return jsonify({"html": chart_html})
+
+
+@analytics_bp.route("/api/charts/active-players")
+def api_chart_active_players():
+    """API endpoint para gráfico de jugadores activos en los últimos 7 días."""
+    events = analytics_service.get_all_events()
+    chart_html = analytics_service.create_active_players_chart(events)
     return jsonify({"html": chart_html})
 
 
@@ -264,20 +287,7 @@ def api_events():
     Returns:
         JSON: Lista de eventos recientes (máximo 10)
     """
-    players = analytics_service.get_all_players()
-    all_events = []
-
-    for player in players:
-        try:
-            response = analytics_service.client.get(f"/v1/events/player/{player['player_id']}")
-            response.raise_for_status()
-            events_data = response.json()
-            # Agregar username del jugador a cada evento
-            for event in events_data:
-                event["player_username"] = player.get("username", "Desconocido")
-            all_events.extend(events_data)
-        except Exception:
-            pass
+    all_events = analytics_service.get_all_events()
 
     # Ordenar por fecha (más recientes primero) y limitar a 10
     all_events.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
