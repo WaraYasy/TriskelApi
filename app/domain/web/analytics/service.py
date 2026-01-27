@@ -493,9 +493,7 @@ class AnalyticsService:
         )
 
         fig.update_layout(self._get_dark_layout())
-        return fig.to_html(
-            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
-        )
+        return fig.to_json()
 
     def create_global_good_vs_bad_chart(self, games: List[Dict]) -> str:
         """
@@ -535,9 +533,7 @@ class AnalyticsService:
 
         fig.update_layout(self._get_dark_layout())
         fig.update_traces(textinfo="percent+label", textfont_color="#ffffff")
-        return fig.to_html(
-            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
-        )
+        return fig.to_json()
 
     def create_playtime_distribution(self, players: List[Dict]) -> str:
         """
@@ -569,7 +565,7 @@ class AnalyticsService:
             nbins=20,
         )
 
-        return fig.to_html(full_html=False, include_plotlyjs=False)
+        return fig.to_json()
 
     def create_deaths_per_level_chart(self, games: List[Dict]) -> str:
         """
@@ -617,9 +613,7 @@ class AnalyticsService:
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None)
 
-        return fig.to_html(
-            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
-        )
+        return fig.to_json()
 
     def create_events_by_type_chart(self, events: List[Dict]) -> str:
         """
@@ -790,9 +784,7 @@ class AnalyticsService:
 
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None, bargap=0.1)
-        return fig.to_html(
-            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
-        )
+        return fig.to_json()
 
     def create_relics_distribution_chart(self, games: List[Dict]) -> str:
         """
@@ -836,9 +828,7 @@ class AnalyticsService:
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None, showlegend=False)
 
-        return fig.to_html(
-            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
-        )
+        return fig.to_json()
 
     def create_level_completion_chart(self, games: List[Dict]) -> str:
         """
@@ -890,9 +880,7 @@ class AnalyticsService:
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None)
 
-        return fig.to_html(
-            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
-        )
+        return fig.to_json()
 
     def create_playtime_per_level_chart(self, games: List[Dict]) -> str:
         """
@@ -946,9 +934,7 @@ class AnalyticsService:
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None)
 
-        return fig.to_html(
-            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
-        )
+        return fig.to_json()
 
     def create_active_players_chart(self, events: List[Dict]) -> str:
         """
@@ -1013,9 +999,7 @@ class AnalyticsService:
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None)
 
-        return fig.to_html(
-            full_html=False, include_plotlyjs=False, config={"displayModeBar": False}
-        )
+        return fig.to_json()
 
     def export_to_csv(self, data: List[Dict], filename: str) -> str:
         """

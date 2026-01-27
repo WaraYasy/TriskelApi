@@ -123,7 +123,19 @@
             const response = await fetch('/web/dashboard/api/charts/playtime');
             if (!response.ok) throw new Error('Error cargando gráfico');
             const data = await response.json();
-            document.getElementById('chart-playtime').innerHTML = data.html;
+
+            // Renderizar con Plotly.newPlot
+            if (data.html) {
+                const figData = JSON.parse(data.html);
+                Plotly.newPlot(
+                    'chart-playtime',
+                    figData.data,
+                    figData.layout,
+                    {displayModeBar: false}
+                );
+            } else {
+                throw new Error('No chart data received');
+            }
         } catch (error) {
             console.error('Error:', error);
             document.getElementById('chart-playtime').innerHTML = '<div class="chart-loader"><span>Error al cargar el gráfico</span></div>';

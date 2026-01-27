@@ -266,7 +266,19 @@
             if (!response.ok) throw new Error('Error cargando gráfico');
 
             const data = await response.json();
-            document.getElementById(elementId).innerHTML = data.html;
+
+            // Renderizar con Plotly.newPlot
+            if (data.html) {
+                const figData = JSON.parse(data.html);
+                Plotly.newPlot(
+                    elementId,
+                    figData.data,
+                    figData.layout,
+                    {displayModeBar: false}
+                );
+            } else {
+                throw new Error('No chart data received');
+            }
 
         } catch (error) {
             console.error(`Error cargando ${elementId}:`, error);

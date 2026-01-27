@@ -91,9 +91,21 @@
             }
 
             const data = await response.json();
-            console.log(`Data received for ${url}, html length: ${data.html?.length || 0}`);
+            console.log(`Data received for ${url}`);
 
-            document.getElementById(containerId).innerHTML = data.html;
+            // Renderizar con Plotly.newPlot
+            if (data.html) {
+                const figData = JSON.parse(data.html);
+                Plotly.newPlot(
+                    containerId,
+                    figData.data,
+                    figData.layout,
+                    {displayModeBar: false}
+                );
+                console.log(`Chart rendered in #${containerId}`);
+            } else {
+                throw new Error('No chart data received');
+            }
         } catch (error) {
             console.error(`Error loading chart from ${url}:`, error);
             document.getElementById(containerId).innerHTML =
