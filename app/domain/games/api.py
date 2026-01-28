@@ -184,6 +184,41 @@ def create_game(
             raise HTTPException(status_code=409, detail=str(e))
 
 
+@router.get("", response_model=List[Game])
+def get_all_games(
+    request: Request,
+    limit: int = 1000,
+    service: GameService = Depends(get_game_service),
+):
+    """
+    Obtener todas las partidas de todos los jugadores (ADMIN ONLY).
+
+    Este endpoint está diseñado para analytics y herramientas de administración.
+    Requiere autenticación admin (JWT con rol admin o API Key).
+
+    Args:
+        request: Request de FastAPI
+        limit: Máximo número de partidas a retornar (default: 1000)
+        service: Servicio inyectado
+
+    Returns:
+        List[Game]: Lista de todas las partidas
+
+    Raises:
+        HTTPException 403: Si no tiene permisos de admin
+    """
+    # Verificar que es admin
+    is_admin = getattr(request.state, "is_admin", False)
+
+    if not is_admin:
+        raise HTTPException(
+            status_code=403,
+            detail="Este endpoint requiere permisos de administrador. Usa API Key o JWT token de admin."
+        )
+
+    return service.get_all_games(limit=limit)
+
+
 @router.get("/{game_id}", response_model=Game)
 def get_game(game_id: str, request: Request, service: GameService = Depends(get_game_service)):
     """
@@ -242,41 +277,6 @@ def get_player_games(
     check_player_games_access(request, player_id)
 
     return service.get_player_games(player_id, limit=limit)
-
-
-@router.get("", response_model=List[Game])
-def get_all_games(
-    request: Request,
-    limit: int = 1000,
-    service: GameService = Depends(get_game_service),
-):
-    """
-    Obtener todas las partidas de todos los jugadores (ADMIN ONLY).
-
-    Este endpoint está diseñado para analytics y herramientas de administración.
-    Requiere autenticación admin (JWT con rol admin o API Key).
-
-    Args:
-        request: Request de FastAPI
-        limit: Máximo número de partidas a retornar (default: 1000)
-        service: Servicio inyectado
-
-    Returns:
-        List[Game]: Lista de todas las partidas
-
-    Raises:
-        HTTPException 403: Si no tiene permisos de admin
-    """
-    # Verificar que es admin
-    is_admin = getattr(request.state, "is_admin", False)
-
-    if not is_admin:
-        raise HTTPException(
-            status_code=403,
-            detail="Este endpoint requiere permisos de administrador. Usa API Key o JWT token de admin."
-        )
-
-    return service.get_all_games(limit=limit)
 
 
 @router.patch("/{game_id}", response_model=Game)
