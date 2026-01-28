@@ -62,10 +62,17 @@ class AnalyticsService:
         self._cache_timestamp = {}
         self._cache_ttl = 300  # 5 minutos
 
+        # DEBUG: Log de inicialización
+        print(f"[Analytics] Initializing service:")
+        print(f"  - API Base URL: {api_base_url}")
+        print(f"  - API Key: {'SET' if api_key else 'NOT SET'}")
+        print(f"  - Mock Mode: {use_mock_data}")
+
         if ANALYTICS_AVAILABLE:
             headers = {}
             if api_key:
                 headers["X-API-Key"] = api_key
+                print(f"  - X-API-Key header: Added to client")
             # Configurar timeout extendido para peticiones lentas de Firebase
             # timeout=60s para requests individuales, 120s para todo el proceso
             self.client = httpx.Client(
@@ -358,7 +365,14 @@ class AnalyticsService:
 
         try:
             # OPTIMIZACIÓN: Llamar endpoint admin directo en lugar de iterar jugadores
+            print(f"[Analytics] Calling GET /v1/games with limit=1000")
+            print(f"[Analytics] Client headers: {dict(self.client.headers)}")
+
             response = self.client.get("/v1/games", params={"limit": 1000})
+
+            print(f"[Analytics] Response status: {response.status_code}")
+            print(f"[Analytics] Response content-type: {response.headers.get('content-type')}")
+
             response.raise_for_status()
             all_games = response.json()
 
@@ -372,14 +386,13 @@ class AnalyticsService:
             return all_games
 
         except httpx.HTTPStatusError as e:
+            print(f"[Analytics] ❌ HTTP Error {e.response.status_code}")
+            print(f"[Analytics] Response preview: {e.response.text[:500]}")
             if e.response.status_code == 403:
-                print("[Analytics] ❌ ERROR: Endpoint requires admin auth. Make sure API Key is set.")
-                print("           Old behavior (iterating players) removed. Use API Key in AnalyticsService.__init__")
-            else:
-                print(f"[Analytics] ❌ HTTP Error fetching games: {e}")
+                print("[Analytics] ERROR: Endpoint requires admin auth. Make sure API Key is set.")
             return []
         except Exception as e:
-            print(f"[Analytics] ❌ Error fetching games: {e}")
+            print(f"[Analytics] ❌ Error fetching games: {type(e).__name__}: {e}")
             return []
 
     def get_all_events(self) -> List[Dict[str, Any]]:
@@ -415,7 +428,13 @@ class AnalyticsService:
 
         try:
             # OPTIMIZACIÓN: Llamar endpoint admin directo
+            print(f"[Analytics] Calling GET /v1/events with limit=5000")
+
             response = self.client.get("/v1/events", params={"limit": 5000})
+
+            print(f"[Analytics] Response status: {response.status_code}")
+            print(f"[Analytics] Response content-type: {response.headers.get('content-type')}")
+
             response.raise_for_status()
             all_events = response.json()
 
@@ -436,14 +455,13 @@ class AnalyticsService:
             return all_events
 
         except httpx.HTTPStatusError as e:
+            print(f"[Analytics] ❌ HTTP Error {e.response.status_code}")
+            print(f"[Analytics] Response preview: {e.response.text[:500]}")
             if e.response.status_code == 403:
-                print("[Analytics] ❌ ERROR: Endpoint requires admin auth. Make sure API Key is set.")
-                print("           Old behavior (iterating players) removed. Use API Key in AnalyticsService.__init__")
-            else:
-                print(f"[Analytics] ❌ HTTP Error fetching events: {e}")
+                print("[Analytics] ERROR: Endpoint requires admin auth. Make sure API Key is set.")
             return []
         except Exception as e:
-            print(f"[Analytics] ❌ Error fetching events: {e}")
+            print(f"[Analytics] ❌ Error fetching events: {type(e).__name__}: {e}")
             return []
 
     def calculate_global_metrics(self, players: List[Dict], games: List[Dict]) -> Dict[str, Any]:
