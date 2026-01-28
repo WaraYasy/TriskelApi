@@ -21,10 +21,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from ..games.adapters.firestore_repository import FirestoreGameRepository
 from .models import GameEvent
 from .repository import EventRepository
-from .schemas import (
-    EventBatchCreate,
-    EventCreate,
-)
+from .schemas import EventBatchCreate, EventCreate
 from .service import EventService
 
 # Router de FastAPI

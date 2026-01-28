@@ -1,8 +1,9 @@
-"""
-Modelos de dominio para Sessions
+"""Modelos de dominio para Sessions.
 
-Una sesion representa un periodo continuo de tiempo que el jugador
-esta jugando (desde que abre el juego hasta que lo cierra).
+Una sesión representa un periodo continuo de tiempo que el jugador
+está jugando (desde que abre el juego hasta que lo cierra).
+
+Autor: Mandrágora
 """
 
 from datetime import datetime, timezone
@@ -14,26 +15,25 @@ from pydantic import BaseModel, Field, computed_field
 
 
 class Platform(str, Enum):
-    """Plataformas soportadas"""
+    """Plataformas soportadas."""
 
     WINDOWS = "windows"
     ANDROID = "android"
 
 
 class GameSession(BaseModel):
-    """
-    Entidad principal: Sesion de Juego.
+    """Entidad principal: Sesión de Juego.
 
-    Representa un periodo continuo en el que un jugador esta
+    Representa un periodo continuo en el que un jugador está
     conectado al juego.
 
     Attributes:
-        session_id: ID unico de la sesion (UUID)
-        player_id: ID del jugador (FK obligatorio)
-        game_id: ID de la partida asociada (FK obligatorio)
-        started_at: Momento de inicio de la sesion
-        ended_at: Momento de fin (None si activa)
-        platform: Plataforma del cliente (windows/android)
+        session_id (str): ID único de la sesión (UUID).
+        player_id (str): ID del jugador (FK obligatorio).
+        game_id (str): ID de la partida asociada (FK obligatorio).
+        started_at (datetime): Momento de inicio de la sesión.
+        ended_at (Optional[datetime]): Momento de fin (None si activa).
+        platform (Platform): Plataforma del cliente (windows/android).
     """
 
     session_id: str = Field(default_factory=lambda: f"s-{uuid4()}")
@@ -46,11 +46,13 @@ class GameSession(BaseModel):
     @computed_field
     @property
     def duration_seconds(self) -> int:
-        """
-        Calcula la duracion de la sesion en segundos.
+        """Calcula la duración de la sesión en segundos.
 
-        Si la sesion esta activa (ended_at=None), calcula
+        Si la sesión está activa (ended_at=None), calcula
         hasta el momento actual.
+
+        Returns:
+            int: Duración en segundos.
         """
         end_time = self.ended_at or datetime.now(timezone.utc)
         # Asegurar que ambos datetime tengan timezone
@@ -64,11 +66,19 @@ class GameSession(BaseModel):
 
     @property
     def is_active(self) -> bool:
-        """Indica si la sesion sigue activa"""
+        """Indica si la sesión sigue activa.
+
+        Returns:
+            bool: True si está activa (ended_at es None).
+        """
         return self.ended_at is None
 
     def to_dict(self) -> dict:
-        """Convierte la sesion a diccionario para Firestore"""
+        """Convierte la sesión a diccionario para Firestore.
+
+        Returns:
+            dict: Representación de la sesión para la BD.
+        """
         data = self.model_dump()
         data["started_at"] = self.started_at
         if self.ended_at:
@@ -79,7 +89,14 @@ class GameSession(BaseModel):
 
     @classmethod
     def from_dict(cls, data: dict) -> "GameSession":
-        """Crea una sesion desde diccionario de Firestore"""
+        """Crea una sesión desde diccionario de Firestore.
+
+        Args:
+            data (dict): Diccionario con los datos.
+
+        Returns:
+            GameSession: Instancia de la sesión.
+        """
         # Convertir platform string a enum si es necesario
         if isinstance(data.get("platform"), str):
             data["platform"] = Platform(data["platform"])

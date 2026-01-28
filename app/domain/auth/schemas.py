@@ -5,6 +5,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 
 from .validators import PasswordValidator
 
+
 class LoginRequest(BaseModel):
     """Esquema para la petición de login.
 
@@ -12,6 +13,7 @@ class LoginRequest(BaseModel):
         username (str): Nombre de usuario (3-50 caracteres).
         password (str): Contraseña (8-72 caracteres).
     """
+
     username: str = Field(..., min_length=3, max_length=50)
     password: str = Field(..., min_length=8, max_length=72)
 
@@ -28,6 +30,7 @@ class RefreshTokenRequest(BaseModel):
     Attributes:
         refresh_token (str): Token de refresco válido.
     """
+
     refresh_token: str
 
 
@@ -40,6 +43,7 @@ class AdminUserCreate(BaseModel):
         password (str): Contraseña segura.
         role (str): Rol del usuario (admin, support, viewer).
     """
+
     username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=72)
@@ -66,6 +70,7 @@ class AdminUserUpdate(BaseModel):
         role (Optional[str]): Nuevo rol.
         is_active (Optional[bool]): Estado de activación.
     """
+
     email: Optional[EmailStr] = None
     role: Optional[str] = Field(None, pattern="^(admin|support|viewer)$")
     is_active: Optional[bool] = None
@@ -78,6 +83,7 @@ class ChangePasswordRequest(BaseModel):
         old_password (str): Contraseña actual.
         new_password (str): Nueva contraseña.
     """
+
     old_password: str = Field(..., min_length=8, max_length=72)
     new_password: str = Field(..., min_length=8, max_length=72)
 
@@ -100,6 +106,7 @@ class TokenResponse(BaseModel):
         token_type (str): Tipo de token (bearer).
         expires_in (int): Tiempo de expiración en segundos.
     """
+
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
@@ -119,6 +126,7 @@ class AdminUserResponse(BaseModel):
         updated_at (datetime): Fecha de última actualización.
         last_login (Optional[datetime]): Fecha del último inicio de sesión.
     """
+
     id: int
     username: str
     email: str
@@ -148,6 +156,7 @@ class CurrentUserResponse(BaseModel):
         last_login (Optional[datetime]): Fecha del último inicio de sesión.
         permissions (List[str]): Lista de permisos asignados.
     """
+
     id: int
     username: str
     email: str
@@ -179,6 +188,7 @@ class AuditLogResponse(BaseModel):
         success (bool): Si la acción fue exitosa.
         error_message (Optional[str]): Mensaje de error (si falló).
     """
+
     id: int
     user_id: Optional[int] = None
     username: Optional[str] = None
@@ -205,6 +215,7 @@ class AuditLogListResponse(BaseModel):
         limit (int): Límite de paginación usado.
         offset (int): Offset de paginación usado.
     """
+
     logs: List[AuditLogResponse]
     total: int
     limit: int

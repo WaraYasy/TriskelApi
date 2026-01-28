@@ -1,7 +1,8 @@
-"""
-Dominio Sessions
+"""Dominio Sessions.
 
-Gestion de sesiones de juego (tracking de tiempo conectado).
+Gestión de sesiones de juego (tracking de tiempo conectado).
+
+Autor: Mandrágora
 """
 
 from .api import router

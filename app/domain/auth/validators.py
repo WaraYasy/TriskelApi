@@ -18,6 +18,7 @@ class PasswordValidator:
     - Presencia de números.
     - Presencia de caracteres especiales.
     """
+
     MIN_LENGTH = 8
     MAX_LENGTH = 72
 

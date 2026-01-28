@@ -1,7 +1,8 @@
-"""
-Schemas (DTOs) para la API de Sessions
+"""Schemas (DTOs) para la API de Sessions.
 
 Modelos de entrada y salida para los endpoints de sesiones.
+
+Autor: Mandrágora
 """
 
 from datetime import datetime
@@ -13,10 +14,13 @@ from .models import Platform
 
 
 class SessionCreate(BaseModel):
-    """
-    Datos para iniciar una sesion de juego.
+    """Datos para iniciar una sesión de juego.
 
-    player_id se obtiene del middleware de autenticacion.
+    player_id se obtiene del middleware de autenticación.
+
+    Attributes:
+        game_id (str): ID de la partida activa.
+        platform (Platform): Plataforma del cliente.
     """
 
     game_id: str = Field(..., description="ID de la partida activa")
@@ -27,21 +31,29 @@ class SessionCreate(BaseModel):
 
 
 class SessionEnd(BaseModel):
-    """
-    Datos para finalizar una sesion.
+    """Datos para finalizar una sesión.
 
-    Por ahora vacio, pero puede extenderse para incluir
-    metricas de cierre o razon de finalizacion.
+    Por ahora vacío, pero puede extenderse para incluir
+    métricas de cierre o razón de finalización.
     """
 
     pass
 
 
 class SessionResponse(BaseModel):
-    """
-    Respuesta con datos de sesion.
+    """Respuesta con datos de sesión.
 
-    Incluye todos los campos de GameSession mas campos calculados.
+    Incluye todos los campos de GameSession más campos calculados.
+
+    Attributes:
+        session_id (str): ID único de la sesión.
+        player_id (str): ID del jugador.
+        game_id (str): ID de la partida.
+        started_at (datetime): Fecha de inicio.
+        ended_at (Optional[datetime]): Fecha de fin.
+        duration_seconds (int): Duración en segundos.
+        platform (str): Plataforma.
+        is_active (bool): Si la sesión está activa.
     """
 
     session_id: str
@@ -69,8 +81,11 @@ class SessionResponse(BaseModel):
 
 
 class SessionListResponse(BaseModel):
-    """
-    Respuesta paginada con lista de sesiones.
+    """Respuesta paginada con lista de sesiones.
+
+    Attributes:
+        sessions (List[SessionResponse]): Lista de sesiones.
+        total (int): Total de sesiones encontradas.
     """
 
     sessions: List[SessionResponse]

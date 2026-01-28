@@ -1,7 +1,8 @@
-"""
-Service para Sessions
+"""Service para Sessions.
 
-Logica de negocio de sesiones de juego.
+Lógica de negocio de sesiones de juego.
+
+Autor: Mandrágora
 """
 
 from typing import List, Optional
@@ -16,13 +17,12 @@ from .schemas import SessionCreate
 
 
 class SessionService:
-    """
-    Servicio de sesiones de juego.
+    """Servicio de sesiones de juego.
 
     Responsabilidades:
-    - Validar que player_id y game_id existen
-    - Cerrar sesiones huerfanas al iniciar nueva
-    - Calcular duracion al terminar
+    - Validar que player_id y game_id existen.
+    - Cerrar sesiones huérfanas al iniciar nueva.
+    - Calcular duración al terminar.
     """
 
     def __init__(
@@ -31,29 +31,28 @@ class SessionService:
         player_repo: Optional[FirestorePlayerRepository] = None,
         game_repo: Optional[FirestoreGameRepository] = None,
     ):
-        """Inicializa el servicio con repositorios"""
+        """Inicializa el servicio con repositorios."""
         self.repository = repository
         self.player_repo = player_repo or FirestorePlayerRepository()
         self.game_repo = game_repo or FirestoreGameRepository()
 
     def start_session(self, player_id: str, session_data: SessionCreate) -> GameSession:
-        """
-        Inicia una nueva sesion de juego.
+        """Inicia una nueva sesión de juego.
 
         Validaciones:
-        - El jugador debe existir
-        - La partida debe existir
-        - Cierra sesiones huerfanas previas
+        - El jugador debe existir.
+        - La partida debe existir.
+        - Cierra sesiones huérfanas previas.
 
         Args:
-            player_id: ID del jugador autenticado
-            session_data: Datos de la sesion
+            player_id (str): ID del jugador autenticado.
+            session_data (SessionCreate): Datos de la sesión.
 
         Returns:
-            GameSession creada
+            GameSession: Sesión creada.
 
         Raises:
-            ValueError: Si el jugador o partida no existen
+            ValueError: Si el jugador o partida no existen.
         """
         # Validar jugador
         player = self.player_repo.get_by_id(player_id)
@@ -78,18 +77,17 @@ class SessionService:
         return self.repository.create(player_id, session_data)
 
     def end_session(self, session_id: str, player_id: str) -> Optional[GameSession]:
-        """
-        Termina una sesion de juego.
+        """Termina una sesión de juego.
 
         Args:
-            session_id: ID de la sesion a terminar
-            player_id: ID del jugador (para validar propiedad)
+            session_id (str): ID de la sesión a terminar.
+            player_id (str): ID del jugador (para validar propiedad).
 
         Returns:
-            GameSession actualizada o None si no existe
+            Optional[GameSession]: GameSession actualizada o None si no existe.
 
         Raises:
-            ValueError: Si la sesion no pertenece al jugador o ya esta cerrada
+            ValueError: Si la sesión no pertenece al jugador o ya está cerrada.
         """
         session = self.repository.get_by_id(session_id)
 
@@ -107,17 +105,17 @@ class SessionService:
         return self.repository.end_session(session_id)
 
     def get_session(self, session_id: str) -> Optional[GameSession]:
-        """Obtiene una sesion por ID"""
+        """Obtiene una sesión por ID."""
         return self.repository.get_by_id(session_id)
 
     def get_player_sessions(self, player_id: str, limit: int = 100) -> List[GameSession]:
-        """Obtiene todas las sesiones de un jugador"""
+        """Obtiene todas las sesiones de un jugador."""
         return self.repository.get_by_player(player_id, limit)
 
     def get_game_sessions(self, game_id: str, limit: int = 100) -> List[GameSession]:
-        """Obtiene todas las sesiones de una partida"""
+        """Obtiene todas las sesiones de una partida."""
         return self.repository.get_by_game(game_id, limit)
 
     def get_active_session(self, player_id: str) -> Optional[GameSession]:
-        """Obtiene la sesion activa de un jugador"""
+        """Obtiene la sesión activa de un jugador."""
         return self.repository.get_active_session(player_id)

@@ -1,7 +1,8 @@
-"""
-Repositorio para Sessions (acceso directo a Firestore)
+"""Repositorio para Sessions (acceso directo a Firestore).
 
 Arquitectura SIMPLE (sin ports) como Events.
+
+Autor: Mandrágora
 """
 
 from datetime import datetime, timezone
@@ -18,8 +19,7 @@ from .schemas import SessionCreate
 
 
 class SessionRepository:
-    """
-    Repositorio de sesiones de juego usando Firestore.
+    """Repositorio de sesiones de juego usando Firestore.
 
     Las sesiones se crean al iniciar y se actualizan al terminar.
     """
@@ -27,20 +27,19 @@ class SessionRepository:
     COLLECTION_NAME = "sessions"
 
     def __init__(self, db: Optional[Client] = None):
-        """Inicializa el repositorio"""
+        """Inicializa el repositorio."""
         self.db = db or get_firestore_client()
         self.collection = self.db.collection(self.COLLECTION_NAME)
 
     def create(self, player_id: str, session_data: SessionCreate) -> GameSession:
-        """
-        Crea una nueva sesion en Firestore.
+        """Crea una nueva sesión en Firestore.
 
         Args:
-            player_id: ID del jugador autenticado
-            session_data: Datos de la sesion a crear
+            player_id (str): ID del jugador autenticado.
+            session_data (SessionCreate): Datos de la sesión a crear.
 
         Returns:
-            GameSession: Sesion creada
+            GameSession: Sesión creada.
         """
         session = GameSession(
             player_id=player_id,
@@ -55,7 +54,7 @@ class SessionRepository:
         return session
 
     def get_by_id(self, session_id: str) -> Optional[GameSession]:
-        """Obtiene una sesion por su ID"""
+        """Obtiene una sesión por su ID."""
         doc_ref = self.collection.document(session_id)
         doc = doc_ref.get()
 
@@ -65,15 +64,14 @@ class SessionRepository:
         return GameSession.from_dict(doc.to_dict())
 
     def get_by_player(self, player_id: str, limit: int = 100) -> List[GameSession]:
-        """
-        Obtiene todas las sesiones de un jugador.
+        """Obtiene todas las sesiones de un jugador.
 
         Args:
-            player_id: ID del jugador
-            limit: Maximo numero de sesiones a retornar
+            player_id (str): ID del jugador.
+            limit (int): Máximo número de sesiones a retornar.
 
         Returns:
-            Lista de sesiones ordenadas por fecha (mas reciente primero)
+            List[GameSession]: Lista de sesiones ordenadas por fecha (más reciente primero).
         """
         query = (
             self.collection.where(filter=FieldFilter("player_id", "==", player_id))
@@ -89,15 +87,14 @@ class SessionRepository:
         return sessions
 
     def get_by_game(self, game_id: str, limit: int = 100) -> List[GameSession]:
-        """
-        Obtiene todas las sesiones de una partida.
+        """Obtiene todas las sesiones de una partida.
 
         Args:
-            game_id: ID de la partida
-            limit: Maximo numero de sesiones a retornar
+            game_id (str): ID de la partida.
+            limit (int): Máximo número de sesiones a retornar.
 
         Returns:
-            Lista de sesiones ordenadas por fecha
+            List[GameSession]: Lista de sesiones ordenadas por fecha.
         """
         query = (
             self.collection.where(filter=FieldFilter("game_id", "==", game_id))
@@ -113,16 +110,15 @@ class SessionRepository:
         return sessions
 
     def get_active_session(self, player_id: str) -> Optional[GameSession]:
-        """
-        Obtiene la sesion activa de un jugador (si existe).
+        """Obtiene la sesión activa de un jugador (si existe).
 
-        Una sesion activa tiene ended_at=None.
+        Una sesión activa tiene ended_at=None.
 
         Args:
-            player_id: ID del jugador
+            player_id (str): ID del jugador.
 
         Returns:
-            GameSession activa o None
+            Optional[GameSession]: GameSession activa o None.
         """
         query = (
             self.collection.where(filter=FieldFilter("player_id", "==", player_id))
@@ -137,14 +133,13 @@ class SessionRepository:
         return None
 
     def end_session(self, session_id: str) -> Optional[GameSession]:
-        """
-        Finaliza una sesion estableciendo ended_at.
+        """Finaliza una sesión estableciendo ended_at.
 
         Args:
-            session_id: ID de la sesion a finalizar
+            session_id (str): ID de la sesión a finalizar.
 
         Returns:
-            GameSession actualizada o None si no existe
+            Optional[GameSession]: GameSession actualizada o None si no existe.
         """
         doc_ref = self.collection.document(session_id)
         doc = doc_ref.get()
@@ -159,14 +154,13 @@ class SessionRepository:
         return self.get_by_id(session_id)
 
     def close_stale_sessions(self, player_id: str) -> int:
-        """
-        Cierra sesiones que quedaron abiertas (por crash del cliente).
+        """Cierra sesiones que quedaron abiertas (por crash del cliente).
 
         Args:
-            player_id: ID del jugador
+            player_id (str): ID del jugador.
 
         Returns:
-            Numero de sesiones cerradas
+            int: Número de sesiones cerradas.
         """
         query = self.collection.where(filter=FieldFilter("player_id", "==", player_id)).where(
             filter=FieldFilter("ended_at", "==", None)
