@@ -1,5 +1,4 @@
-"""
-Servicio de Analytics
+"""Servicio de Analytics.
 
 Consume la API REST de Triskel para obtener datos y generar métricas.
 
@@ -7,9 +6,11 @@ Este servicio NO accede directamente a la base de datos.
 En su lugar, hace peticiones HTTP a la propia API REST.
 
 Esto mantiene el desacoplamiento y asegura que:
-- Analytics no tiene lógica de negocio duplicada
-- Usa las mismas validaciones que el juego
-- Más fácil de escalar (puede estar en otro servidor)
+- Analytics no tiene lógica de negocio duplicada.
+- Usa las mismas validaciones que el juego.
+- Es más fácil de escalar (puede estar en otro servidor).
+
+Autor: Mandrágora
 """
 
 import time
@@ -30,13 +31,12 @@ except ImportError:
 
 
 class AnalyticsService:
-    """
-    Servicio para agregación de datos y generación de métricas.
+    """Servicio para agregación de datos y generación de métricas.
 
     Consume la API REST y genera:
-    - Métricas agregadas
-    - DataFrames con Pandas
-    - Gráficos con Plotly
+    - Métricas agregadas.
+    - DataFrames con Pandas.
+    - Gráficos con Plotly.
     """
 
     def __init__(
@@ -45,13 +45,12 @@ class AnalyticsService:
         api_key: str = None,
         use_mock_data: bool = False,
     ):
-        """
-        Inicializa el servicio.
+        """Inicializa el servicio.
 
         Args:
-            api_base_url: URL base de la API REST
-            api_key: API Key para acceso admin
-            use_mock_data: Si True, usa datos ficticios en lugar de Firebase (para pruebas)
+            api_base_url (str): URL base de la API REST.
+            api_key (str, optional): API Key para acceso admin.
+            use_mock_data (bool): Si es True, usa datos ficticios en lugar de Firebase (para pruebas).
         """
         self.api_base_url = api_base_url
         self.api_key = api_key
@@ -82,14 +81,13 @@ class AnalyticsService:
             self.client = None
 
     def _is_cache_valid(self, key: str) -> bool:
-        """
-        Verifica si el cache para una clave es válido (no expiró el TTL).
+        """Verifica si el caché para una clave es válido (no expiró el TTL).
 
         Args:
-            key: Clave del cache
+            key (str): Clave del caché.
 
         Returns:
-            True si el cache es válido, False si expiró o no existe
+            bool: True si el caché es válido, False si expiró o no existe.
         """
         if key not in self._cache_timestamp:
             return False
@@ -300,13 +298,12 @@ class AnalyticsService:
         }
 
     def get_all_players(self) -> List[Dict[str, Any]]:
-        """
-        Obtiene todos los jugadores desde la API.
+        """Obtiene todos los jugadores desde la API.
 
-        Usa cache con TTL de 5 minutos para evitar llamadas repetidas.
+        Usa caché con TTL de 5 minutos para evitar llamadas repetidas.
 
         Returns:
-            Lista de jugadores con sus stats
+            List[Dict[str, Any]]: Lista de jugadores con sus estadísticas.
         """
         # 🎨 MODO MOCK: Retornar datos ficticios sin Firebase
         if self.use_mock_data:
@@ -341,16 +338,15 @@ class AnalyticsService:
             return []
 
     def get_all_games(self) -> List[Dict[str, Any]]:
-        """
-        Obtiene todas las partidas usando endpoint admin optimizado.
+        """Obtiene todas las partidas usando el endpoint admin optimizado.
 
         OPTIMIZADO: Usa GET /v1/games en lugar de iterar sobre jugadores.
         Reduce de ~100 llamadas HTTP a 1 sola llamada.
 
-        Usa cache con TTL de 5 minutos para evitar llamadas repetidas.
+        Usa caché con TTL de 5 minutos para evitar llamadas repetidas.
 
         Returns:
-            Lista de partidas
+            List[Dict[str, Any]]: Lista de partidas.
         """
         # 🎨 MODO MOCK: Retornar datos ficticios sin Firebase
         if self.use_mock_data:
@@ -404,16 +400,15 @@ class AnalyticsService:
             return []
 
     def get_all_events(self) -> List[Dict[str, Any]]:
-        """
-        Obtiene todos los eventos usando endpoint admin optimizado.
+        """Obtiene todos los eventos usando el endpoint admin optimizado.
 
         OPTIMIZADO: Usa GET /v1/events en lugar de iterar sobre jugadores.
         Reduce de ~100 llamadas HTTP a 1 sola llamada.
 
-        Usa cache con TTL de 5 minutos para evitar llamadas repetidas.
+        Usa caché con TTL de 5 minutos para evitar llamadas repetidas.
 
         Returns:
-            Lista de eventos
+            List[Dict[str, Any]]: Lista de eventos.
         """
         # 🎨 MODO MOCK: Retornar datos ficticios sin Firebase
         if self.use_mock_data:
@@ -475,15 +470,14 @@ class AnalyticsService:
             return []
 
     def calculate_global_metrics(self, players: List[Dict], games: List[Dict]) -> Dict[str, Any]:
-        """
-        Calcula métricas globales del juego.
+        """Calcula las métricas globales del juego.
 
         Args:
-            players: Lista de jugadores
-            games: Lista de partidas
+            players (List[Dict]): Lista de jugadores.
+            games (List[Dict]): Lista de partidas.
 
         Returns:
-            Dict con métricas agregadas
+            Dict[str, Any]: Métricas agregadas.
         """
         if not ANALYTICS_AVAILABLE or not games:
             return {
@@ -537,8 +531,13 @@ class AnalyticsService:
         }
 
     def create_moral_choices_chart(self, games: List[Dict]) -> str:
-        """
-        Genera gráfico de barras apiladas de buenas vs malas decisiones por nivel.
+        """Genera un gráfico de barras apiladas de buenas vs malas decisiones por nivel.
+
+        Args:
+            games (List[Dict]): Lista de partidas.
+
+        Returns:
+            str: Representación JSON del gráfico Plotly.
         """
         if not ANALYTICS_AVAILABLE:
             return '{"data":[],"layout":{"title":"Analytics no disponible"}}'
@@ -604,8 +603,13 @@ class AnalyticsService:
         return fig.to_json()
 
     def create_global_good_vs_bad_chart(self, games: List[Dict]) -> str:
-        """
-        Genera Pie Chart de decisiones buenas vs malas totales.
+        """Genera un gráfico circular (Pie Chart) del total de decisiones buenas vs malas.
+
+        Args:
+            games (List[Dict]): Lista de partidas.
+
+        Returns:
+            str: Representación JSON del gráfico Plotly.
         """
         if not ANALYTICS_AVAILABLE or not games:
             return self._empty_chart("No hay datos disponibles")

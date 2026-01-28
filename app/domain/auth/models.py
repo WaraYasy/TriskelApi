@@ -1,11 +1,12 @@
-"""
-Modelos SQLAlchemy para Auth
+"""Modelos SQLAlchemy para Auth.
 
 Define las tablas SQL para:
-- AdminUser: Usuarios administradores del sistema
-- AuditLog: Logs de auditoría de acciones administrativas
+- AdminUser: Usuarios administradores del sistema.
+- AuditLog: Logs de auditoría de acciones administrativas.
 
 Compatible con PostgreSQL, MySQL, MariaDB.
+
+Autor: Mandrágora
 """
 
 from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
@@ -15,15 +16,14 @@ from app.infrastructure.database.sql_client import Base
 
 
 class AdminUser(Base):
-    """
-    Usuario administrador del sistema.
+    """Usuario administrador del sistema.
 
     Tabla: admin_users
 
     Roles disponibles:
-    - admin: Control total del sistema (CRUD admins, exports, etc.)
-    - support: Acceso a jugadores/partidas para soporte (sin CRUD admins)
-    - viewer: Solo lectura (analytics, sin modificaciones)
+    - admin: Control total del sistema (CRUD admins, exports, etc.).
+    - support: Acceso a jugadores/partidas para soporte (sin CRUD admins).
+    - viewer: Solo lectura (analytics, sin modificaciones).
     """
 
     __tablename__ = "admin_users"
@@ -59,13 +59,12 @@ class AdminUser(Base):
 
 
 class AuditLog(Base):
-    """
-    Registro de auditoría de acciones administrativas.
+    """Registro de auditoría de acciones administrativas.
 
     Tabla: audit_logs
 
     Registra específicamente:
-    - Autenticación: login_success, login_failed, logout, token_refresh, change_password
+    - Autenticación: login_success, login_failed, logout, token_refresh, change_password.
     - Exportaciones: export_players_csv, export_games_csv, export_events_csv, etc.
 
     NO registra acciones de CRUD normales (view_player, edit_player, etc.)

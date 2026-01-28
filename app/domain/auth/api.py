@@ -27,18 +27,46 @@ router = APIRouter(prefix="/v1/auth", tags=["Auth"])
 
 
 def get_auth_repository(db: Session = Depends(get_db_session)) -> IAuthRepository:
+    """Inyecta el repositorio SQLAuthRepository.
+
+    Args:
+        db (Session): Sesión de base de datos.
+
+    Returns:
+        IAuthRepository: Repositorio instanciado.
+    """
     return SQLAuthRepository(session=db)
 
 
 def get_auth_service(
     repository: IAuthRepository = Depends(get_auth_repository),
 ) -> AuthService:
+    """Inyecta el servicio AuthService.
+
+    Args:
+        repository (IAuthRepository): Repositorio inyectado.
+
+    Returns:
+        AuthService: Servicio instanciado.
+    """
     return AuthService(repository=repository)
 
 
 def get_current_admin(
     authorization: str = Header(...), service: AuthService = Depends(get_auth_service)
 ) -> dict:
+    """Obtiene el administrador actual desde el token Bearer.
+
+    Args:
+        authorization (str): Header Authorization.
+        service (AuthService): Servicio de autenticación.
+
+    Returns:
+        dict: Datos del usuario actual.
+
+    Raises:
+        HTTPException: Si el token es inválido, expirado o faltante.
+    """
     if not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Token inválido")
 
@@ -52,6 +80,15 @@ def get_current_admin(
 
 
 def require_permission(permission: str):
+    """Dependencia para requerir un permiso específico.
+
+    Args:
+        permission (str): Permiso requerido.
+
+    Returns:
+        function: Función de dependencia.
+    """
+
     def check_permission(current_user: dict = Depends(get_current_admin)) -> dict:
         if permission not in current_user.get("permissions", []):
             raise HTTPException(status_code=403, detail=f"Permiso '{permission}' requerido")

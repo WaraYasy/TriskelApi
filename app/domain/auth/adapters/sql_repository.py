@@ -1,9 +1,10 @@
-"""
-Adaptador SQL para Auth
+"""Adaptador SQL para Auth.
 
 Implementación CONCRETA del repositorio usando SQLAlchemy + Base de Datos SQL.
 Soporta PostgreSQL, MySQL, MariaDB, etc.
 Implementa la interfaz IAuthRepository.
+
+Autor: Mandrágora
 """
 
 from datetime import datetime
@@ -19,8 +20,7 @@ from ..ports import IAuthRepository
 
 
 class SQLAuthRepository(IAuthRepository):
-    """
-    Repositorio de Auth usando Base de Datos SQL con SQLAlchemy.
+    """Repositorio de Auth usando Base de Datos SQL con SQLAlchemy.
 
     Esta es la implementación real que habla con la base de datos.
     Soporta PostgreSQL, MySQL, MariaDB, etc.
@@ -28,26 +28,24 @@ class SQLAuthRepository(IAuthRepository):
     """
 
     def __init__(self, session: Session):
-        """
-        Inicializa el repositorio.
+        """Inicializa el repositorio.
 
         Args:
-            session: Sesión de SQLAlchemy para transacciones
+            session (Session): Sesión de SQLAlchemy para transacciones.
         """
         self.session = session
 
     # ==================== Helper Methods ====================
 
     def _user_to_dict(self, user: AdminUser, include_password: bool = False) -> Dict[str, Any]:
-        """
-        Convierte un AdminUser ORM model a dict.
+        """Convierte un AdminUser ORM model a dict.
 
         Args:
-            user: Modelo SQLAlchemy de AdminUser
-            include_password: Si incluir password_hash (solo para autenticación interna)
+            user (AdminUser): Modelo SQLAlchemy de AdminUser.
+            include_password (bool): Si incluir password_hash (solo para autenticación interna).
 
         Returns:
-            Dict con datos del usuario
+            Dict[str, Any]: Dict con datos del usuario.
         """
         data = {
             "id": user.id,
@@ -66,14 +64,13 @@ class SQLAuthRepository(IAuthRepository):
         return data
 
     def _log_to_dict(self, log: AuditLog) -> Dict[str, Any]:
-        """
-        Convierte un AuditLog ORM model a dict.
+        """Convierte un AuditLog ORM model a dict.
 
         Args:
-            log: Modelo SQLAlchemy de AuditLog
+            log (AuditLog): Modelo SQLAlchemy de AuditLog.
 
         Returns:
-            Dict con datos del log
+            Dict[str, Any]: Dict con datos del log.
         """
         return {
             "id": log.id,
@@ -95,9 +92,7 @@ class SQLAuthRepository(IAuthRepository):
     def create_admin_user(
         self, username: str, email: str, password_hash: str, role: str = "viewer"
     ) -> Dict[str, Any]:
-        """
-        Crea un nuevo usuario administrador.
-        """
+        """Crea un nuevo usuario administrador."""
         try:
             user = AdminUser(
                 username=username,
@@ -120,9 +115,7 @@ class SQLAuthRepository(IAuthRepository):
             raise ValueError("Username o email ya existe")
 
     def get_user_by_id(self, user_id: int) -> Optional[Dict[str, Any]]:
-        """
-        Busca un admin por su ID.
-        """
+        """Busca un admin por su ID."""
         user = self.session.query(AdminUser).filter_by(id=user_id).first()
 
         if not user:
@@ -131,9 +124,7 @@ class SQLAuthRepository(IAuthRepository):
         return self._user_to_dict(user, include_password=True)
 
     def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
-        """
-        Busca un admin por su username.
-        """
+        """Busca un admin por su username."""
         user = self.session.query(AdminUser).filter_by(username=username).first()
 
         if not user:
@@ -142,9 +133,7 @@ class SQLAuthRepository(IAuthRepository):
         return self._user_to_dict(user, include_password=True)
 
     def get_user_by_email(self, email: str) -> Optional[Dict[str, Any]]:
-        """
-        Busca un admin por su email.
-        """
+        """Busca un admin por su email."""
         user = self.session.query(AdminUser).filter_by(email=email).first()
 
         if not user:
@@ -153,9 +142,7 @@ class SQLAuthRepository(IAuthRepository):
         return self._user_to_dict(user, include_password=True)
 
     def update_last_login(self, user_id: int) -> None:
-        """
-        Actualiza el timestamp de último login.
-        """
+        """Actualiza el timestamp de último login."""
         user = self.session.query(AdminUser).filter_by(id=user_id).first()
 
         if user:
@@ -170,9 +157,7 @@ class SQLAuthRepository(IAuthRepository):
         role: Optional[str] = None,
         is_active: Optional[bool] = None,
     ) -> Optional[Dict[str, Any]]:
-        """
-        Actualiza campos de un usuario administrador.
-        """
+        """Actualiza campos de un usuario administrador."""
         user = self.session.query(AdminUser).filter_by(id=user_id).first()
 
         if not user:
@@ -198,9 +183,7 @@ class SQLAuthRepository(IAuthRepository):
             raise ValueError("Email ya existe")
 
     def update_password(self, user_id: int, new_password_hash: str) -> bool:
-        """
-        Actualiza el password hash de un usuario.
-        """
+        """Actualiza el password hash de un usuario."""
         user = self.session.query(AdminUser).filter_by(id=user_id).first()
 
         if not user:
@@ -213,9 +196,7 @@ class SQLAuthRepository(IAuthRepository):
         return True
 
     def deactivate_user(self, user_id: int) -> bool:
-        """
-        Desactiva un usuario (soft delete).
-        """
+        """Desactiva un usuario (soft delete)."""
         user = self.session.query(AdminUser).filter_by(id=user_id).first()
 
         if not user:
@@ -233,9 +214,7 @@ class SQLAuthRepository(IAuthRepository):
         is_active: Optional[bool] = None,
         limit: int = 100,
     ) -> List[Dict[str, Any]]:
-        """
-        Lista usuarios administradores con filtros opcionales.
-        """
+        """Lista usuarios administradores con filtros opcionales."""
         query = self.session.query(AdminUser)
 
         if role is not None:
@@ -263,9 +242,7 @@ class SQLAuthRepository(IAuthRepository):
         success: bool = True,
         error_message: Optional[str] = None,
     ) -> Dict[str, Any]:
-        """
-        Crea un registro de auditoría.
-        """
+        """Crea un registro de auditoría."""
         log = AuditLog(
             user_id=user_id,
             username=username,
@@ -296,9 +273,7 @@ class SQLAuthRepository(IAuthRepository):
         limit: int = 100,
         offset: int = 0,
     ) -> List[Dict[str, Any]]:
-        """
-        Obtiene logs de auditoría con filtros opcionales.
-        """
+        """Obtiene logs de auditoría con filtros opcionales."""
         query = self.session.query(AuditLog)
 
         if user_id is not None:
@@ -331,9 +306,7 @@ class SQLAuthRepository(IAuthRepository):
         start_date: Optional[datetime] = None,
         end_date: Optional[datetime] = None,
     ) -> int:
-        """
-        Cuenta logs de auditoría con filtros opcionales.
-        """
+        """Cuenta logs de auditoría con filtros opcionales."""
         query = self.session.query(AuditLog)
 
         if user_id is not None:

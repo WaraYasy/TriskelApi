@@ -1,15 +1,16 @@
-"""
-Blueprint de Analytics
+"""Blueprint de Analytics.
 
 Dashboard de métricas y visualizaciones del juego.
 
 Rutas:
-- GET /dashboard/          → Dashboard principal con métricas globales
-- GET /dashboard/players   → Análisis detallado de jugadores
-- GET /dashboard/games     → Análisis de partidas y progresión
-- GET /dashboard/choices   → Análisis de decisiones morales
-- GET /dashboard/events    → Análisis de eventos de gameplay
-- GET /dashboard/export    → Exportar datos a CSV
+- GET /dashboard/          → Dashboard principal con métricas globales.
+- GET /dashboard/players   → Análisis detallado de jugadores.
+- GET /dashboard/games     → Análisis de partidas y progresión.
+- GET /dashboard/choices   → Análisis de decisiones morales.
+- GET /dashboard/events    → Análisis de eventos de gameplay.
+- GET /dashboard/export    → Exportar datos a CSV.
+
+Autor: Mandrágora
 """
 
 from flask import Blueprint, jsonify, render_template, request, send_file
@@ -32,8 +33,8 @@ analytics_service = AnalyticsService(
 
 @analytics_bp.route("/")
 def index():
-    """
-    Dashboard principal con métricas globales.
+    """Dashboard principal con métricas globales.
+
     Renderiza la página inmediatamente, los datos se cargan via AJAX.
     """
     return render_template("analytics/index.html")
@@ -65,15 +66,14 @@ def events():
 
 @analytics_bp.route("/export")
 def export():
-    """
-    Exporta datos a CSV.
+    """Exporta datos a CSV.
 
     Query params:
-    - type: players | games | events
-    - format: csv | json
+        type (str): players | games | events.
+        format (str): csv | json.
 
     Returns:
-        File: Archivo descargable
+        File: Archivo descargable.
     """
     export_type = request.args.get("type", "players")
     export_format = request.args.get("format", "csv")
@@ -113,13 +113,12 @@ def advanced():
 
 @analytics_bp.route("/api/metrics")
 def api_metrics():
-    """
-    API endpoint para obtener métricas en JSON.
+    """API endpoint para obtener métricas en JSON.
 
     Útil para actualizar el dashboard sin recargar la página.
 
     Returns:
-        JSON: Métricas actualizadas
+        JSON: Métricas actualizadas.
     """
     players = analytics_service.get_all_players()
     games = analytics_service.get_all_games()
@@ -307,11 +306,10 @@ def api_advanced():
 
 @analytics_bp.route("/api/events")
 def api_events():
-    """
-    API endpoint para obtener eventos recientes en JSON.
+    """API endpoint para obtener eventos recientes en JSON.
 
     Returns:
-        JSON: Lista de eventos recientes (máximo 10)
+        JSON: Lista de eventos recientes (máximo 10).
     """
     all_events = analytics_service.get_all_events()
 
