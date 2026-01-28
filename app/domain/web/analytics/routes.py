@@ -26,7 +26,7 @@ analytics_bp = Blueprint("analytics", __name__, template_folder="templates")
 analytics_service = AnalyticsService(
     api_base_url=settings.api_base_url,
     api_key=settings.api_key,
-    use_mock_data=False,  # 🎨 MOCK: Datos ficticios (sin Firebase)
+    use_mock_data=False,  # Usar endpoints reales /v1/games y /v1/events
 )
 
 
