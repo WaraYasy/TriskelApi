@@ -1,8 +1,9 @@
-"""
-Service Layer para Players - Lógica de negocio
+"""Service Layer para Players - Lógica de negocio.
 
 Contiene todas las reglas de negocio y validaciones.
 Depende de la INTERFAZ IPlayerRepository, no de una implementación concreta.
+
+Autor: Mandrágora
 """
 
 from datetime import datetime, timezone
@@ -19,63 +20,58 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def hash_password(password: str) -> str:
-    """
-    Hashea una contraseña usando bcrypt (via passlib).
+    """Hashea una contraseña usando bcrypt (via passlib).
 
     Args:
-        password: Contraseña en texto plano
+        password (str): Contraseña en texto plano.
 
     Returns:
-        str: Hash de la contraseña
+        str: Hash de la contraseña.
     """
     return pwd_context.hash(password)
 
 
 def verify_password(password: str, password_hash: str) -> bool:
-    """
-    Verifica una contraseña contra su hash.
+    """Verifica una contraseña contra su hash.
 
     Args:
-        password: Contraseña en texto plano
-        password_hash: Hash almacenado
+        password (str): Contraseña en texto plano.
+        password_hash (str): Hash almacenado.
 
     Returns:
-        bool: True si coincide, False si no
+        bool: True si coincide, False si no.
     """
     return pwd_context.verify(password, password_hash)
 
 
 class PlayerService:
-    """
-    Servicio de lógica de negocio para jugadores.
+    """Servicio de lógica de negocio para jugadores.
 
     IMPORTANTE: Recibe el repository por Dependency Injection.
     No sabe si es Firestore, PostgreSQL o un Mock - solo usa la interfaz.
     """
 
     def __init__(self, repository: IPlayerRepository):
-        """
-        Inicializa el servicio con un repositorio.
+        """Inicializa el servicio con un repositorio.
 
         Args:
-            repository: Implementación de IPlayerRepository (inyectada)
+            repository (IPlayerRepository): Implementación de IPlayerRepository (inyectada).
         """
         self.repository = repository
 
     def create_player(self, player_data: PlayerCreate) -> Player:
-        """
-        Crea un nuevo jugador.
+        """Crea un nuevo jugador.
 
         Regla de negocio: El username debe ser único.
 
         Args:
-            player_data: Datos del jugador a crear
+            player_data (PlayerCreate): Datos del jugador a crear.
 
         Returns:
-            Player: Jugador creado
+            Player: Jugador creado.
 
         Raises:
-            ValueError: Si el username ya existe
+            ValueError: Si el username ya existe.
         """
         # Verificar que el username no exista
         existing = self.repository.get_by_username(player_data.username)
@@ -96,18 +92,17 @@ class PlayerService:
         return self.repository.save(player)
 
     def login(self, username: str, password: str) -> Optional[Player]:
-        """
-        Realiza login de un jugador validando su contraseña.
+        """Realiza login de un jugador validando su contraseña.
 
         Args:
-            username: Nombre de usuario
-            password: Contraseña en texto plano
+            username (str): Nombre de usuario.
+            password (str): Contraseña en texto plano.
 
         Returns:
-            Player si las credenciales son correctas, None si no
+            Optional[Player]: Player si las credenciales son correctas, None si no.
 
         Raises:
-            ValueError: Si el usuario no existe o la contraseña es incorrecta
+            ValueError: Si el usuario no existe o la contraseña es incorrecta.
         """
         # Buscar jugador por username
         player = self.repository.get_by_username(username)
@@ -128,39 +123,36 @@ class PlayerService:
         return self.repository.get_by_id(player.player_id)
 
     def get_player(self, player_id: str) -> Optional[Player]:
-        """
-        Obtiene un jugador por ID.
+        """Obtiene un jugador por ID.
 
         Args:
-            player_id: ID del jugador
+            player_id (str): ID del jugador.
 
         Returns:
-            Player si existe, None si no
+            Optional[Player]: Player si existe, None si no.
         """
         return self.repository.get_by_id(player_id)
 
     def get_all_players(self, limit: int = 100) -> List[Player]:
-        """
-        Lista todos los jugadores.
+        """Lista todos los jugadores.
 
         Args:
-            limit: Máximo número de jugadores a retornar
+            limit (int): Máximo número de jugadores a retornar.
 
         Returns:
-            Lista de jugadores
+            List[Player]: Lista de jugadores.
         """
         return self.repository.get_all(limit=limit)
 
     def update_player(self, player_id: str, player_update: PlayerUpdate) -> Optional[Player]:
-        """
-        Actualiza un jugador.
+        """Actualiza un jugador.
 
         Args:
-            player_id: ID del jugador
-            player_update: Campos a actualizar
+            player_id (str): ID del jugador.
+            player_update (PlayerUpdate): Campos a actualizar.
 
         Returns:
-            Player actualizado si existe, None si no
+            Optional[Player]: Player actualizado si existe, None si no.
         """
         # Verificar que existe
         player = self.repository.get_by_id(player_id)
@@ -171,36 +163,34 @@ class PlayerService:
         return self.repository.update(player_id, player_update)
 
     def delete_player(self, player_id: str) -> bool:
-        """
-        Elimina un jugador.
+        """Elimina un jugador.
 
         Args:
-            player_id: ID del jugador
+            player_id (str): ID del jugador.
 
         Returns:
-            True si se eliminó, False si no existía
+            bool: True si se eliminó, False si no existía.
         """
         return self.repository.delete(player_id)
 
     def update_player_stats_after_game(self, player_id: str, game) -> Optional[Player]:
-        """
-        Actualiza las estadísticas del jugador después de completar una partida.
+        """Actualiza las estadísticas del jugador después de completar una partida.
 
         Esta es la LÓGICA COMPLEJA de negocio que calcula:
-        - Incremento de partidas jugadas/completadas
-        - Acumulación de tiempo de juego
-        - Conteo de muertes totales
-        - Análisis de elecciones morales (buenas vs malas)
-        - Cálculo de alineación moral (-1 a 1)
-        - Actualización de reliquia favorita
-        - Actualización de mejor speedrun
+        - Incremento de partidas jugadas/completadas.
+        - Acumulación de tiempo de juego.
+        - Conteo de muertes totales.
+        - Análisis de elecciones morales (buenas vs malas).
+        - Cálculo de alineación moral (-1 a 1).
+        - Actualización de reliquia favorita.
+        - Actualización de mejor speedrun.
 
         Args:
-            player_id: ID del jugador
-            game: Objeto Game con los datos de la partida
+            player_id (str): ID del jugador.
+            game (Game): Objeto Game con los datos de la partida.
 
         Returns:
-            Player actualizado si existe, None si no
+            Optional[Player]: Player actualizado si existe, None si no.
         """
         player = self.repository.get_by_id(player_id)
         if not player:

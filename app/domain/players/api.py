@@ -1,16 +1,17 @@
-"""
-API REST para Players
+"""API REST para Players.
 
 Endpoints de FastAPI para gestionar jugadores.
 Usa Dependency Injection para desacoplar de implementaciones concretas.
 
 Reglas de acceso:
-- POST /v1/players: Público (crear cuenta)
-- GET /v1/players/me: Jugador autenticado (ver mi perfil)
-- GET /v1/players: Solo API Key (listar todos - admin)
-- GET /v1/players/{id}: Solo si es tu ID o con API Key
-- PATCH /v1/players/{id}: Solo si es tu ID o con API Key
-- DELETE /v1/players/{id}: Solo si es tu ID o con API Key
+- POST /v1/players: Público (crear cuenta).
+- GET /v1/players/me: Jugador autenticado (ver mi perfil).
+- GET /v1/players: Solo API Key (listar todos - admin).
+- GET /v1/players/{id}: Solo si es tu ID o con API Key.
+- PATCH /v1/players/{id}: Solo si es tu ID o con API Key.
+- DELETE /v1/players/{id}: Solo si es tu ID o con API Key.
+
+Autor: Mandrágora
 """
 
 from typing import List
@@ -40,19 +41,18 @@ router = APIRouter(prefix="/v1/players", tags=["Players"])
 
 
 def check_player_access(request: Request, target_player_id: str) -> None:
-    """
-    Verifica que el usuario tenga permisos para acceder al jugador especificado.
+    """Verifica que el usuario tenga permisos para acceder al jugador especificado.
 
     Reglas:
-    - Admin (API Key): puede acceder a cualquier jugador
-    - Jugador autenticado: solo puede acceder a su propio ID
+    - Admin (API Key): puede acceder a cualquier jugador.
+    - Jugador autenticado: solo puede acceder a su propio ID.
 
     Args:
-        request: Request de FastAPI con estado de autenticación
-        target_player_id: ID del jugador al que se quiere acceder
+        request (Request): Request de FastAPI con estado de autenticación.
+        target_player_id (str): ID del jugador al que se quiere acceder.
 
     Raises:
-        HTTPException 403: Si no tiene permisos
+        HTTPException: Si no tiene permisos (403).
     """
     is_admin = getattr(request.state, "is_admin", False)
     authenticated_player_id = getattr(request.state, "player_id", None)
@@ -72,14 +72,13 @@ def check_player_access(request: Request, target_player_id: str) -> None:
 
 
 def get_player_repository() -> IPlayerRepository:
-    """
-    Dependency que provee el repositorio de Players.
+    """Dependency que provee el repositorio de Players.
 
     Retorna la implementación concreta (Firestore).
     Si queremos cambiar a otra BD, solo cambiamos esto.
 
     Returns:
-        IPlayerRepository: Implementación del repositorio
+        IPlayerRepository: Implementación del repositorio.
     """
     return FirestorePlayerRepository()
 
@@ -87,26 +86,24 @@ def get_player_repository() -> IPlayerRepository:
 def get_player_service(
     repository: IPlayerRepository = Depends(get_player_repository),
 ) -> PlayerService:
-    """
-    Dependency que provee el servicio de Players.
+    """Dependency que provee el servicio de Players.
 
     Recibe el repository por inyección automática.
 
     Args:
-        repository: Repositorio inyectado por FastAPI
+        repository (IPlayerRepository): Repositorio inyectado por FastAPI.
 
     Returns:
-        PlayerService: Servicio configurado
+        PlayerService: Servicio configurado.
     """
     return PlayerService(repository=repository)
 
 
 def get_game_repository() -> IGameRepository:
-    """
-    Dependency que provee el repositorio de Games.
+    """Dependency que provee el repositorio de Games.
 
     Returns:
-        IGameRepository: Implementación del repositorio
+        IGameRepository: Implementación del repositorio.
     """
     return FirestoreGameRepository()
 
@@ -116,21 +113,20 @@ def get_game_repository() -> IGameRepository:
 
 @router.post("", response_model=PlayerAuthResponse, status_code=201)
 def create_player(player_data: PlayerCreate, service: PlayerService = Depends(get_player_service)):
-    """
-    Crear un nuevo jugador.
+    """Crear un nuevo jugador.
 
     Devuelve player_id y player_token que el juego debe guardar.
     El token se envía en futuras peticiones para autenticación.
 
     Args:
-        player_data: Datos del jugador (username, email)
-        service: Servicio inyectado automáticamente
+        player_data (PlayerCreate): Datos del jugador (username, email).
+        service (PlayerService): Servicio inyectado automáticamente.
 
     Returns:
-        PlayerAuthResponse: ID, username y token del jugador
+        PlayerAuthResponse: ID, username y token del jugador.
 
     Raises:
-        HTTPException 400: Si el username ya existe
+        HTTPException: Si el username ya existe (400).
     """
     try:
         player = service.create_player(player_data)
@@ -151,22 +147,21 @@ def login_player(
     service: PlayerService = Depends(get_player_service),
     game_repo: IGameRepository = Depends(get_game_repository),
 ):
-    """
-    Login de jugador con username y contraseña.
+    """Login de jugador con username y contraseña.
 
     Valida las credenciales y devuelve el token de autenticación.
     También devuelve la partida activa si existe.
 
     Args:
-        login_data: Datos de login (username, password)
-        service: Servicio de jugadores inyectado
-        game_repo: Repositorio de games inyectado
+        login_data (PlayerLoginRequest): Datos de login (username, password).
+        service (PlayerService): Servicio de jugadores inyectado.
+        game_repo (IGameRepository): Repositorio de games inyectado.
 
     Returns:
-        PlayerLoginResponse: Credenciales y partida activa si existe
+        PlayerLoginResponse: Credenciales y partida activa si existe.
 
     Raises:
-        HTTPException 401: Si el usuario no existe o la contraseña es incorrecta
+        HTTPException: Si el usuario no existe o la contraseña es incorrecta (401).
     """
     try:
         player = service.login(login_data.username, login_data.password)
@@ -195,19 +190,18 @@ def login_player(
     dependencies=[],
 )
 def get_my_profile(request: Request):
-    """
-    Obtener mi propio perfil (jugador autenticado).
+    """Obtener mi propio perfil (jugador autenticado).
 
-    **Requiere autenticación:** X-Player-ID + X-Player-Token
+    **Requiere autenticación:** X-Player-ID + X-Player-Token.
 
     El middleware ya validó la autenticación y obtuvo el player.
     Simplemente devolvemos el player que ya está en memoria.
 
     Args:
-        request: Request de FastAPI (contiene player del middleware)
+        request (Request): Request de FastAPI (contiene player del middleware).
 
     Returns:
-        Player: Datos completos del jugador autenticado
+        Player: Datos completos del jugador autenticado.
     """
     # El middleware ya validó auth y obtuvo el player
     # No necesitamos hacer otra consulta a la BD
@@ -220,22 +214,21 @@ def get_player(
     request: Request,
     service: PlayerService = Depends(get_player_service),
 ):
-    """
-    Obtener un jugador por ID.
+    """Obtener un jugador por ID.
 
     Solo puedes ver tu propio perfil, a menos que uses API Key (admin).
 
     Args:
-        player_id: ID único del jugador
-        request: Request de FastAPI
-        service: Servicio inyectado
+        player_id (str): ID único del jugador.
+        request (Request): Request de FastAPI.
+        service (PlayerService): Servicio inyectado.
 
     Returns:
-        Player: Datos completos del jugador
+        Player: Datos completos del jugador.
 
     Raises:
-        HTTPException 403: Si intentas ver el perfil de otro jugador
-        HTTPException 404: Si el jugador no existe
+        HTTPException: Si intentas ver el perfil de otro jugador (403).
+        HTTPException: Si el jugador no existe (404).
     """
     # Verificar permisos (admin o propio jugador)
     check_player_access(request, player_id)
@@ -253,21 +246,20 @@ def get_all_players(
     limit: int = 100,
     service: PlayerService = Depends(get_player_service),
 ):
-    """
-    Listar todos los jugadores.
+    """Listar todos los jugadores.
 
     SOLO ADMIN: Requiere API Key (X-API-Key).
 
     Args:
-        request: Request de FastAPI
-        limit: Máximo número de jugadores a retornar (default: 100)
-        service: Servicio inyectado
+        request (Request): Request de FastAPI.
+        limit (int): Máximo número de jugadores a retornar (default: 100).
+        service (PlayerService): Servicio inyectado.
 
     Returns:
-        List[Player]: Lista de jugadores
+        List[Player]: Lista de jugadores.
 
     Raises:
-        HTTPException 403: Si no eres admin
+        HTTPException: Si no eres admin (403).
     """
     # Solo admin puede listar todos los jugadores
     is_admin = getattr(request.state, "is_admin", False)
@@ -288,24 +280,23 @@ def update_player(
     request: Request,
     service: PlayerService = Depends(get_player_service),
 ):
-    """
-    Actualizar un jugador.
+    """Actualizar un jugador.
 
     Solo puedes actualizar tu propio perfil, a menos que uses API Key (admin).
     Solo se actualizan los campos enviados (parcial).
 
     Args:
-        player_id: ID del jugador
-        player_update: Campos a actualizar
-        request: Request de FastAPI
-        service: Servicio inyectado
+        player_id (str): ID del jugador.
+        player_update (PlayerUpdate): Campos a actualizar.
+        request (Request): Request de FastAPI.
+        service (PlayerService): Servicio inyectado.
 
     Returns:
-        Player: Jugador actualizado
+        Player: Jugador actualizado.
 
     Raises:
-        HTTPException 403: Si intentas actualizar otro jugador
-        HTTPException 404: Si el jugador no existe
+        HTTPException: Si intentas actualizar otro jugador (403).
+        HTTPException: Si el jugador no existe (404).
     """
     # Verificar permisos (admin o propio jugador)
     check_player_access(request, player_id)
@@ -323,22 +314,21 @@ def delete_player(
     request: Request,
     service: PlayerService = Depends(get_player_service),
 ):
-    """
-    Eliminar un jugador.
+    """Eliminar un jugador.
 
     Solo puedes eliminar tu propia cuenta, a menos que uses API Key (admin).
 
     Args:
-        player_id: ID del jugador
-        request: Request de FastAPI
-        service: Servicio inyectado
+        player_id (str): ID del jugador.
+        request (Request): Request de FastAPI.
+        service (PlayerService): Servicio inyectado.
 
     Returns:
-        dict: Mensaje de confirmación
+        dict: Mensaje de confirmación.
 
     Raises:
-        HTTPException 403: Si intentas eliminar otro jugador
-        HTTPException 404: Si el jugador no existe
+        HTTPException: Si intentas eliminar otro jugador (403).
+        HTTPException: Si el jugador no existe (404).
     """
     # Verificar permisos (admin o propio jugador)
     check_player_access(request, player_id)

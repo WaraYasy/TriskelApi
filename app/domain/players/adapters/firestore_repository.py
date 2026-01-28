@@ -1,8 +1,9 @@
-"""
-Adaptador Firestore para Players
+"""Adaptador Firestore para Players.
 
 Implementación CONCRETA del repositorio usando Firestore.
 Implementa la interfaz IPlayerRepository.
+
+Autor: Mandrágora
 """
 
 from typing import List, Optional
@@ -19,8 +20,7 @@ from ..schemas import PlayerUpdate
 
 
 class FirestorePlayerRepository(IPlayerRepository):
-    """
-    Repositorio de Players usando Firestore.
+    """Repositorio de Players usando Firestore.
 
     Esta es la implementación real que habla con la base de datos.
     Implementa todos los métodos definidos en IPlayerRepository.
@@ -29,17 +29,16 @@ class FirestorePlayerRepository(IPlayerRepository):
     COLLECTION_NAME = "players"
 
     def __init__(self, db: Optional[Client] = None):
-        """
-        Inicializa el repositorio.
+        """Inicializa el repositorio.
 
         Args:
-            db: Cliente de Firestore (opcional, se obtiene automáticamente)
+            db (Optional[Client]): Cliente de Firestore (opcional, se obtiene automáticamente).
         """
         self.db = db or get_firestore_client()
         self.collection = self.db.collection(self.COLLECTION_NAME)
 
     def get_by_id(self, player_id: str) -> Optional[Player]:
-        """Obtiene un jugador por su ID"""
+        """Obtiene un jugador por su ID."""
         doc_ref = self.collection.document(player_id)
         doc = doc_ref.get()
 
@@ -50,7 +49,7 @@ class FirestorePlayerRepository(IPlayerRepository):
         return Player.from_dict(data)
 
     def get_by_username(self, username: str) -> Optional[Player]:
-        """Obtiene un jugador por su username"""
+        """Obtiene un jugador por su username."""
         # Query en Firestore: WHERE username == X LIMIT 1
         query = self.collection.where(filter=FieldFilter("username", "==", username)).limit(1)
         docs = query.stream()
@@ -62,7 +61,7 @@ class FirestorePlayerRepository(IPlayerRepository):
         return None
 
     def get_all(self, limit: int = 100) -> List[Player]:
-        """Obtiene todos los jugadores (con límite)"""
+        """Obtiene todos los jugadores (con límite)."""
         docs = self.collection.limit(limit).stream()
         players = []
 
@@ -73,8 +72,7 @@ class FirestorePlayerRepository(IPlayerRepository):
         return players
 
     def update(self, player_id: str, player_update: PlayerUpdate) -> Optional[Player]:
-        """
-        Actualiza un jugador existente de forma eficiente.
+        """Actualiza un jugador existente de forma eficiente.
 
         Solo actualiza los campos que no son None en player_update.
         """
@@ -102,8 +100,7 @@ class FirestorePlayerRepository(IPlayerRepository):
             return None
 
     def delete(self, player_id: str) -> bool:
-        """
-        Elimina un jugador de Firestore.
+        """Elimina un jugador de Firestore.
 
         Firestore permite eliminar documentos que no existen sin error,
         así que verificamos existencia primero para retornar el valor correcto.
@@ -120,18 +117,17 @@ class FirestorePlayerRepository(IPlayerRepository):
         return True
 
     def exists(self, player_id: str) -> bool:
-        """Verifica si existe un jugador"""
+        """Verifica si existe un jugador."""
         doc_ref = self.collection.document(player_id)
         return doc_ref.get().exists
 
     def count(self) -> int:
-        """Cuenta el total de jugadores"""
+        """Cuenta el total de jugadores."""
         docs = self.collection.stream()
         return sum(1 for _ in docs)
 
     def save(self, player: Player) -> Player:
-        """
-        Guarda un Player ya construido directamente.
+        """Guarda un Player ya construido directamente.
 
         Útil cuando el servicio necesita crear un Player con datos específicos
         (como password hasheado) antes de guardarlo.

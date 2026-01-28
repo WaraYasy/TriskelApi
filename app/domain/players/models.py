@@ -1,8 +1,9 @@
-"""
-Modelos de dominio para Players
+"""Modelos de dominio para Players.
 
 Estas son las ENTIDADES de negocio (objetos que representan conceptos reales).
 Solo contienen lógica de dominio, no validaciones de API.
+
+Autor: Mandrágora
 """
 
 from datetime import datetime, timezone
@@ -13,10 +14,17 @@ from pydantic import BaseModel, Field, field_validator
 
 
 class PlayerStats(BaseModel):
-    """
-    Estadísticas globales del jugador.
+    """Estadísticas globales del jugador.
 
     Se calculan a partir de todas las partidas completadas.
+
+    Attributes:
+        total_good_choices (int): Decisiones morales buenas (>= 0).
+        total_bad_choices (int): Decisiones morales malas (>= 0).
+        total_deaths (int): Muertes acumuladas (>= 0).
+        favorite_relic (Optional[str]): Reliquia favorita (lirio | hacha | manto).
+        best_speedrun_seconds (Optional[int]): Mejor tiempo (>= 0).
+        moral_alignment (float): De -1.0 (malo) a 1.0 (bueno).
     """
 
     total_good_choices: int = Field(default=0, ge=0)  # Decisiones morales buenas (>= 0)
@@ -29,18 +37,30 @@ class PlayerStats(BaseModel):
     @field_validator("favorite_relic")
     @classmethod
     def validate_relic(cls, v: Optional[str]) -> Optional[str]:
-        """Valida que la reliquia sea una de las permitidas"""
+        """Valida que la reliquia sea una de las permitidas."""
         if v is not None and v not in ["lirio", "hacha", "manto"]:
             raise ValueError(f"Reliquia inválida: {v}. Debe ser: lirio, hacha o manto")
         return v
 
 
 class Player(BaseModel):
-    """
-    Entidad principal: Jugador.
+    """Entidad principal: Jugador.
 
     Representa un usuario que juega Triskel.
     Contiene su perfil y estadísticas agregadas de todas sus partidas.
+
+    Attributes:
+        player_id (str): ID único del jugador.
+        username (str): Nombre de usuario (requerido).
+        password_hash (str): Hash de la contraseña (bcrypt).
+        email (Optional[str]): Email del jugador.
+        player_token (str): Token para autenticación.
+        created_at (datetime): Fecha de creación (UTC).
+        last_login (datetime): Último login (UTC).
+        total_playtime_seconds (int): Tiempo total jugado.
+        games_played (int): Partidas jugadas.
+        games_completed (int): Partidas completadas.
+        stats (PlayerStats): Estadísticas detalladas.
     """
 
     # Identificación
@@ -63,7 +83,7 @@ class Player(BaseModel):
     @field_validator("games_completed")
     @classmethod
     def validate_games_completed(cls, v: int, info) -> int:
-        """Valida que games_completed no sea mayor que games_played"""
+        """Valida que games_completed no sea mayor que games_played."""
         # info.data contiene los valores de los campos ya validados
         games_played = info.data.get("games_played", 0)
         if v > games_played:
@@ -73,11 +93,10 @@ class Player(BaseModel):
         return v
 
     def to_dict(self) -> dict:
-        """
-        Convierte el Player a diccionario para guardar en Firestore.
+        """Convierte el Player a diccionario para guardar en Firestore.
 
         Returns:
-            dict: Representación del jugador para la BD
+            dict: Representación del jugador para la BD.
         """
         data = self.model_dump()
         # Los datetime se guardan tal cual (Firestore los maneja)
@@ -87,13 +106,12 @@ class Player(BaseModel):
 
     @classmethod
     def from_dict(cls, data: dict) -> "Player":
-        """
-        Crea un Player desde un diccionario de Firestore.
+        """Crea un Player desde un diccionario de Firestore.
 
         Args:
-            data: Diccionario con los datos del jugador
+            data (dict): Diccionario con los datos del jugador.
 
         Returns:
-            Player: Instancia del jugador
+            Player: Instancia del jugador.
         """
         return cls(**data)
