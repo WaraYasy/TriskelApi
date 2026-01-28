@@ -119,10 +119,17 @@
     }
 
     async function loadChart() {
+        const container = document.getElementById('chart-playtime');
+
         try {
             const response = await fetch('/web/dashboard/api/charts/playtime');
             if (!response.ok) throw new Error('Error cargando gráfico');
+
             const data = await response.json();
+
+            // Ocultar loader
+            const loader = container.querySelector('.chart-loader');
+            if (loader) loader.style.display = 'none';
 
             // Renderizar con Plotly.newPlot
             if (data.html) {
@@ -131,14 +138,14 @@
                     'chart-playtime',
                     figData.data,
                     figData.layout,
-                    {displayModeBar: false}
+                    {displayModeBar: false, responsive: true}
                 );
             } else {
                 throw new Error('No chart data received');
             }
         } catch (error) {
-            console.error('Error:', error);
-            document.getElementById('chart-playtime').innerHTML = '<div class="chart-loader"><span>Error al cargar el gráfico</span></div>';
+            console.error('Error cargando gráfico:', error);
+            container.innerHTML = '<div class="chart-loader"><span>Error al cargar el gráfico</span></div>';
         }
     }
 </script>

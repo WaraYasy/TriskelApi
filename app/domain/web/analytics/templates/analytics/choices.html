@@ -79,6 +79,8 @@
     }
 
     async function loadChart(url, containerId) {
+        const container = document.getElementById(containerId);
+
         try {
             console.log(`Loading chart from: ${url}`);
             const response = await fetch(url, {
@@ -93,6 +95,10 @@
             const data = await response.json();
             console.log(`Data received for ${url}`);
 
+            // Ocultar loader
+            const loader = container.querySelector('.chart-loader');
+            if (loader) loader.style.display = 'none';
+
             // Renderizar con Plotly.newPlot
             if (data.html) {
                 const figData = JSON.parse(data.html);
@@ -100,7 +106,7 @@
                     containerId,
                     figData.data,
                     figData.layout,
-                    {displayModeBar: false}
+                    {displayModeBar: false, responsive: true}
                 );
                 console.log(`Chart rendered in #${containerId}`);
             } else {
@@ -108,8 +114,11 @@
             }
         } catch (error) {
             console.error(`Error loading chart from ${url}:`, error);
-            document.getElementById(containerId).innerHTML =
-                '<div class="chart-loader"><span>Error al cargar datos</span></div>';
+            container.innerHTML =
+                `<div class="chart-error" style="padding: 2rem; text-align: center; color: #ef4444;">
+                    <p>⚠️ Error al cargar gráfico</p>
+                    <small style="color: #a0aec0;">${error.message}</small>
+                </div>`;
         }
     }
 </script>
