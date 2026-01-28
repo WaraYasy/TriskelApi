@@ -1,3 +1,11 @@
+"""Script de sembrado de datos (Seed).
+
+Utilidad para crear datos iniciales como el administrador por defecto.
+DEBE SER ELIMINADO O PROTEGIDO EN PRODUCCIÓN.
+
+Autor: Mandrágora
+"""
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -11,7 +19,17 @@ router = APIRouter(prefix="/seed", tags=["Seed"])
 
 @router.post("/admin")
 def seed_admin(db: Session = Depends(get_db_session)):
-    """Crea el admin inicial. ELIMINAR después de usar."""
+    """Crea el admin inicial. ELIMINAR después de usar.
+
+    Args:
+        db (Session): Sesión de base de datos.
+
+    Returns:
+        dict: Datos del administrador creado.
+
+    Raises:
+        HTTPException: Si el admin ya existe (400) o error interno (500).
+    """
     try:
         repo = SQLAuthRepository(session=db)
         service = AuthService(repository=repo)

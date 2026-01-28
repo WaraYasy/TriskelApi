@@ -1,7 +1,8 @@
-"""
-Scheduler para recalculo de Leaderboards
+"""Scheduler para recálculo de Leaderboards.
 
 Usa APScheduler para ejecutar el recalculo cada 6 horas.
+
+Autor: Mandrágora
 """
 
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -14,8 +15,7 @@ scheduler = BackgroundScheduler()
 
 
 def refresh_leaderboards_job():
-    """
-    Job que recalcula todos los leaderboards.
+    """Job que recalcula todos los leaderboards.
 
     Este job se ejecuta cada 6 horas por el scheduler.
     """
@@ -40,11 +40,10 @@ def refresh_leaderboards_job():
 
 
 def start_scheduler():
-    """
-    Inicia el scheduler de leaderboards.
+    """Inicia el scheduler de leaderboards.
 
     Configura el job para ejecutarse cada 6 horas.
-    Tambien ejecuta un recalculo inicial al arrancar.
+    También ejecuta un recálculo inicial al arrancar.
     """
     if scheduler.running:
         logger.warning("Scheduler ya esta corriendo")
@@ -74,8 +73,7 @@ def start_scheduler():
 
 
 def shutdown_scheduler():
-    """
-    Detiene el scheduler de forma segura.
+    """Detiene el scheduler de forma segura.
 
     Espera a que los jobs actuales terminen antes de cerrar.
     """

@@ -1,9 +1,10 @@
-"""
-Middleware Layer
+"""Middleware Layer.
 
 Middleware y utilidades de autenticación/autorización:
-- Auth middleware
-- Security utilities
+- Auth middleware.
+- Security utilities.
+
+Autor: Mandrágora
 """
 
 from .auth import auth_middleware

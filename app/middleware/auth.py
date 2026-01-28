@@ -1,10 +1,11 @@
-"""
-Middleware de autenticación
+"""Middleware de autenticación.
 
 Soporta TRES tipos de autenticación:
-1. JWT Token: Para administradores del dashboard (Bearer token)
-2. API Key: Para administración programática (acceso completo)
-3. Player Token: Para jugadores (solo acceden a sus propios datos)
+1. JWT Token: Para administradores del dashboard (Bearer token).
+2. API Key: Para administración programática (acceso completo).
+3. Player Token: Para jugadores (solo acceden a sus propios datos).
+
+Autor: Mandrágora
 """
 
 from fastapi import Request
@@ -34,21 +35,27 @@ CREATION_ROUTES = [
 
 
 async def auth_middleware(request: Request, call_next):
-    """
-    Middleware que valida autenticación de tres formas:
+    """Middleware que valida autenticación de tres formas:
 
     1. JWT TOKEN (admin dashboard):
-       - Header "Authorization: Bearer <token>"
-       - Acceso completo a endpoints de admin según permisos del rol
+       - Header "Authorization: Bearer <token>".
+       - Acceso completo a endpoints de admin según permisos del rol.
 
     2. API KEY (admin programmatic):
-       - Header "X-API-Key": la clave de administración
-       - Acceso completo a todos los endpoints
+       - Header "X-API-Key": la clave de administración.
+       - Acceso completo a todos los endpoints.
 
     3. PLAYER TOKEN (jugadores):
-       - Header "X-Player-ID": el UUID del jugador
-       - Header "X-Player-Token": el token secreto del jugador
-       - Solo accede a sus propios datos
+       - Header "X-Player-ID": el UUID del jugador.
+       - Header "X-Player-Token": el token secreto del jugador.
+       - Solo accede a sus propios datos.
+
+    Args:
+        request (Request): Request de FastAPI.
+        call_next (callable): Siguiente middleware/endpoint.
+
+    Returns:
+        JSONResponse: Ejecución del request o error 401/500.
     """
     path = request.url.path
 

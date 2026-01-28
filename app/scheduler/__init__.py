@@ -1,7 +1,8 @@
-"""
-Modulo de Scheduling
+"""Módulo de Scheduling.
 
-Configuracion de tareas programadas con APScheduler.
+Configuración de tareas programadas con APScheduler.
+
+Autor: Mandrágora
 """
 
 from .leaderboard_scheduler import scheduler, shutdown_scheduler, start_scheduler

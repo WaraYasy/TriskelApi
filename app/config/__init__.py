@@ -1,9 +1,10 @@
-"""
-Configuration
+"""Configuration.
 
 Configuración global de la aplicación:
-- Variables de entorno
-- Settings
+- Variables de entorno.
+- Settings.
+
+Autor: Mandrágora
 """
 
 from .settings import settings

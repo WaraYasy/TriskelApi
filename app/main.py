@@ -1,8 +1,9 @@
-"""
-Triskel API - Main Application
+"""Triskel API - Main Application.
 
 Aplicación principal con arquitectura hexagonal por dominios.
 Integra FastAPI para la API REST del juego + Flask para el dashboard web.
+
+Autor: Mandrágora
 """
 
 import uvicorn
@@ -158,7 +159,7 @@ app.middleware("http")(auth_middleware)
 # Eventos de ciclo de vida
 @app.on_event("startup")
 def startup_event():
-    """Inicializa servicios al arrancar la aplicación"""
+    """Inicializa servicios al arrancar la aplicación."""
     logger.info("Iniciando Triskel API", version="2.0.0")
 
     # Inicializar Firebase
@@ -182,7 +183,7 @@ def startup_event():
 
 @app.on_event("shutdown")
 def shutdown_event():
-    """Limpia recursos al cerrar la aplicación"""
+    """Limpia recursos al cerrar la aplicación."""
     logger.info("Cerrando Triskel API...")
 
     # Detener scheduler
@@ -212,7 +213,7 @@ logger.info("Flask app montada en /web")
 # Endpoints raíz
 @app.get("/")
 def read_root():
-    """Endpoint raíz - Bienvenida"""
+    """Endpoint raíz - Bienvenida."""
     return {
         "message": "Bienvenido a Triskel-API",
         "version": "2.0.0",
@@ -225,7 +226,7 @@ def read_root():
 
 @app.get("/health")
 def health_check():
-    """Health check para monitoreo"""
+    """Health check para monitoreo."""
     return {"status": "ok", "version": "2.0.0"}
 
 

@@ -1,8 +1,9 @@
-"""
-Esquemas de seguridad para autenticación
+"""Esquemas de seguridad para autenticación.
 
 Define los esquemas de seguridad que se muestran en Swagger UI.
 Proporciona dependencies para validar autenticación en endpoints.
+
+Autor: Mandrágora
 """
 
 from typing import Annotated, Optional
@@ -36,14 +37,13 @@ player_token_header = APIKeyHeader(
 
 
 def get_api_key(api_key: str = Security(api_key_header)) -> str:
-    """
-    Valida que la API Key sea correcta.
+    """Valida que la API Key sea correcta.
 
     Returns:
-        str: API Key válida
+        str: API Key válida.
 
     Raises:
-        HTTPException 401: Si la API Key es inválida o no existe
+        HTTPException: Si la API Key es inválida o no existe (401).
     """
     if not api_key:
         raise HTTPException(
@@ -66,18 +66,17 @@ def get_current_player(
     player_id: Optional[str] = Security(player_id_header),
     player_token: Optional[str] = Security(player_token_header),
 ) -> Player:
-    """
-    Valida las credenciales del jugador y retorna el Player.
+    """Valida las credenciales del jugador y retorna el Player.
 
     IMPORTANTE: Esta función hace una consulta a Firestore.
     Si ya tienes el player en request.state (del middleware),
     úsalo directamente en vez de esta dependency.
 
     Returns:
-        Player: Jugador autenticado
+        Player: Jugador autenticado.
 
     Raises:
-        HTTPException 401: Si las credenciales son inválidas
+        HTTPException: Si las credenciales son inválidas (401).
     """
     if not player_id or not player_token:
         raise HTTPException(
@@ -114,16 +113,15 @@ def get_current_player_or_admin(
     player_id: Optional[str] = Security(player_id_header),
     player_token: Optional[str] = Security(player_token_header),
 ) -> tuple[bool, Optional[Player]]:
-    """
-    Valida que sea admin (API Key) o jugador (Player Token).
+    """Valida que sea admin (API Key) o jugador (Player Token).
 
     Returns:
         tuple[bool, Optional[Player]]:
-            - (True, None) si es admin
-            - (False, Player) si es jugador autenticado
+            - (True, None) si es admin.
+            - (False, Player) si es jugador autenticado.
 
     Raises:
-        HTTPException 401: Si no hay credenciales válidas
+        HTTPException: Si no hay credenciales válidas (401).
     """
     # Opción 1: Admin con API Key
     if api_key:

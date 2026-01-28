@@ -1,8 +1,9 @@
-"""
-Configuración global de la aplicación
+"""Configuración global de la aplicación.
 
 Gestiona variables de entorno y configuración de la aplicación.
-Migrado desde app/config.py
+Migrado desde app/config.py.
+
+Autor: Mandrágora
 """
 
 import os
@@ -12,7 +13,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    """Configuración de la aplicación cargada desde variables de entorno"""
+    """Configuración de la aplicación cargada desde variables de entorno."""
 
     # ==================== Aplicación ====================
     # Nombre de la aplicación (hardcodeado, no configurable)
@@ -67,9 +68,9 @@ class Settings(BaseSettings):
     bcrypt_rounds: int = 12  # Número de rounds para bcrypt (más rounds = más seguro pero más lento)
 
     # ==================== CORS ====================
-    # Orígenes permitidos (separados por comas)
-    # En desarrollo: permite todo (*)
-    # En producción: debe especificarse explícitamente
+    # Orígenes permitidos (separados por comas).
+    # En desarrollo: permite todo (*).
+    # En producción: debe especificarse explícitamente.
     @property
     def cors_origins(self) -> str:
         env_origins = os.getenv("CORS_ORIGINS", "")
@@ -82,9 +83,9 @@ class Settings(BaseSettings):
             return ""
 
     # ==================== API Interna (para Analytics) ====================
-    # URL base de la API para consumo interno por el dashboard
-    # En desarrollo: http://localhost:8000
-    # En producción Railway: http://localhost:{PORT}
+    # URL base de la API para consumo interno por el dashboard.
+    # En desarrollo: http://localhost:8000.
+    # En producción Railway: http://localhost:{PORT}.
     @property
     def api_base_url(self) -> str:
         env_url = os.getenv("API_BASE_URL", "")
