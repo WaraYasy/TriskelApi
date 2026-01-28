@@ -267,6 +267,14 @@ class AnalyticsService:
             },
         ]
 
+    def _empty_chart(self, message: str = "No hay datos disponibles") -> str:
+        """
+        Retorna un JSON vacío válido para Plotly cuando no hay datos.
+
+        Evita retornar HTML que causaría error de JSON parse en el frontend.
+        """
+        return f'{{"data":[],"layout":{{"title":"{message}","paper_bgcolor":"rgba(0,0,0,0)","plot_bgcolor":"rgba(0,0,0,0)","font":{{"color":"#a0aec0"}}}}}}'
+
     def _get_dark_layout(self):
         """
         Retorna configuración de layout oscuro para gráficos de Plotly.
@@ -530,8 +538,11 @@ class AnalyticsService:
         """
         Genera gráfico de barras apiladas de buenas vs malas decisiones por nivel.
         """
-        if not ANALYTICS_AVAILABLE or not games:
-            return "<div>No hay datos disponibles</div>"
+        if not ANALYTICS_AVAILABLE:
+            return '{"data":[],"layout":{"title":"Analytics no disponible"}}'
+
+        if not games:
+            return '{"data":[],"layout":{"title":"No hay datos de partidas"}}'
 
         # Mapeo de decisiones a good/bad
         good_choices = {"sanar", "construir", "revelar"}
@@ -567,7 +578,7 @@ class AnalyticsService:
                     )
 
         if not choices_data:
-            return "<div>No hay decisiones morales registradas</div>"
+            return self._empty_chart("No hay decisiones morales registradas")
 
         df = pd.DataFrame(choices_data)
         # Agrupar por Nivel y Decisión
@@ -595,7 +606,7 @@ class AnalyticsService:
         Genera Pie Chart de decisiones buenas vs malas totales.
         """
         if not ANALYTICS_AVAILABLE or not games:
-            return "<div>No hay datos disponibles</div>"
+            return self._empty_chart("No hay datos disponibles")
 
         # Mapeo de decisiones a good/bad
         good_choices = {"sanar", "construir", "revelar"}
@@ -613,7 +624,7 @@ class AnalyticsService:
                     bad_count += 1
 
         if good_count == 0 and bad_count == 0:
-            return "<div>No hay decisiones registradas</div>"
+            return self._empty_chart("No hay decisiones registradas")
 
         df = pd.DataFrame({"Tipo": ["Buenas", "Malas"], "Cantidad": [good_count, bad_count]})
 
@@ -641,7 +652,7 @@ class AnalyticsService:
             HTML del gráfico
         """
         if not ANALYTICS_AVAILABLE or not players:
-            return "<div>No hay datos disponibles</div>"
+            return self._empty_chart("No hay datos disponibles")
 
         playtimes = [p.get("total_playtime", 0) for p in players]
 
@@ -673,7 +684,7 @@ class AnalyticsService:
             HTML del gráfico
         """
         if not ANALYTICS_AVAILABLE or not games:
-            return "<div>No hay datos disponibles</div>"
+            return self._empty_chart("No hay datos disponibles")
 
         # Recopilar muertes por nivel
         deaths_by_level = {}
@@ -721,7 +732,7 @@ class AnalyticsService:
             HTML del gráfico
         """
         if not ANALYTICS_AVAILABLE or not events:
-            return "<div>No hay eventos registrados</div>"
+            return self._empty_chart("No hay eventos registrados")
 
         # Contar eventos por tipo
         event_types = [e.get("event_type") for e in events]
@@ -765,7 +776,7 @@ class AnalyticsService:
             HTML del gráfico
         """
         if not ANALYTICS_AVAILABLE or not events:
-            return "<div>No hay eventos registrados</div>"
+            return self._empty_chart("No hay eventos registrados")
 
         # Procesar fechas
         dates = []
@@ -780,7 +791,7 @@ class AnalyticsService:
                     pass
 
         if not dates:
-            return "<div>No hay fechas válidas en los eventos</div>"
+            return self._empty_chart("No hay fechas válidas en eventos")
 
         date_counts = Counter(dates)
 
@@ -817,13 +828,13 @@ class AnalyticsService:
             HTML del gráfico
         """
         if not ANALYTICS_AVAILABLE or not events:
-            return "<div>No hay eventos registrados</div>"
+            return self._empty_chart("No hay eventos registrados")
 
         # Filtrar solo eventos de muerte ('death', 'player_death', etc.)
         death_events = [e for e in events if "death" in str(e.get("event_type", "")).lower()]
 
         if not death_events:
-            return "<div>No hay eventos de muerte registrados</div>"
+            return self._empty_chart("No hay eventos de muerte")
 
         # Agrupar por nivel
         level_counts = Counter([e.get("level", "Unknown") for e in death_events])
@@ -855,7 +866,7 @@ class AnalyticsService:
         Genera Histograma de alineación moral (0-1).
         """
         if not ANALYTICS_AVAILABLE or not players:
-            return "<div>No hay datos disponibles</div>"
+            return self._empty_chart("No hay datos disponibles")
 
         alignments = []
         for player in players:
@@ -865,7 +876,7 @@ class AnalyticsService:
                 alignments.append(val)
 
         if not alignments:
-            return "<div>No hay datos de alineación moral</div>"
+            return self._empty_chart("No hay datos de alineación moral")
 
         df = pd.DataFrame({"Align": alignments})
 
@@ -892,7 +903,7 @@ class AnalyticsService:
             HTML del gráfico
         """
         if not ANALYTICS_AVAILABLE or not games:
-            return "<div>No hay datos disponibles</div>"
+            return self._empty_chart("No hay datos disponibles")
 
         all_relics = []
         for game in games:
@@ -900,7 +911,7 @@ class AnalyticsService:
             all_relics.extend(relics)
 
         if not all_relics:
-            return "<div>No hay reliquias obtenidas aún</div>"
+            return self._empty_chart("No hay reliquias obtenidas")
 
         relic_counts = Counter(all_relics)
 
@@ -936,7 +947,7 @@ class AnalyticsService:
             HTML del gráfico
         """
         if not ANALYTICS_AVAILABLE or not games:
-            return "<div>No hay datos disponibles</div>"
+            return self._empty_chart("No hay datos disponibles")
 
         level_completions = {}
         total_games = len(games)
@@ -949,7 +960,7 @@ class AnalyticsService:
                 level_completions[level] += 1
 
         if not level_completions:
-            return "<div>No hay niveles completados aún</div>"
+            return self._empty_chart("No hay niveles completados")
 
         # Calcular porcentaje
         level_percentages = {
@@ -988,7 +999,7 @@ class AnalyticsService:
             HTML del gráfico
         """
         if not ANALYTICS_AVAILABLE or not games:
-            return "<div>No hay datos disponibles</div>"
+            return self._empty_chart("No hay datos disponibles")
 
         level_times = {}
 
@@ -1002,7 +1013,7 @@ class AnalyticsService:
                 level_times[level].append(time_seconds)
 
         if not level_times:
-            return "<div>No hay datos de tiempo por nivel</div>"
+            return self._empty_chart("No hay datos de tiempo por nivel")
 
         # Calcular promedio en minutos
         avg_times = {
@@ -1042,7 +1053,7 @@ class AnalyticsService:
             HTML del gráfico
         """
         if not ANALYTICS_AVAILABLE or not events:
-            return "<div>No hay datos disponibles</div>"
+            return self._empty_chart("No hay datos disponibles")
 
         # Calcular fecha límite (7 días atrás)
         today = datetime.now().date()
@@ -1071,7 +1082,7 @@ class AnalyticsService:
                 continue
 
         if not daily_players:
-            return "<div>No hay actividad en los últimos 7 días</div>"
+            return self._empty_chart("No hay actividad en 7 días")
 
         # Asegurar que todos los días estén representados (incluso con 0)
         all_dates = [seven_days_ago + timedelta(days=i) for i in range(8)]
