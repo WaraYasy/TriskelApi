@@ -101,17 +101,107 @@ class AnalyticsService:
     def _generate_mock_players(self) -> List[Dict[str, Any]]:
         """Genera datos mock de jugadores para pruebas sin Firebase."""
         return [
-            {"player_id": "player001", "username": "TestPlayer1", "email": "test1@example.com"},
-            {"player_id": "player002", "username": "TestPlayer2", "email": "test2@example.com"},
-            {"player_id": "player003", "username": "TestPlayer3", "email": "test3@example.com"},
+            {
+                "player_id": "player001",
+                "username": "TestPlayer1",
+                "email": "test1@example.com",
+                "moral_alignment": 0.75,  # Jugador bueno
+                "stats": {"moral_alignment": 0.75},
+                "total_playtime": 1200,  # 20 minutos
+            },
+            {
+                "player_id": "player002",
+                "username": "TestPlayer2",
+                "email": "test2@example.com",
+                "moral_alignment": 0.30,  # Jugador malo
+                "stats": {"moral_alignment": 0.30},
+                "total_playtime": 1800,  # 30 minutos
+            },
+            {
+                "player_id": "player003",
+                "username": "TestPlayer3",
+                "email": "test3@example.com",
+                "moral_alignment": 0.50,  # Jugador neutral
+                "stats": {"moral_alignment": 0.50},
+                "total_playtime": 900,  # 15 minutos
+            },
         ]
 
     def _generate_mock_games(self) -> List[Dict[str, Any]]:
         """Genera datos mock de partidas para pruebas sin Firebase."""
         return [
-            {"game_id": "game001", "player_id": "player001", "status": "completed"},
-            {"game_id": "game002", "player_id": "player002", "status": "in_progress"},
-            {"game_id": "game003", "player_id": "player003", "status": "completed"},
+            {
+                "game_id": "game001",
+                "player_id": "player001",
+                "status": "completed",
+                "choices": {
+                    "senda_ebano": "sanar",  # Buena decisión
+                    "fortaleza_gigantes": "construir",  # Buena decisión
+                    "aquelarre_sombras": "revelar",  # Buena decisión
+                },
+                "levels_completed": ["senda_ebano", "fortaleza_gigantes", "aquelarre_sombras"],
+                "levels_data": {
+                    "senda_ebano": {"time_seconds": 300, "deaths": 2},
+                    "fortaleza_gigantes": {"time_seconds": 450, "deaths": 5},
+                    "aquelarre_sombras": {"time_seconds": 600, "deaths": 8},
+                },
+                "relics": ["reliquia_fuego", "reliquia_agua"],
+                "completion_percentage": 100,
+                "metrics": {
+                    "total_deaths": 15,
+                    "time_per_level": {
+                        "senda_ebano": 300,
+                        "fortaleza_gigantes": 450,
+                        "aquelarre_sombras": 600,
+                    },
+                },
+            },
+            {
+                "game_id": "game002",
+                "player_id": "player002",
+                "status": "in_progress",
+                "choices": {
+                    "senda_ebano": "forzar",  # Mala decisión
+                    "fortaleza_gigantes": "destruir",  # Mala decisión
+                },
+                "levels_completed": ["senda_ebano", "fortaleza_gigantes"],
+                "levels_data": {
+                    "senda_ebano": {"time_seconds": 250, "deaths": 1},
+                    "fortaleza_gigantes": {"time_seconds": 400, "deaths": 3},
+                },
+                "relics": ["reliquia_tierra"],
+                "completion_percentage": 66,
+                "metrics": {
+                    "total_deaths": 4,
+                    "time_per_level": {"senda_ebano": 250, "fortaleza_gigantes": 400},
+                },
+            },
+            {
+                "game_id": "game003",
+                "player_id": "player003",
+                "status": "completed",
+                "choices": {
+                    "senda_ebano": "sanar",  # Buena decisión
+                    "fortaleza_gigantes": "destruir",  # Mala decisión
+                    "aquelarre_sombras": "ocultar",  # Mala decisión
+                },
+                "levels_completed": ["senda_ebano", "fortaleza_gigantes", "aquelarre_sombras"],
+                "levels_data": {
+                    "senda_ebano": {"time_seconds": 350, "deaths": 4},
+                    "fortaleza_gigantes": {"time_seconds": 500, "deaths": 6},
+                    "aquelarre_sombras": {"time_seconds": 550, "deaths": 10},
+                },
+                "relics": ["reliquia_viento"],
+                "completion_percentage": 100,
+                "metrics": {
+                    "total_deaths": 20,
+                    "time_per_level": {
+                        "senda_ebano": 350,
+                        "fortaleza_gigantes": 500,
+                        "aquelarre_sombras": 550,
+                    },
+                },
+            },
         ]
 
     def _generate_mock_events(self) -> List[Dict[str, Any]]:
