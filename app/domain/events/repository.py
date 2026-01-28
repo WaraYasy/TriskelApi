@@ -168,11 +168,7 @@ class EventRepository:
         Returns:
             List[GameEvent]: Lista de eventos ordenados por timestamp descendente
         """
-        query = (
-            self.collection
-            .order_by("timestamp", direction=Query.DESCENDING)
-            .limit(limit)
-        )
+        query = self.collection.order_by("timestamp", direction=Query.DESCENDING).limit(limit)
         docs = query.stream()
 
         events = []

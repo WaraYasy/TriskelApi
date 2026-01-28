@@ -213,7 +213,7 @@ def get_all_games(
     if not is_admin:
         raise HTTPException(
             status_code=403,
-            detail="Este endpoint requiere permisos de administrador. Usa API Key o JWT token de admin."
+            detail="Este endpoint requiere permisos de administrador. Usa API Key o JWT token de admin.",
         )
 
     return service.get_all_games(limit=limit)

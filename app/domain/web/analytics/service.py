@@ -63,7 +63,7 @@ class AnalyticsService:
         self._cache_ttl = 300  # 5 minutos
 
         # DEBUG: Log de inicialización
-        print(f"[Analytics] Initializing service:")
+        print("[Analytics] Initializing service:")
         print(f"  - API Base URL: {api_base_url}")
         print(f"  - API Key: {'SET' if api_key else 'NOT SET'}")
         print(f"  - Mock Mode: {use_mock_data}")
@@ -72,7 +72,7 @@ class AnalyticsService:
             headers = {}
             if api_key:
                 headers["X-API-Key"] = api_key
-                print(f"  - X-API-Key header: Added to client")
+                print("  - X-API-Key header: Added to client")
             # Configurar timeout extendido para peticiones lentas de Firebase
             # timeout=60s para requests individuales, 120s para todo el proceso
             self.client = httpx.Client(
@@ -373,7 +373,7 @@ class AnalyticsService:
 
         try:
             # OPTIMIZACIÓN: Llamar endpoint admin directo en lugar de iterar jugadores
-            print(f"[Analytics] Calling GET /v1/games with limit=1000")
+            print("[Analytics] Calling GET /v1/games with limit=1000")
             print(f"[Analytics] Client headers: {dict(self.client.headers)}")
 
             response = self.client.get("/v1/games", params={"limit": 1000})
@@ -436,7 +436,7 @@ class AnalyticsService:
 
         try:
             # OPTIMIZACIÓN: Llamar endpoint admin directo
-            print(f"[Analytics] Calling GET /v1/events with limit=5000")
+            print("[Analytics] Calling GET /v1/events with limit=5000")
 
             response = self.client.get("/v1/events", params={"limit": 5000})
 
@@ -454,7 +454,9 @@ class AnalyticsService:
                 event["player_username"] = player_map.get(event.get("player_id"), "Unknown")
 
             elapsed = time.time() - start_time
-            print(f"[Analytics] ✅ Fetched {len(all_events)} events in {elapsed:.2f}s (1 HTTP call)")
+            print(
+                f"[Analytics] ✅ Fetched {len(all_events)} events in {elapsed:.2f}s (1 HTTP call)"
+            )
 
             # Guardar en cache
             self._set_cache(cache_key, all_events)
