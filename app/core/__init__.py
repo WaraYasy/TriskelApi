@@ -1,10 +1,11 @@
-"""
-Core Utilities
+"""Core Utilities.
 
 Utilidades comunes usadas en toda la aplicación:
-- Excepciones personalizadas
-- Validadores de negocio
-- Logger estructurado
+- Excepciones personalizadas.
+- Validadores de negocio.
+- Logger estructurado.
+
+Autor: Mandrágora
 """
 
 from .exceptions import (

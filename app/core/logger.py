@@ -1,11 +1,12 @@
-"""
-Logger estructurado para la aplicación
+"""Logger estructurado para la aplicación.
 
 Sistema avanzado de logging con:
-- Rotación de archivos (por tamaño y tiempo)
-- Formato JSON estructurado para producción
-- Formato texto legible para desarrollo
-- Múltiples handlers (consola + archivo)
+- Rotación de archivos (por tamaño y tiempo).
+- Formato JSON estructurado para producción.
+- Formato texto legible para desarrollo.
+- Múltiples handlers (consola + archivo).
+
+Autor: Mandrágora
 """
 
 import json
@@ -21,15 +22,14 @@ from app.config.settings import settings
 
 
 class JSONFormatter(logging.Formatter):
-    """
-    Formateador que convierte logs a JSON estructurado.
+    """Formateador que convierte logs a JSON estructurado.
 
     Útil para producción donde los logs se procesan con herramientas
-    de análisis (ELK, Splunk, CloudWatch, etc.)
+    de análisis (ELK, Splunk, CloudWatch, etc.).
     """
 
     def format(self, record: logging.LogRecord) -> str:
-        """Convierte el log record a JSON"""
+        """Convierte el log record a JSON."""
         log_data = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "level": record.levelname,
@@ -52,22 +52,21 @@ class JSONFormatter(logging.Formatter):
 
 
 class StructuredLogger:
-    """
-    Logger estructurado con rotación de archivos.
+    """Logger estructurado con rotación de archivos.
 
     Características:
-    - Rotación por tamaño (RotatingFileHandler)
-    - Rotación por tiempo (TimedRotatingFileHandler)
-    - Formato JSON para producción
-    - Formato texto para desarrollo
-    - Logs en consola y archivo
+    - Rotación por tamaño (RotatingFileHandler).
+    - Rotación por tiempo (TimedRotatingFileHandler).
+    - Formato JSON para producción.
+    - Formato texto para desarrollo.
+    - Logs en consola y archivo.
 
     Niveles disponibles:
-    - DEBUG: Información detallada para debugging
-    - INFO: Mensajes informativos normales
-    - WARNING: Algo inesperado pero no crítico
-    - ERROR: Error que impide una operación
-    - CRITICAL: Error grave que puede parar la app
+    - DEBUG: Información detallada para debugging.
+    - INFO: Mensajes informativos normales.
+    - WARNING: Algo inesperado pero no crítico.
+    - ERROR: Error que impide una operación.
+    - CRITICAL: Error grave que puede parar la app.
     """
 
     def __init__(self, name: str = "triskel-api"):
@@ -75,7 +74,7 @@ class StructuredLogger:
         self._setup()
 
     def _setup(self):
-        """Configura el logger con handlers y formateadores"""
+        """Configura el logger con handlers y formateadores."""
         # Nivel desde configuración (DEBUG, INFO, etc.)
         level = getattr(logging, settings.log_level.upper(), logging.INFO)
         self.logger.setLevel(level)
@@ -93,12 +92,12 @@ class StructuredLogger:
             self._add_file_handlers(level)
 
     def _ensure_log_directory(self):
-        """Crea el directorio de logs si no existe"""
+        """Crea el directorio de logs si no existe."""
         log_dir = Path(settings.log_directory)
         log_dir.mkdir(parents=True, exist_ok=True)
 
     def _add_console_handler(self, level: int):
-        """Añade handler para logs en consola"""
+        """Añade handler para logs en consola."""
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(level)
 
@@ -116,7 +115,7 @@ class StructuredLogger:
         self.logger.addHandler(console_handler)
 
     def _add_file_handlers(self, level: int):
-        """Añade handlers para logs en archivos con rotación"""
+        """Añade handlers para logs en archivos con rotación."""
         log_dir = settings.log_directory
 
         # 1. Handler con rotación por TAMAÑO
@@ -176,7 +175,7 @@ class StructuredLogger:
         self.logger.addHandler(error_handler)
 
     def _create_log_record(self, level: int, message: str, extra: Dict[str, Any]):
-        """Crea un log record con campos extra"""
+        """Crea un log record con campos extra."""
         # Para JSON formatter, guardamos los campos extra
         if settings.log_format == "json" and extra:
             # Crear un record con extra_fields
@@ -191,7 +190,7 @@ class StructuredLogger:
             return message + context
 
     def _add_context(self, extra: Dict[str, Any]) -> str:
-        """Convierte información extra en string legible (para formato texto)"""
+        """Convierte información extra en string legible (para formato texto)."""
         if not extra:
             return ""
 
@@ -199,8 +198,7 @@ class StructuredLogger:
         return f" | {' | '.join(parts)}"
 
     def debug(self, message: str, **extra):
-        """
-        Log de debug (solo visible si LOG_LEVEL=DEBUG).
+        """Log de debug (solo visible si LOG_LEVEL=DEBUG).
 
         Ejemplo:
             logger.debug("Consultando BD", player_id="123", query="SELECT")
@@ -213,8 +211,7 @@ class StructuredLogger:
             self.logger.debug(f"{message}{context}")
 
     def info(self, message: str, **extra):
-        """
-        Log informativo normal.
+        """Log informativo normal.
 
         Ejemplo:
             logger.info("Jugador creado", player_id="123", username="player1")
@@ -227,8 +224,7 @@ class StructuredLogger:
             self.logger.info(f"{message}{context}")
 
     def warning(self, message: str, **extra):
-        """
-        Log de advertencia (algo inesperado pero no crítico).
+        """Log de advertencia (algo inesperado pero no crítico).
 
         Ejemplo:
             logger.warning("Username casi duplicado", username="test")
@@ -241,8 +237,7 @@ class StructuredLogger:
             self.logger.warning(f"{message}{context}")
 
     def error(self, message: str, **extra):
-        """
-        Log de error (algo falló).
+        """Log de error (algo falló).
 
         Ejemplo:
             logger.error("No se pudo crear jugador", error=str(e))
@@ -255,8 +250,7 @@ class StructuredLogger:
             self.logger.error(f"{message}{context}")
 
     def critical(self, message: str, **extra):
-        """
-        Log crítico (error grave).
+        """Log crítico (error grave).
 
         Ejemplo:
             logger.critical("Firebase no responde", error=str(e))

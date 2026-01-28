@@ -1,16 +1,17 @@
-"""
-Excepciones personalizadas de la aplicación
+"""Excepciones personalizadas de la aplicación.
 
 Define errores específicos para manejar casos comunes de forma clara.
 Cada excepción tiene un código HTTP asociado.
+
+Autor: Mandrágora
 """
 
 from typing import Any, Optional
 
 
 class TriskelAPIException(Exception):
-    """
-    Excepción base de la aplicación.
+    """Excepción base de la aplicación.
+
     Todas las demás heredan de esta.
     """
 
@@ -22,8 +23,7 @@ class TriskelAPIException(Exception):
 
 
 class NotFoundException(TriskelAPIException):
-    """
-    Error cuando no se encuentra un recurso (HTTP 404).
+    """Error cuando no se encuentra un recurso (HTTP 404).
 
     Ejemplo:
         raise NotFoundException("Player", "abc-123")
@@ -36,8 +36,7 @@ class NotFoundException(TriskelAPIException):
 
 
 class ValidationException(TriskelAPIException):
-    """
-    Error de validación de datos (HTTP 400).
+    """Error de validación de datos (HTTP 400).
 
     Ejemplo:
         raise ValidationException("Username debe tener al menos 3 caracteres")
@@ -48,8 +47,7 @@ class ValidationException(TriskelAPIException):
 
 
 class AuthenticationException(TriskelAPIException):
-    """
-    Error de autenticación (HTTP 401).
+    """Error de autenticación (HTTP 401).
 
     Ejemplo:
         raise AuthenticationException("Token inválido")
@@ -60,8 +58,7 @@ class AuthenticationException(TriskelAPIException):
 
 
 class AuthorizationException(TriskelAPIException):
-    """
-    Error de autorización/permisos (HTTP 403).
+    """Error de autorización/permisos (HTTP 403).
 
     Ejemplo:
         raise AuthorizationException("No tienes permisos de administrador")
@@ -72,8 +69,7 @@ class AuthorizationException(TriskelAPIException):
 
 
 class ConflictException(TriskelAPIException):
-    """
-    Conflicto con el estado actual (HTTP 409).
+    """Conflicto con el estado actual (HTTP 409).
 
     Ejemplo:
         raise ConflictException("Ya existe un jugador con ese username")
@@ -84,8 +80,7 @@ class ConflictException(TriskelAPIException):
 
 
 class BusinessRuleException(TriskelAPIException):
-    """
-    Violación de regla de negocio (HTTP 422).
+    """Violación de regla de negocio (HTTP 422).
 
     Ejemplo:
         raise BusinessRuleException(

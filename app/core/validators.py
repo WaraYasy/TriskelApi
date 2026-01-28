@@ -1,8 +1,9 @@
-"""
-Validadores comunes de la aplicación
+"""Validadores comunes de la aplicación.
 
 Funciones simples para validar datos que se usan en múltiples lugares.
 Lanzan ValidationException si algo no es válido.
+
+Autor: Mandrágora
 """
 
 import re
@@ -12,14 +13,19 @@ from .exceptions import ValidationException
 
 
 def validate_username(username: str) -> None:
-    """
-    Valida que un username sea correcto.
+    """Valida que un username sea correcto.
 
     Reglas:
-    - Obligatorio (no vacío)
-    - Mínimo 3 caracteres
-    - Máximo 20 caracteres
-    - Solo letras, números y guiones bajos
+    - Obligatorio (no vacío).
+    - Mínimo 3 caracteres.
+    - Máximo 20 caracteres.
+    - Solo letras, números y guiones bajos.
+
+    Args:
+        username (str): Username a validar.
+
+    Raises:
+        ValidationException: Si el username no cumple las reglas.
 
     Ejemplo:
         validate_username("player123")  # OK
@@ -40,10 +46,15 @@ def validate_username(username: str) -> None:
 
 
 def validate_email(email: Optional[str]) -> None:
-    """
-    Valida formato de email (solo si se proporciona).
+    """Valida formato de email (solo si se proporciona).
 
     El email es opcional, pero si se envía debe ser válido.
+
+    Args:
+        email (Optional[str]): Email a validar (puede ser None).
+
+    Raises:
+        ValidationException: Si el formato del email no es válido.
 
     Ejemplo:
         validate_email("player@example.com")  # OK
@@ -61,8 +72,7 @@ def validate_email(email: Optional[str]) -> None:
 
 
 def validate_level_name(level: str) -> None:
-    """
-    Valida que el nombre de nivel sea uno de los 5 niveles del juego.
+    """Valida que el nombre de nivel sea uno de los 5 niveles del juego.
 
     Niveles válidos:
     - hub_central
@@ -70,6 +80,12 @@ def validate_level_name(level: str) -> None:
     - fortaleza_gigantes
     - aquelarre_sombras
     - claro_almas
+
+    Args:
+        level (str): Nombre del nivel.
+
+    Raises:
+        ValidationException: Si el nivel no es válido.
     """
     valid_levels = [
         "hub_central",
@@ -84,15 +100,21 @@ def validate_level_name(level: str) -> None:
 
 
 def validate_choice(level: str, choice: str) -> None:
-    """
-    Valida que una elección moral sea válida para ese nivel.
+    """Valida que una elección moral sea válida para ese nivel.
 
     Decisiones morales por nivel:
-    - senda_ebano: forzar (malo) o sanar (bueno)
-    - fortaleza_gigantes: destruir (malo) o construir (bueno)
-    - aquelarre_sombras: ocultar (malo) o revelar (bueno)
+    - senda_ebano: forzar (malo) o sanar (bueno).
+    - fortaleza_gigantes: destruir (malo) o construir (bueno).
+    - aquelarre_sombras: ocultar (malo) o revelar (bueno).
 
     Nota: No todos los niveles tienen decisión moral.
+
+    Args:
+        level (str): Nivel donde se toma la decisión.
+        choice (str): Decisión tomada.
+
+    Raises:
+        ValidationException: Si la decisión no es válida para el nivel.
     """
     choices_by_level = {
         "senda_ebano": ["forzar", "sanar"],
@@ -113,13 +135,18 @@ def validate_choice(level: str, choice: str) -> None:
 
 
 def validate_relic(relic: str) -> None:
-    """
-    Valida que una reliquia sea una de las 3 del juego.
+    """Valida que una reliquia sea una de las 3 del juego.
 
     Reliquias válidas:
-    - lirio (Lirio Azul)
-    - hacha (Hacha Sagrada)
-    - manto (Manto de Luna)
+    - lirio (Lirio Azul).
+    - hacha (Hacha Sagrada).
+    - manto (Manto de Luna).
+
+    Args:
+        relic (str): Nombre de la reliquia.
+
+    Raises:
+        ValidationException: Si la reliquia no es válida.
     """
     valid_relics = ["lirio", "hacha", "manto"]
 

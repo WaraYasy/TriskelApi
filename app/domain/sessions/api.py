@@ -1,13 +1,14 @@
-"""
-API REST para Sessions
+"""API REST para Sessions.
 
 Endpoints de FastAPI para gestionar sesiones de juego.
 
 Reglas de acceso:
-- POST /v1/sessions: Jugador autenticado (iniciar sesion propia)
-- PATCH /v1/sessions/{id}/end: Jugador autenticado (terminar sesion propia)
-- GET /v1/sessions/player/{id}: Solo tu ID o admin
-- GET /v1/sessions/game/{id}: Solo tus partidas o admin
+- POST /v1/sessions: Jugador autenticado (iniciar sesión propia).
+- PATCH /v1/sessions/{id}/end: Jugador autenticado (terminar sesión propia).
+- GET /v1/sessions/player/{id}: Solo tu ID o admin.
+- GET /v1/sessions/game/{id}: Solo tus partidas o admin.
+
+Autor: Mandrágora
 """
 
 from typing import List
@@ -28,7 +29,7 @@ router = APIRouter(prefix="/v1/sessions", tags=["Sessions"])
 
 
 def check_player_access(request: Request, target_player_id: str) -> None:
-    """Verifica permisos para acceder a datos de un jugador"""
+    """Verifica permisos para acceder a datos de un jugador."""
     is_admin = getattr(request.state, "is_admin", False)
     authenticated_player_id = getattr(request.state, "player_id", None)
 
@@ -43,7 +44,7 @@ def check_player_access(request: Request, target_player_id: str) -> None:
 
 
 def check_game_access(request: Request, game_id: str) -> None:
-    """Verifica permisos para acceder a datos de una partida"""
+    """Verifica permisos para acceder a datos de una partida."""
     is_admin = getattr(request.state, "is_admin", False)
     authenticated_player_id = getattr(request.state, "player_id", None)
 
@@ -65,7 +66,7 @@ def check_game_access(request: Request, game_id: str) -> None:
 
 
 def session_to_response(session: GameSession) -> SessionResponse:
-    """Convierte GameSession a SessionResponse"""
+    """Convierte GameSession a SessionResponse."""
     return SessionResponse(
         session_id=session.session_id,
         player_id=session.player_id,
@@ -82,14 +83,14 @@ def session_to_response(session: GameSession) -> SessionResponse:
 
 
 def get_session_repository() -> SessionRepository:
-    """Dependency que provee el repositorio de Sessions"""
+    """Dependency que provee el repositorio de Sessions."""
     return SessionRepository()
 
 
 def get_session_service(
     repository: SessionRepository = Depends(get_session_repository),
 ) -> SessionService:
-    """Dependency que provee el servicio de Sessions"""
+    """Dependency que provee el servicio de Sessions."""
     return SessionService(repository=repository)
 
 
@@ -102,23 +103,22 @@ def start_session(
     request: Request,
     service: SessionService = Depends(get_session_service),
 ):
-    """
-    Iniciar una nueva sesion de juego.
+    """Iniciar una nueva sesión de juego.
 
-    Requiere autenticacion de jugador.
-    Cierra automaticamente sesiones huerfanas previas.
+    Requiere autenticación de jugador.
+    Cierra automáticamente sesiones huerfanas previas.
 
     Args:
-        session_data: Datos de la sesion (game_id, platform)
-        request: Request de FastAPI
-        service: Servicio inyectado
+        session_data (SessionCreate): Datos de la sesión (game_id, platform).
+        request (Request): Request de FastAPI.
+        service (SessionService): Servicio inyectado.
 
     Returns:
-        SessionResponse: Sesion creada
+        SessionResponse: Sesión creada.
 
     Raises:
-        HTTPException 400: Si la partida no existe o no pertenece al jugador
-        HTTPException 401: Si no esta autenticado
+        HTTPException: Si la partida no existe o no pertenece al jugador (400).
+        HTTPException: Si no está autenticado (401).
     """
     player_id = getattr(request.state, "player_id", None)
 
@@ -138,22 +138,21 @@ def end_session(
     request: Request,
     service: SessionService = Depends(get_session_service),
 ):
-    """
-    Terminar una sesion de juego activa.
+    """Terminar una sesión de juego activa.
 
     Solo puedes terminar tus propias sesiones.
 
     Args:
-        session_id: ID de la sesion a terminar
-        request: Request de FastAPI
-        service: Servicio inyectado
+        session_id (str): ID de la sesión a terminar.
+        request (Request): Request de FastAPI.
+        service (SessionService): Servicio inyectado.
 
     Returns:
-        SessionResponse: Sesion finalizada con duracion calculada
+        SessionResponse: Sesión finalizada con duración calculada.
 
     Raises:
-        HTTPException 400: Si la sesion ya esta cerrada o no te pertenece
-        HTTPException 404: Si la sesion no existe
+        HTTPException: Si la sesión ya está cerrada o no te pertenece (400).
+        HTTPException: Si la sesión no existe (404).
     """
     player_id = getattr(request.state, "player_id", None)
     is_admin = getattr(request.state, "is_admin", False)
@@ -184,19 +183,18 @@ def get_player_sessions(
     limit: int = 100,
     service: SessionService = Depends(get_session_service),
 ):
-    """
-    Obtener sesiones de un jugador.
+    """Obtener sesiones de un jugador.
 
     Solo puedes ver tus propias sesiones (a menos que seas admin).
 
     Args:
-        player_id: ID del jugador
-        request: Request de FastAPI
-        limit: Maximo numero de sesiones
-        service: Servicio inyectado
+        player_id (str): ID del jugador.
+        request (Request): Request de FastAPI.
+        limit (int): Máximo número de sesiones.
+        service (SessionService): Servicio inyectado.
 
     Returns:
-        Lista de sesiones ordenadas por fecha (mas reciente primero)
+        List[SessionResponse]: Lista de sesiones ordenadas por fecha (más reciente primero).
     """
     check_player_access(request, player_id)
 
@@ -211,19 +209,18 @@ def get_game_sessions(
     limit: int = 100,
     service: SessionService = Depends(get_session_service),
 ):
-    """
-    Obtener sesiones de una partida.
+    """Obtener sesiones de una partida.
 
     Solo puedes ver sesiones de tus propias partidas (a menos que seas admin).
 
     Args:
-        game_id: ID de la partida
-        request: Request de FastAPI
-        limit: Maximo numero de sesiones
-        service: Servicio inyectado
+        game_id (str): ID de la partida.
+        request (Request): Request de FastAPI.
+        limit (int): Máximo número de sesiones.
+        service (SessionService): Servicio inyectado.
 
     Returns:
-        Lista de sesiones de la partida
+        List[SessionResponse]: Lista de sesiones de la partida.
     """
     check_game_access(request, game_id)
 
