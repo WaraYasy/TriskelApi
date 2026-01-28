@@ -24,7 +24,9 @@ analytics_bp = Blueprint("analytics", __name__, template_folder="templates")
 # Instanciar servicio con API Key
 # Usa la URL configurada en settings (auto-detecta producción vs desarrollo)
 analytics_service = AnalyticsService(
-    api_base_url=settings.api_base_url, api_key=settings.api_key, use_mock_data=False
+    api_base_url=settings.api_base_url,
+    api_key=settings.api_key,
+    use_mock_data=True,  # 🎨 MOCK: Datos ficticios (sin Firebase)
 )
 
 
