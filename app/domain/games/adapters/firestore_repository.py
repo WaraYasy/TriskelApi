@@ -1,7 +1,8 @@
-"""
-Adaptador Firestore para Games
+"""Adaptador Firestore para Games.
 
 Implementación concreta del repositorio usando Firestore.
+
+Autor: Mandrágora
 """
 
 from typing import List, Optional
@@ -17,8 +18,7 @@ from ..schemas import GameCreate, GameUpdate, LevelComplete, LevelStart
 
 
 class FirestoreGameRepository(IGameRepository):
-    """
-    Repositorio de Games usando Firestore.
+    """Repositorio de Games usando Firestore.
 
     Implementa todos los métodos definidos en IGameRepository.
     """
@@ -26,12 +26,19 @@ class FirestoreGameRepository(IGameRepository):
     COLLECTION_NAME = "games"
 
     def __init__(self, db: Optional[Client] = None):
-        """Inicializa el repositorio"""
+        """Inicializa el repositorio."""
         self.db = db or get_firestore_client()
         self.collection = self.db.collection(self.COLLECTION_NAME)
 
     def create(self, game_data: GameCreate) -> Game:
-        """Crea una nueva partida en Firestore"""
+        """Crea una nueva partida en Firestore.
+
+        Args:
+            game_data (GameCreate): Datos de la partida a crear.
+
+        Returns:
+            Game: Partida creada.
+        """
         # Crear el objeto Game completo
         game = Game(player_id=game_data.player_id)
 
@@ -43,7 +50,14 @@ class FirestoreGameRepository(IGameRepository):
         return game
 
     def get_by_id(self, game_id: str) -> Optional[Game]:
-        """Obtiene una partida por su ID"""
+        """Obtiene una partida por su ID.
+
+        Args:
+            game_id (str): ID de la partida.
+
+        Returns:
+            Optional[Game]: Game si existe, None si no.
+        """
         doc_ref = self.collection.document(game_id)
         doc = doc_ref.get()
 
@@ -54,7 +68,15 @@ class FirestoreGameRepository(IGameRepository):
         return Game.from_dict(data)
 
     def get_by_player(self, player_id: str, limit: int = 100) -> List[Game]:
-        """Obtiene todas las partidas de un jugador"""
+        """Obtiene todas las partidas de un jugador.
+
+        Args:
+            player_id (str): ID del jugador.
+            limit (int): Máximo número de partidas.
+
+        Returns:
+            List[Game]: Lista de partidas del jugador.
+        """
         # Query: WHERE player_id == X LIMIT N
         query = self.collection.where(filter=FieldFilter("player_id", "==", player_id)).limit(limit)
         docs = query.stream()
@@ -67,10 +89,15 @@ class FirestoreGameRepository(IGameRepository):
         return games
 
     def get_active_game(self, player_id: str) -> Optional[Game]:
-        """
-        Obtiene la partida activa de un jugador.
+        """Obtiene la partida activa de un jugador.
 
         Una partida activa tiene status="in_progress".
+
+        Args:
+            player_id (str): ID del jugador.
+
+        Returns:
+            Optional[Game]: Partida activa si existe, None si no.
         """
         # Query: WHERE player_id == X AND status == "in_progress" LIMIT 1
         query = (
@@ -87,17 +114,16 @@ class FirestoreGameRepository(IGameRepository):
         return None
 
     def get_all(self, limit: int = 1000) -> List[Game]:
-        """
-        Obtiene todas las partidas de todos los jugadores.
+        """Obtiene todas las partidas de todos los jugadores.
 
         ADVERTENCIA: Esta query puede ser costosa en colecciones grandes.
         Solo debe ser usada por endpoints admin con autenticación.
 
         Args:
-            limit: Máximo número de partidas a retornar
+            limit (int): Máximo número de partidas a retornar.
 
         Returns:
-            Lista de partidas ordenadas por fecha de inicio descendente
+            List[Game]: Lista de partidas ordenadas por fecha de inicio descendente.
         """
         # Query: ORDER BY started_at DESC LIMIT N
         query = self.collection.order_by("started_at", direction=Query.DESCENDING).limit(limit)
@@ -112,7 +138,15 @@ class FirestoreGameRepository(IGameRepository):
         return games
 
     def update(self, game_id: str, game_update: GameUpdate) -> Optional[Game]:
-        """Actualiza una partida existente"""
+        """Actualiza una partida existente.
+
+        Args:
+            game_id (str): ID de la partida.
+            game_update (GameUpdate): Campos a actualizar.
+
+        Returns:
+            Optional[Game]: Partida actualizada si existe, None si no.
+        """
         doc_ref = self.collection.document(game_id)
         doc = doc_ref.get()
 
@@ -133,7 +167,15 @@ class FirestoreGameRepository(IGameRepository):
         return self.get_by_id(game_id)
 
     def start_level(self, game_id: str, level_data: LevelStart) -> Optional[Game]:
-        """Registra el inicio de un nivel"""
+        """Registra el inicio de un nivel.
+
+        Args:
+            game_id (str): ID de la partida.
+            level_data (LevelStart): Datos del nivel.
+
+        Returns:
+            Optional[Game]: Partida actualizada si existe, None si no.
+        """
         doc_ref = self.collection.document(game_id)
         doc = doc_ref.get()
 
@@ -147,15 +189,21 @@ class FirestoreGameRepository(IGameRepository):
         return self.get_by_id(game_id)
 
     def complete_level(self, game_id: str, level_data: LevelComplete) -> Optional[Game]:
-        """
-        Registra la completación de un nivel.
+        """Registra la completación de un nivel.
 
         Actualiza múltiples campos:
-        - Añade el nivel a levels_completed
-        - Actualiza métricas (tiempo, muertes)
-        - Registra decisión moral si aplica
-        - Añade reliquia si aplica
-        - Calcula porcentaje de completado
+        - Añade el nivel a levels_completed.
+        - Actualiza métricas (tiempo, muertes).
+        - Registra decisión moral si aplica.
+        - Añade reliquia si aplica.
+        - Calcula porcentaje de completado.
+
+        Args:
+            game_id (str): ID de la partida.
+            level_data (LevelComplete): Datos del nivel completado.
+
+        Returns:
+            Optional[Game]: Partida actualizada si existe, None si no.
         """
         doc_ref = self.collection.document(game_id)
         doc = doc_ref.get()
@@ -201,7 +249,14 @@ class FirestoreGameRepository(IGameRepository):
         return game
 
     def delete(self, game_id: str) -> bool:
-        """Elimina una partida"""
+        """Elimina una partida.
+
+        Args:
+            game_id (str): ID de la partida.
+
+        Returns:
+            bool: True si se eliminó, False si no existía.
+        """
         doc_ref = self.collection.document(game_id)
         doc = doc_ref.get()
 

@@ -1,7 +1,8 @@
-"""
-Modelos de dominio para Leaderboard
+"""Modelos de dominio para Leaderboard.
 
-Los leaderboards son tablas de clasificacion calculadas periodicamente.
+Los leaderboards son tablas de clasificación calculadas periódicamente.
+
+Autor: Mandrágora
 """
 
 from datetime import datetime, timezone
@@ -12,7 +13,7 @@ from pydantic import BaseModel, Field
 
 
 class LeaderboardType(str, Enum):
-    """Tipos de leaderboard disponibles"""
+    """Tipos de leaderboard disponibles."""
 
     SPEEDRUN = "speedrun"  # Menor tiempo = mejor
     MORAL_GOOD = "moral_good"  # Mayor alignment (+1) = mejor
@@ -21,10 +22,17 @@ class LeaderboardType(str, Enum):
 
 
 class LeaderboardEntry(BaseModel):
-    """
-    Entrada individual en un leaderboard.
+    """Entrada individual en un leaderboard.
 
-    Representa la posicion de un jugador en la tabla.
+    Representa la posición de un jugador en la tabla.
+
+    Attributes:
+        rank (int): Posición en el ranking (1-100).
+        player_id (str): ID del jugador.
+        username (str): Nombre del jugador.
+        value (float): Valor que determina el ranking.
+        game_id (str): ID de la partida donde se logró.
+        achieved_at (datetime): Cuándo se logró este valor.
     """
 
     rank: int = Field(..., ge=1, le=100, description="Posicion en el ranking (1-100)")
@@ -48,11 +56,15 @@ class LeaderboardEntry(BaseModel):
 
 
 class Leaderboard(BaseModel):
-    """
-    Entidad principal: Leaderboard.
+    """Entidad principal: Leaderboard.
 
-    Contiene el ranking completo de un tipo especifico.
-    Maximo 100 entradas por leaderboard.
+    Contiene el ranking completo de un tipo específico.
+    Máximo 100 entradas por leaderboard.
+
+    Attributes:
+        leaderboard_id (LeaderboardType): Tipo de leaderboard.
+        updated_at (datetime): Última actualización del ranking.
+        entries (List[LeaderboardEntry]): Entradas del ranking (max 100).
     """
 
     leaderboard_id: LeaderboardType = Field(..., description="Tipo de leaderboard")
@@ -67,7 +79,11 @@ class Leaderboard(BaseModel):
     )
 
     def to_dict(self) -> dict:
-        """Convierte el leaderboard a diccionario para Firestore"""
+        """Convierte el leaderboard a diccionario para Firestore.
+
+        Returns:
+            dict: Representación del leaderboard para la BD.
+        """
         return {
             "leaderboard_id": self.leaderboard_id.value,
             "updated_at": self.updated_at,
@@ -76,7 +92,14 @@ class Leaderboard(BaseModel):
 
     @classmethod
     def from_dict(cls, data: dict) -> "Leaderboard":
-        """Crea un leaderboard desde diccionario de Firestore"""
+        """Crea un leaderboard desde diccionario de Firestore.
+
+        Args:
+            data (dict): Diccionario con los datos.
+
+        Returns:
+            Leaderboard: Instancia del leaderboard.
+        """
         # Convertir leaderboard_id string a enum
         if isinstance(data.get("leaderboard_id"), str):
             data["leaderboard_id"] = LeaderboardType(data["leaderboard_id"])

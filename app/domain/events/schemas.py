@@ -1,7 +1,8 @@
-"""
-Schemas (DTOs) para la API de Events
+"""Schemas (DTOs) para la API de Events.
 
 Modelos de entrada y salida para los endpoints de eventos.
+
+Autor: Mandrágora
 """
 
 from datetime import datetime
@@ -14,10 +15,16 @@ from app.core.validators import validate_level_name
 
 
 class EventCreate(BaseModel):
-    """
-    Datos para crear un evento de gameplay.
+    """Datos para crear un evento de gameplay.
 
     Los eventos son inmutables, solo se crean, no se actualizan.
+
+    Attributes:
+        game_id (str): ID de la partida.
+        player_id (str): ID del jugador.
+        event_type (str): Tipo de evento.
+        level (str): Nivel del juego.
+        data (Dict[str, Any]): Datos adicionales del evento.
     """
 
     game_id: str
@@ -29,7 +36,7 @@ class EventCreate(BaseModel):
     @field_validator("event_type")
     @classmethod
     def validate_event_type(cls, v: str) -> str:
-        """Valida que el tipo de evento sea uno de los permitidos"""
+        """Valida que el tipo de evento sea uno de los permitidos."""
         valid_types = [
             "player_death",
             "level_start",
@@ -47,7 +54,7 @@ class EventCreate(BaseModel):
     @field_validator("level")
     @classmethod
     def validate_level(cls, v: str) -> str:
-        """Valida que el nivel sea uno de los 5 niveles válidos"""
+        """Valida que el nivel sea uno de los 5 niveles válidos."""
         try:
             validate_level_name(v)
         except ValidationException as e:
@@ -67,11 +74,13 @@ class EventCreate(BaseModel):
 
 
 class EventBatchCreate(BaseModel):
-    """
-    Datos para crear múltiples eventos en una sola petición.
+    """Datos para crear múltiples eventos en una sola petición.
 
     Optimización: Unity puede enviar múltiples eventos acumulados
     para reducir número de requests HTTP.
+
+    Attributes:
+        events (List[EventCreate]): Lista de eventos a crear (1-100).
     """
 
     events: List[EventCreate] = Field(..., min_length=1, max_length=100)
@@ -100,10 +109,18 @@ class EventBatchCreate(BaseModel):
 
 
 class EventFilter(BaseModel):
-    """
-    Filtros para buscar eventos.
+    """Filtros para buscar eventos.
 
     Todos los campos son opcionales, se combinan con AND.
+
+    Attributes:
+        game_id (Optional[str]): Filtrar por partida.
+        player_id (Optional[str]): Filtrar por jugador.
+        event_type (Optional[str]): Filtrar por tipo de evento.
+        level (Optional[str]): Filtrar por nivel.
+        start_time (Optional[datetime]): Fecha inicio.
+        end_time (Optional[datetime]): Fecha fin.
+        limit (int): Límite de resultados (1-1000).
     """
 
     game_id: Optional[str] = None

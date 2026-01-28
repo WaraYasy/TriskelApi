@@ -1,12 +1,13 @@
-"""
-API REST para Leaderboard
+"""API REST para Leaderboard.
 
 Endpoints de FastAPI para consultar rankings.
 
 Reglas de acceso:
-- GET /v1/leaderboard: Publico (listar tipos disponibles)
-- GET /v1/leaderboard/{type}: Publico (ver ranking especifico)
-- POST /v1/admin/leaderboard/refresh: Solo admin (forzar recalculo)
+- GET /v1/leaderboard: Público (listar tipos disponibles).
+- GET /v1/leaderboard/{type}: Público (ver ranking específico).
+- POST /v1/admin/leaderboard/refresh: Solo admin (forzar recálculo).
+
+Autor: Mandrágora
 """
 
 from datetime import datetime, timezone
@@ -29,14 +30,25 @@ admin_router = APIRouter(prefix="/v1/admin/leaderboard", tags=["Admin - Leaderbo
 
 
 def get_leaderboard_repository() -> LeaderboardRepository:
-    """Dependency que provee el repositorio de Leaderboard"""
+    """Dependency que provee el repositorio de Leaderboard.
+
+    Returns:
+        LeaderboardRepository: Repositorio instanciado.
+    """
     return LeaderboardRepository()
 
 
 def get_leaderboard_service(
     repository: LeaderboardRepository = Depends(get_leaderboard_repository),
 ) -> LeaderboardService:
-    """Dependency que provee el servicio de Leaderboard"""
+    """Dependency que provee el servicio de Leaderboard.
+
+    Args:
+        repository (LeaderboardRepository): Repositorio inyectado.
+
+    Returns:
+        LeaderboardService: Servicio instanciado.
+    """
     return LeaderboardService(repository=repository)
 
 
@@ -47,13 +59,15 @@ def get_leaderboard_service(
 def list_leaderboards(
     service: LeaderboardService = Depends(get_leaderboard_service),
 ):
-    """
-    Listar todos los tipos de leaderboard disponibles.
+    """Listar todos los tipos de leaderboard disponibles.
 
-    Endpoint publico - no requiere autenticacion.
+    Endpoint público - no requiere autenticación.
+
+    Args:
+        service (LeaderboardService): Servicio inyectado.
 
     Returns:
-        LeaderboardListResponse: Lista de leaderboards con info basica
+        LeaderboardListResponse: Lista de leaderboards con info básica.
     """
     leaderboards = service.get_all_leaderboards_info()
     return LeaderboardListResponse(leaderboards=leaderboards)
@@ -64,21 +78,20 @@ def get_leaderboard(
     leaderboard_type: str,
     service: LeaderboardService = Depends(get_leaderboard_service),
 ):
-    """
-    Obtener un leaderboard especifico con sus rankings.
+    """Obtener un leaderboard específico con sus rankings.
 
-    Endpoint publico - no requiere autenticacion.
+    Endpoint público - no requiere autenticación.
 
     Args:
-        leaderboard_type: Tipo de leaderboard (speedrun, moral_good, moral_evil, completions)
-        service: Servicio inyectado
+        leaderboard_type (str): Tipo de leaderboard (speedrun, moral_good, moral_evil, completions).
+        service (LeaderboardService): Servicio inyectado.
 
     Returns:
-        LeaderboardResponse: Leaderboard completo con entradas
+        LeaderboardResponse: Leaderboard completo con entradas.
 
     Raises:
-        HTTPException 400: Si el tipo no es valido
-        HTTPException 404: Si el leaderboard no tiene datos
+        HTTPException: Si el tipo no es válido (400).
+        HTTPException: Si el leaderboard no tiene datos (404).
     """
     # Validar tipo
     try:
@@ -116,25 +129,24 @@ def refresh_leaderboards(
     request: Request,
     service: LeaderboardService = Depends(get_leaderboard_service),
 ):
-    """
-    Forzar recalculo de todos los leaderboards.
+    """Forzar recálculo de todos los leaderboards.
 
     SOLO ADMIN - Requiere API Key o JWT de administrador.
 
-    Este endpoint es util para:
-    - Pruebas de desarrollo
-    - Forzar actualizacion inmediata
-    - Recuperacion de errores del scheduler
+    Este endpoint es útil para:
+    - Pruebas de desarrollo.
+    - Forzar actualización inmediata.
+    - Recuperación de errores del scheduler.
 
     Args:
-        request: Request de FastAPI
-        service: Servicio inyectado
+        request (Request): Request de FastAPI.
+        service (LeaderboardService): Servicio inyectado.
 
     Returns:
-        RefreshResponse: Confirmacion con leaderboards actualizados
+        RefreshResponse: Confirmación con leaderboards actualizados.
 
     Raises:
-        HTTPException 403: Si no es admin
+        HTTPException: Si no es admin (403).
     """
     is_admin = getattr(request.state, "is_admin", False)
 

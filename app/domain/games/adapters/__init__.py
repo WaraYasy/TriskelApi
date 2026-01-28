@@ -1,6 +1,7 @@
-"""
-Adaptadores para el dominio Games
+"""Adaptadores para el dominio Games.
 
 Implementaciones concretas de los repositorios:
-- firestore_repository.py: Implementación con Firestore
+- firestore_repository.py: Implementación con Firestore.
+
+Autor: Mandrágora
 """

@@ -1,8 +1,9 @@
-"""
-Repositorio para Events (acceso directo a Firestore)
+"""Repositorio para Events (acceso directo a Firestore).
 
 Este dominio usa arquitectura SIMPLE (sin ports ni adapters).
 El repository accede directamente a Firestore.
+
+Autor: Mandrágora
 """
 
 from datetime import datetime
@@ -18,8 +19,7 @@ from .schemas import EventCreate
 
 
 class EventRepository:
-    """
-    Repositorio de eventos de gameplay usando Firestore.
+    """Repositorio de eventos de gameplay usando Firestore.
 
     Los eventos son inmutables (solo inserción, no actualización ni borrado).
     """
@@ -27,19 +27,22 @@ class EventRepository:
     COLLECTION_NAME = "events"
 
     def __init__(self, db: Optional[Client] = None):
-        """Inicializa el repositorio"""
+        """Inicializa el repositorio.
+
+        Args:
+            db (Optional[Client]): Cliente Firestore opcional.
+        """
         self.db = db or get_firestore_client()
         self.collection = self.db.collection(self.COLLECTION_NAME)
 
     def create(self, event_data: EventCreate) -> GameEvent:
-        """
-        Crea un nuevo evento en Firestore.
+        """Crea un nuevo evento en Firestore.
 
         Args:
-            event_data: Datos del evento a crear
+            event_data (EventCreate): Datos del evento a crear.
 
         Returns:
-            GameEvent: Evento creado con ID y timestamp generados
+            GameEvent: Evento creado con ID y timestamp generados.
         """
         # Crear el objeto GameEvent completo
         event = GameEvent(
@@ -58,16 +61,15 @@ class EventRepository:
         return event
 
     def create_batch(self, events_data: List[EventCreate]) -> List[GameEvent]:
-        """
-        Crea múltiples eventos en una sola operación batch.
+        """Crea múltiples eventos en una sola operación batch.
 
         Optimización para Unity: reducir número de requests HTTP.
 
         Args:
-            events_data: Lista de eventos a crear
+            events_data (List[EventCreate]): Lista de eventos a crear.
 
         Returns:
-            List[GameEvent]: Lista de eventos creados
+            List[GameEvent]: Lista de eventos creados.
         """
         # Usar batch write para optimizar
         batch = self.db.batch()
@@ -95,7 +97,14 @@ class EventRepository:
         return created_events
 
     def get_by_id(self, event_id: str) -> Optional[GameEvent]:
-        """Obtiene un evento por su ID"""
+        """Obtiene un evento por su ID.
+
+        Args:
+            event_id (str): ID del evento.
+
+        Returns:
+            Optional[GameEvent]: Evento encontrado o None.
+        """
         doc_ref = self.collection.document(event_id)
         doc = doc_ref.get()
 
@@ -106,15 +115,14 @@ class EventRepository:
         return GameEvent.from_dict(data)
 
     def get_by_game(self, game_id: str, limit: int = 1000) -> List[GameEvent]:
-        """
-        Obtiene todos los eventos de una partida.
+        """Obtiene todos los eventos de una partida.
 
         Args:
-            game_id: ID de la partida
-            limit: Máximo número de eventos a retornar
+            game_id (str): ID de la partida.
+            limit (int): Máximo número de eventos a retornar.
 
         Returns:
-            List[GameEvent]: Lista de eventos ordenados por timestamp
+            List[GameEvent]: Lista de eventos ordenados por timestamp.
         """
         query = (
             self.collection.where(filter=FieldFilter("game_id", "==", game_id))
@@ -131,15 +139,14 @@ class EventRepository:
         return events
 
     def get_by_player(self, player_id: str, limit: int = 1000) -> List[GameEvent]:
-        """
-        Obtiene todos los eventos de un jugador.
+        """Obtiene todos los eventos de un jugador.
 
         Args:
-            player_id: ID del jugador
-            limit: Máximo número de eventos a retornar
+            player_id (str): ID del jugador.
+            limit (int): Máximo número de eventos a retornar.
 
         Returns:
-            List[GameEvent]: Lista de eventos ordenados por timestamp
+            List[GameEvent]: Lista de eventos ordenados por timestamp.
         """
         query = (
             self.collection.where(filter=FieldFilter("player_id", "==", player_id))
@@ -156,17 +163,16 @@ class EventRepository:
         return events
 
     def get_all(self, limit: int = 5000) -> List[GameEvent]:
-        """
-        Obtiene todos los eventos de todos los jugadores (admin only).
+        """Obtiene todos los eventos de todos los jugadores (admin only).
 
         ADVERTENCIA: Esta query puede ser muy costosa en colecciones grandes.
         Solo debe ser usada por endpoints admin con autenticación.
 
         Args:
-            limit: Máximo número de eventos a retornar (default: 5000)
+            limit (int): Máximo número de eventos a retornar (default: 5000).
 
         Returns:
-            List[GameEvent]: Lista de eventos ordenados por timestamp descendente
+            List[GameEvent]: Lista de eventos ordenados por timestamp descendente.
         """
         query = self.collection.order_by("timestamp", direction=Query.DESCENDING).limit(limit)
         docs = query.stream()
@@ -182,16 +188,15 @@ class EventRepository:
     def get_by_type(
         self, event_type: str, game_id: Optional[str] = None, limit: int = 1000
     ) -> List[GameEvent]:
-        """
-        Obtiene eventos filtrados por tipo.
+        """Obtiene eventos filtrados por tipo.
 
         Args:
-            event_type: Tipo de evento a buscar
-            game_id: Opcional - filtrar también por partida
-            limit: Máximo número de eventos a retornar
+            event_type (str): Tipo de evento a buscar.
+            game_id (Optional[str]): Opcional - filtrar también por partida.
+            limit (int): Máximo número de eventos a retornar.
 
         Returns:
-            List[GameEvent]: Lista de eventos ordenados por timestamp
+            List[GameEvent]: Lista de eventos ordenados por timestamp.
         """
         try:
             query = self.collection.where(filter=FieldFilter("event_type", "==", event_type))
@@ -225,23 +230,22 @@ class EventRepository:
         end_time: Optional[datetime] = None,
         limit: int = 1000,
     ) -> List[GameEvent]:
-        """
-        Búsqueda de eventos con filtros múltiples.
+        """Búsqueda de eventos con filtros múltiples.
 
         IMPORTANTE: Firestore tiene limitaciones con queries compuestas.
         Solo soportamos ciertas combinaciones de filtros.
 
         Args:
-            game_id: Filtrar por partida
-            player_id: Filtrar por jugador
-            event_type: Filtrar por tipo
-            level: Filtrar por nivel
-            start_time: Eventos desde esta fecha
-            end_time: Eventos hasta esta fecha
-            limit: Máximo número de eventos
+            game_id (Optional[str]): Filtrar por partida.
+            player_id (Optional[str]): Filtrar por jugador.
+            event_type (Optional[str]): Filtrar por tipo.
+            level (Optional[str]): Filtrar por nivel.
+            start_time (Optional[datetime]): Eventos desde esta fecha.
+            end_time (Optional[datetime]): Eventos hasta esta fecha.
+            limit (int): Máximo número de eventos.
 
         Returns:
-            List[GameEvent]: Lista de eventos ordenados por timestamp
+            List[GameEvent]: Lista de eventos ordenados por timestamp.
         """
         query = self.collection
 

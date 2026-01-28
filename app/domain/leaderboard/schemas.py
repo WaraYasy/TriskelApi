@@ -1,7 +1,8 @@
-"""
-Schemas (DTOs) para la API de Leaderboard
+"""Schemas (DTOs) para la API de Leaderboard.
 
 Modelos de entrada y salida para los endpoints de rankings.
+
+Autor: Mandrágora
 """
 
 from datetime import datetime
@@ -13,8 +14,14 @@ from .models import LeaderboardEntry
 
 
 class LeaderboardResponse(BaseModel):
-    """
-    Respuesta con un leaderboard completo.
+    """Respuesta con un leaderboard completo.
+
+    Attributes:
+        leaderboard_id (str): ID del leaderboard.
+        leaderboard_name (str): Nombre legible.
+        updated_at (datetime): Fecha de última actualización.
+        entries (List[LeaderboardEntry]): Lista de entradas.
+        total_entries (int): Total de entradas.
     """
 
     leaderboard_id: str
@@ -45,8 +52,10 @@ class LeaderboardResponse(BaseModel):
 
 
 class LeaderboardListResponse(BaseModel):
-    """
-    Lista de leaderboards disponibles.
+    """Lista de leaderboards disponibles.
+
+    Attributes:
+        leaderboards (List[dict]): Lista de leaderboards con info básica.
     """
 
     leaderboards: List[dict] = Field(..., description="Lista de leaderboards con info basica")
@@ -71,8 +80,12 @@ class LeaderboardListResponse(BaseModel):
 
 
 class RefreshResponse(BaseModel):
-    """
-    Respuesta al forzar recalculo de leaderboards.
+    """Respuesta al forzar recálculo de leaderboards.
+
+    Attributes:
+        message (str): Mensaje de estado.
+        leaderboards_updated (List[str]): IDs de leaderboards actualizados.
+        updated_at (datetime): Fecha de actualización.
     """
 
     message: str

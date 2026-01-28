@@ -8,6 +8,9 @@ Reglas de acceso:
 - POST /v1/events/batch: Jugador autenticado (crear eventos propios)
 - GET /v1/events/game/{game_id}: Solo si es tu partida o con API Key
 - GET /v1/events/player/{player_id}: Solo si es tu ID o con API Key
+
+Autor: Mandrágora
+
 """
 
 from typing import List
@@ -18,7 +21,10 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from ..games.adapters.firestore_repository import FirestoreGameRepository
 from .models import GameEvent
 from .repository import EventRepository
-from .schemas import EventBatchCreate, EventCreate
+from .schemas import (
+    EventBatchCreate,
+    EventCreate,
+)
 from .service import EventService
 
 # Router de FastAPI
@@ -29,19 +35,18 @@ router = APIRouter(prefix="/v1/events", tags=["Events"])
 
 
 def check_event_creation_access(request: Request, event_data: EventCreate) -> None:
-    """
-    Verifica que el usuario tenga permisos para crear un evento.
+    """Verifica que el usuario tenga permisos para crear un evento.
 
     Reglas:
-    - Admin (API Key): puede crear eventos para cualquier jugador
-    - Jugador autenticado: solo puede crear eventos para sí mismo
+    - Admin (API Key): puede crear eventos para cualquier jugador.
+    - Jugador autenticado: solo puede crear eventos para sí mismo.
 
     Args:
-        request: Request de FastAPI con estado de autenticación
-        event_data: Datos del evento a crear
+        request (Request): Request de FastAPI con estado de autenticación.
+        event_data (EventCreate): Datos del evento a crear.
 
     Raises:
-        HTTPException 403: Si no tiene permisos
+        HTTPException: Si no tiene permisos (403).
     """
     is_admin = getattr(request.state, "is_admin", False)
     authenticated_player_id = getattr(request.state, "player_id", None)
@@ -56,35 +61,33 @@ def check_event_creation_access(request: Request, event_data: EventCreate) -> No
 
 
 def check_batch_creation_access(request: Request, batch_data: EventBatchCreate) -> None:
-    """
-    Verifica permisos para crear batch de eventos.
+    """Verifica permisos para crear batch de eventos.
 
     Args:
-        request: Request de FastAPI
-        batch_data: Batch de eventos
+        request (Request): Request de FastAPI.
+        batch_data (EventBatchCreate): Batch de eventos.
 
     Raises:
-        HTTPException 403: Si algún evento no tiene permisos
+        HTTPException: Si algún evento no tiene permisos (403).
     """
     for event_data in batch_data.events:
         check_event_creation_access(request, event_data)
 
 
 def check_game_events_access(request: Request, game_id: str) -> None:
-    """
-    Verifica permisos para ver eventos de una partida.
+    """Verifica permisos para ver eventos de una partida.
 
     Reglas:
-    - Admin (API Key): puede ver eventos de cualquier partida
-    - Jugador autenticado: solo puede ver eventos de sus partidas
+    - Admin (API Key): puede ver eventos de cualquier partida.
+    - Jugador autenticado: solo puede ver eventos de sus partidas.
 
     Args:
-        request: Request de FastAPI
-        game_id: ID de la partida
+        request (Request): Request de FastAPI.
+        game_id (str): ID de la partida.
 
     Raises:
-        HTTPException 403: Si no tiene permisos
-        HTTPException 404: Si la partida no existe
+        HTTPException: Si no tiene permisos (403).
+        HTTPException: Si la partida no existe (404).
     """
     is_admin = getattr(request.state, "is_admin", False)
     authenticated_player_id = getattr(request.state, "player_id", None)
@@ -108,19 +111,18 @@ def check_game_events_access(request: Request, game_id: str) -> None:
 
 
 def check_player_events_access(request: Request, player_id: str) -> None:
-    """
-    Verifica permisos para ver eventos de un jugador.
+    """Verifica permisos para ver eventos de un jugador.
 
     Reglas:
-    - Admin (API Key): puede ver eventos de cualquier jugador
-    - Jugador autenticado: solo puede ver sus propios eventos
+    - Admin (API Key): puede ver eventos de cualquier jugador.
+    - Jugador autenticado: solo puede ver sus propios eventos.
 
     Args:
-        request: Request de FastAPI
-        player_id: ID del jugador
+        request (Request): Request de FastAPI.
+        player_id (str): ID del jugador.
 
     Raises:
-        HTTPException 403: Si no tiene permisos
+        HTTPException: Si no tiene permisos (403).
     """
     is_admin = getattr(request.state, "is_admin", False)
     authenticated_player_id = getattr(request.state, "player_id", None)
@@ -141,14 +143,25 @@ def check_player_events_access(request: Request, player_id: str) -> None:
 
 
 def get_event_repository() -> EventRepository:
-    """Dependency que provee el repositorio de Events"""
+    """Dependency que provee el repositorio de Events.
+
+    Returns:
+        EventRepository: Repositorio instanciado.
+    """
     return EventRepository()
 
 
 def get_event_service(
     repository: EventRepository = Depends(get_event_repository),
 ) -> EventService:
-    """Dependency que provee el servicio de Events"""
+    """Dependency que provee el servicio de Events.
+
+    Args:
+        repository (EventRepository): Repositorio inyectado.
+
+    Returns:
+        EventService: Servicio instanciado.
+    """
     return EventService(repository=repository)
 
 
@@ -161,22 +174,21 @@ def create_event(
     request: Request,
     service: EventService = Depends(get_event_service),
 ):
-    """
-    Crear un evento de gameplay.
+    """Crear un evento de gameplay.
 
     Solo puedes crear eventos para ti mismo (a menos que seas admin).
 
     Args:
-        event_data: Datos del evento
-        request: Request de FastAPI
-        service: Servicio inyectado
+        event_data (EventCreate): Datos del evento.
+        request (Request): Request de FastAPI.
+        service (EventService): Servicio inyectado.
 
     Returns:
-        GameEvent: Evento creado
+        GameEvent: Evento creado.
 
     Raises:
-        HTTPException 403: Si intentas crear evento para otro jugador
-        HTTPException 404: Si el jugador no existe
+        HTTPException: Si intentas crear evento para otro jugador (403).
+        HTTPException: Si el jugador no existe (404).
     """
     # Verificar permisos
     check_event_creation_access(request, event_data)
@@ -193,23 +205,22 @@ def create_batch(
     request: Request,
     service: EventService = Depends(get_event_service),
 ):
-    """
-    Crear múltiples eventos en una sola petición.
+    """Crear múltiples eventos en una sola petición.
 
     Optimización para Unity: enviar eventos acumulados.
     Solo puedes crear eventos para ti mismo (a menos que seas admin).
 
     Args:
-        batch_data: Batch de eventos
-        request: Request de FastAPI
-        service: Servicio inyectado
+        batch_data (EventBatchCreate): Batch de eventos.
+        request (Request): Request de FastAPI.
+        service (EventService): Servicio inyectado.
 
     Returns:
-        List[GameEvent]: Lista de eventos creados
+        List[GameEvent]: Lista de eventos creados.
 
     Raises:
-        HTTPException 403: Si intentas crear eventos para otro jugador
-        HTTPException 404: Si algún jugador no existe
+        HTTPException: Si intentas crear eventos para otro jugador (403).
+        HTTPException: Si algún jugador no existe (404).
     """
     # Verificar permisos para todos los eventos
     check_batch_creation_access(request, batch_data)
@@ -226,22 +237,21 @@ def get_all_events(
     limit: int = 5000,
     service: EventService = Depends(get_event_service),
 ):
-    """
-    Obtener todos los eventos de todos los jugadores (ADMIN ONLY).
+    """Obtener todos los eventos de todos los jugadores (ADMIN ONLY).
 
     Este endpoint está diseñado para analytics y herramientas de administración.
     Requiere autenticación admin (JWT con rol admin o API Key).
 
     Args:
-        request: Request de FastAPI
-        limit: Máximo número de eventos a retornar (default: 5000)
-        service: Servicio inyectado
+        request (Request): Request de FastAPI.
+        limit (int): Máximo número de eventos a retornar (default: 5000).
+        service (EventService): Servicio inyectado.
 
     Returns:
-        List[GameEvent]: Lista de todos los eventos
+        List[GameEvent]: Lista de todos los eventos.
 
     Raises:
-        HTTPException 403: Si no tiene permisos de admin
+        HTTPException: Si no tiene permisos de admin (403).
     """
     # Verificar que es admin
     is_admin = getattr(request.state, "is_admin", False)
@@ -262,23 +272,22 @@ def get_game_events(
     limit: int = 1000,
     service: EventService = Depends(get_event_service),
 ):
-    """
-    Obtener eventos de una partida.
+    """Obtener eventos de una partida.
 
     Solo puedes ver eventos de tus propias partidas (a menos que seas admin).
 
     Args:
-        game_id: ID de la partida
-        request: Request de FastAPI
-        limit: Máximo número de eventos
-        service: Servicio inyectado
+        game_id (str): ID de la partida.
+        request (Request): Request de FastAPI.
+        limit (int): Máximo número de eventos.
+        service (EventService): Servicio inyectado.
 
     Returns:
-        List[GameEvent]: Lista de eventos ordenados por timestamp
+        List[GameEvent]: Lista de eventos ordenados por timestamp.
 
     Raises:
-        HTTPException 403: Si intentas ver eventos de otra partida
-        HTTPException 404: Si la partida no existe
+        HTTPException: Si intentas ver eventos de otra partida (403).
+        HTTPException: Si la partida no existe (404).
     """
     # Verificar permisos
     check_game_events_access(request, game_id)
@@ -293,22 +302,21 @@ def get_player_events(
     limit: int = 1000,
     service: EventService = Depends(get_event_service),
 ):
-    """
-    Obtener eventos de un jugador.
+    """Obtener eventos de un jugador.
 
     Solo puedes ver tus propios eventos (a menos que seas admin).
 
     Args:
-        player_id: ID del jugador
-        request: Request de FastAPI
-        limit: Máximo número de eventos
-        service: Servicio inyectado
+        player_id (str): ID del jugador.
+        request (Request): Request de FastAPI.
+        limit (int): Máximo número de eventos.
+        service (EventService): Servicio inyectado.
 
     Returns:
-        List[GameEvent]: Lista de eventos ordenados por timestamp
+        List[GameEvent]: Lista de eventos ordenados por timestamp.
 
     Raises:
-        HTTPException 403: Si intentas ver eventos de otro jugador
+        HTTPException: Si intentas ver eventos de otro jugador (403).
     """
     # Verificar permisos
     check_player_events_access(request, player_id)
@@ -324,24 +332,23 @@ def get_game_events_by_type(
     limit: int = 1000,
     service: EventService = Depends(get_event_service),
 ):
-    """
-    Obtener eventos de una partida filtrados por tipo.
+    """Obtener eventos de una partida filtrados por tipo.
 
     Solo puedes ver eventos de tus propias partidas (a menos que seas admin).
 
     Args:
-        game_id: ID de la partida
-        event_type: Tipo de evento a filtrar
-        request: Request de FastAPI
-        limit: Máximo número de eventos
-        service: Servicio inyectado
+        game_id (str): ID de la partida.
+        event_type (str): Tipo de evento a filtrar.
+        request (Request): Request de FastAPI.
+        limit (int): Máximo número de eventos.
+        service (EventService): Servicio inyectado.
 
     Returns:
-        List[GameEvent]: Lista de eventos filtrados
+        List[GameEvent]: Lista de eventos filtrados.
 
     Raises:
-        HTTPException 403: Si intentas ver eventos de otra partida
-        HTTPException 404: Si la partida no existe
+        HTTPException: Si intentas ver eventos de otra partida (403).
+        HTTPException: Si la partida no existe (404).
     """
     # Verificar permisos
     check_game_events_access(request, game_id)

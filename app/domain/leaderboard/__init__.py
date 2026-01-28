@@ -1,7 +1,8 @@
-"""
-Dominio Leaderboard
+"""Dominio Leaderboard.
 
-Tablas de clasificacion calculadas periodicamente.
+Tablas de clasificación calculadas periódicamente.
+
+Autor: Mandrágora
 """
 
 from .api import admin_router, router

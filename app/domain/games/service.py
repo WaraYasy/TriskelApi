@@ -1,8 +1,9 @@
-"""
-Service Layer para Games - Lógica de negocio
+"""Service Layer para Games - Lógica de negocio.
 
 Contiene todas las reglas de negocio de partidas.
 Depende de interfaces, no de implementaciones concretas.
+
+Autor: Mandrágora
 """
 
 from datetime import datetime
@@ -16,13 +17,12 @@ from .schemas import GameCreate, GameUpdate, LevelComplete, LevelStart
 
 
 class GameService:
-    """
-    Servicio de lógica de negocio para partidas.
+    """Servicio de lógica de negocio para partidas.
 
     Recibe sus dependencias por inyección:
-    - game_repository: Para persistir partidas
-    - player_repository: Para verificar que el jugador existe
-    - player_service: Para actualizar stats del jugador al terminar
+    - game_repository: Para persistir partidas.
+    - player_repository: Para verificar que el jugador existe.
+    - player_service: Para actualizar stats del jugador al terminar.
     """
 
     def __init__(
@@ -31,34 +31,32 @@ class GameService:
         player_repository: IPlayerRepository,
         player_service: PlayerService,
     ):
-        """
-        Inicializa el servicio con sus dependencias.
+        """Inicializa el servicio con sus dependencias.
 
         Args:
-            game_repository: Implementación de IGameRepository
-            player_repository: Implementación de IPlayerRepository
-            player_service: Servicio de Players
+            game_repository (IGameRepository): Implementación de IGameRepository.
+            player_repository (IPlayerRepository): Implementación de IPlayerRepository.
+            player_service (PlayerService): Servicio de Players.
         """
         self.game_repository = game_repository
         self.player_repository = player_repository
         self.player_service = player_service
 
     def create_game(self, game_data: GameCreate) -> Game:
-        """
-        Crea una nueva partida.
+        """Crea una nueva partida.
 
         Reglas de negocio:
-        - El jugador debe existir
-        - El jugador NO puede tener otra partida activa
+        - El jugador debe existir.
+        - El jugador NO puede tener otra partida activa.
 
         Args:
-            game_data: Datos de la partida a crear
+            game_data (GameCreate): Datos de la partida a crear.
 
         Returns:
-            Game: Partida creada
+            Game: Partida creada.
 
         Raises:
-            ValueError: Si el jugador no existe o ya tiene partida activa
+            ValueError: Si el jugador no existe o ya tiene partida activa.
         """
         # Verificar que el jugador existe
         player = self.player_repository.get_by_id(game_data.player_id)
@@ -74,57 +72,53 @@ class GameService:
         return self.game_repository.create(game_data)
 
     def get_game(self, game_id: str) -> Optional[Game]:
-        """
-        Obtiene una partida por ID.
+        """Obtiene una partida por ID.
 
         Args:
-            game_id: ID de la partida
+            game_id (str): ID de la partida.
 
         Returns:
-            Game si existe, None si no
+            Optional[Game]: Game si existe, None si no.
         """
         return self.game_repository.get_by_id(game_id)
 
     def get_player_games(self, player_id: str, limit: int = 100) -> List[Game]:
-        """
-        Obtiene todas las partidas de un jugador.
+        """Obtiene todas las partidas de un jugador.
 
         Args:
-            player_id: ID del jugador
-            limit: Máximo número de partidas a retornar
+            player_id (str): ID del jugador.
+            limit (int): Máximo número de partidas a retornar.
 
         Returns:
-            Lista de partidas
+            List[Game]: Lista de partidas.
         """
         return self.game_repository.get_by_player(player_id, limit=limit)
 
     def get_all_games(self, limit: int = 1000) -> List[Game]:
-        """
-        Obtiene todas las partidas de todos los jugadores.
+        """Obtiene todas las partidas de todos los jugadores.
 
         ADMIN ONLY: Este método no debe ser expuesto a jugadores normales.
 
         Args:
-            limit: Máximo número de partidas a retornar
+            limit (int): Máximo número de partidas a retornar.
 
         Returns:
-            Lista de todas las partidas
+            List[Game]: Lista de todas las partidas.
         """
         return self.game_repository.get_all(limit=limit)
 
     def update_game(self, game_id: str, game_update: GameUpdate) -> Optional[Game]:
-        """
-        Actualiza una partida.
+        """Actualiza una partida.
 
         Regla de negocio:
-        - Si la partida se completa o abandona, actualiza stats del jugador
+        - Si la partida se completa o abandona, actualiza stats del jugador.
 
         Args:
-            game_id: ID de la partida
-            game_update: Campos a actualizar
+            game_id (str): ID de la partida.
+            game_update (GameUpdate): Campos a actualizar.
 
         Returns:
-            Game actualizado si existe, None si no
+            Optional[Game]: Game actualizado si existe, None si no.
         """
         game = self.game_repository.get_by_id(game_id)
         if not game:
@@ -140,21 +134,20 @@ class GameService:
         return updated_game
 
     def start_level(self, game_id: str, level_data: LevelStart) -> Optional[Game]:
-        """
-        Inicia un nivel.
+        """Inicia un nivel.
 
         Regla de negocio:
-        - La partida debe estar activa (status="in_progress")
+        - La partida debe estar activa (status="in_progress").
 
         Args:
-            game_id: ID de la partida
-            level_data: Datos del nivel a iniciar
+            game_id (str): ID de la partida.
+            level_data (LevelStart): Datos del nivel a iniciar.
 
         Returns:
-            Game actualizado si existe, None si no
+            Optional[Game]: Game actualizado si existe, None si no.
 
         Raises:
-            ValueError: Si la partida no está activa
+            ValueError: Si la partida no está activa.
         """
         game = self.game_repository.get_by_id(game_id)
         if not game:
@@ -167,22 +160,21 @@ class GameService:
         return self.game_repository.start_level(game_id, level_data)
 
     def complete_level(self, game_id: str, level_data: LevelComplete) -> Optional[Game]:
-        """
-        Completa un nivel.
+        """Completa un nivel.
 
         Reglas de negocio:
-        - La partida debe estar activa
-        - Si es el nivel final (claro_almas), marca boss_defeated=True
+        - La partida debe estar activa.
+        - Si es el nivel final (claro_almas), marca boss_defeated=True.
 
         Args:
-            game_id: ID de la partida
-            level_data: Datos del nivel completado
+            game_id (str): ID de la partida.
+            level_data (LevelComplete): Datos del nivel completado.
 
         Returns:
-            Game actualizado si existe, None si no
+            Optional[Game]: Game actualizado si existe, None si no.
 
         Raises:
-            ValueError: Si la partida no está activa
+            ValueError: Si la partida no está activa.
         """
         game = self.game_repository.get_by_id(game_id)
         if not game:
@@ -203,29 +195,27 @@ class GameService:
         return updated_game
 
     def delete_game(self, game_id: str) -> bool:
-        """
-        Elimina una partida.
+        """Elimina una partida.
 
         Args:
-            game_id: ID de la partida
+            game_id (str): ID de la partida.
 
         Returns:
-            True si se eliminó, False si no existía
+            bool: True si se eliminó, False si no existía.
         """
         return self.game_repository.delete(game_id)
 
     def finish_game(self, game_id: str, completed: bool = True) -> Optional[Game]:
-        """
-        Finaliza una partida.
+        """Finaliza una partida.
 
         Marca la partida como completed o abandoned y actualiza stats del jugador.
 
         Args:
-            game_id: ID de la partida
-            completed: True si completó, False si abandonó
+            game_id (str): ID de la partida.
+            completed (bool): True si completó, False si abandonó.
 
         Returns:
-            Game actualizado si existe, None si no
+            Optional[Game]: Game actualizado si existe, None si no.
         """
         game = self.game_repository.get_by_id(game_id)
         if not game:

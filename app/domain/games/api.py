@@ -1,15 +1,16 @@
-"""
-API REST para Games
+"""API REST para Games.
 
 Endpoints de FastAPI para gestionar partidas.
 
 Reglas de acceso:
-- POST /v1/games: Jugador autenticado (crear partida propia)
-- GET /v1/games/{id}: Solo si es tu partida o con API Key
-- GET /v1/games/player/{player_id}: Solo si es tu ID o con API Key
-- PATCH /v1/games/{id}: Solo si es tu partida o con API Key
-- POST /v1/games/{id}/level/*: Solo si es tu partida o con API Key
-- DELETE /v1/games/{id}: Solo si es tu partida o con API Key
+- POST /v1/games: Jugador autenticado (crear partida propia).
+- GET /v1/games/{id}: Solo si es tu partida o con API Key.
+- GET /v1/games/player/{player_id}: Solo si es tu ID o con API Key.
+- PATCH /v1/games/{id}: Solo si es tu partida o con API Key.
+- POST /v1/games/{id}/level/*: Solo si es tu partida o con API Key.
+- DELETE /v1/games/{id}: Solo si es tu partida o con API Key.
+
+Autor: Mandrágora
 """
 
 from typing import List
@@ -35,20 +36,19 @@ router = APIRouter(prefix="/v1/games", tags=["Games"])
 
 
 def check_game_access(request: Request, game: Game, service: GameService) -> None:
-    """
-    Verifica que el usuario tenga permisos para acceder a la partida especificada.
+    """Verifica que el usuario tenga permisos para acceder a la partida especificada.
 
     Reglas:
-    - Admin (API Key): puede acceder a cualquier partida
-    - Jugador autenticado: solo puede acceder a sus propias partidas
+    - Admin (API Key): puede acceder a cualquier partida.
+    - Jugador autenticado: solo puede acceder a sus propias partidas.
 
     Args:
-        request: Request de FastAPI con estado de autenticación
-        game: Partida a la que se quiere acceder
-        service: Servicio de games (no usado pero mantenido para consistencia)
+        request (Request): Request de FastAPI con estado de autenticación.
+        game (Game): Partida a la que se quiere acceder.
+        service (GameService): Servicio de games (no usado pero mantenido para consistencia).
 
     Raises:
-        HTTPException 403: Si no tiene permisos
+        HTTPException: Si no tiene permisos (403).
     """
     is_admin = getattr(request.state, "is_admin", False)
     authenticated_player_id = getattr(request.state, "player_id", None)
@@ -65,19 +65,18 @@ def check_game_access(request: Request, game: Game, service: GameService) -> Non
 
 
 def check_player_games_access(request: Request, target_player_id: str) -> None:
-    """
-    Verifica que el usuario tenga permisos para ver las partidas de un jugador.
+    """Verifica que el usuario tenga permisos para ver las partidas de un jugador.
 
     Reglas:
-    - Admin (API Key): puede ver partidas de cualquier jugador
-    - Jugador autenticado: solo puede ver sus propias partidas
+    - Admin (API Key): puede ver partidas de cualquier jugador.
+    - Jugador autenticado: solo puede ver sus propias partidas.
 
     Args:
-        request: Request de FastAPI con estado de autenticación
-        target_player_id: ID del jugador cuyas partidas se quieren ver
+        request (Request): Request de FastAPI con estado de autenticación.
+        target_player_id (str): ID del jugador cuyas partidas se quieren ver.
 
     Raises:
-        HTTPException 403: Si no tiene permisos
+        HTTPException: Si no tiene permisos (403).
     """
     is_admin = getattr(request.state, "is_admin", False)
     authenticated_player_id = getattr(request.state, "player_id", None)
@@ -98,19 +97,34 @@ def check_player_games_access(request: Request, target_player_id: str) -> None:
 
 
 def get_game_repository() -> IGameRepository:
-    """Dependency que provee el repositorio de Games"""
+    """Dependency que provee el repositorio de Games.
+
+    Returns:
+        IGameRepository: Repositorio instanciado.
+    """
     return FirestoreGameRepository()
 
 
 def get_player_repository() -> IPlayerRepository:
-    """Dependency que provee el repositorio de Players"""
+    """Dependency que provee el repositorio de Players.
+
+    Returns:
+        IPlayerRepository: Repositorio instanciado.
+    """
     return FirestorePlayerRepository()
 
 
 def get_player_service(
     player_repository: IPlayerRepository = Depends(get_player_repository),
 ) -> PlayerService:
-    """Dependency que provee el servicio de Players"""
+    """Dependency que provee el servicio de Players.
+
+    Args:
+        player_repository (IPlayerRepository): Repositorio inyectado.
+
+    Returns:
+        PlayerService: Servicio instanciado.
+    """
     return PlayerService(repository=player_repository)
 
 
@@ -119,12 +133,19 @@ def get_game_service(
     player_repository: IPlayerRepository = Depends(get_player_repository),
     player_service: PlayerService = Depends(get_player_service),
 ) -> GameService:
-    """
-    Dependency que provee el servicio de Games.
+    """Dependency que provee el servicio de Games.
 
     Games depende de Players para:
-    - Verificar que el jugador existe al crear partida
-    - Actualizar stats del jugador al terminar partida
+    - Verificar que el jugador existe al crear partida.
+    - Actualizar stats del jugador al terminar partida.
+
+    Args:
+        game_repository (IGameRepository): Repositorio de juegos.
+        player_repository (IPlayerRepository): Repositorio de jugadores.
+        player_service (PlayerService): Servicio de jugadores.
+
+    Returns:
+        GameService: Servicio instanciado.
     """
     return GameService(
         game_repository=game_repository,
@@ -142,26 +163,25 @@ def create_game(
     request: Request,
     service: GameService = Depends(get_game_service),
 ):
-    """
-    Iniciar una nueva partida.
+    """Iniciar una nueva partida.
 
     Reglas:
-    - El jugador debe existir
-    - No puede tener otra partida activa
-    - Solo puedes crear partidas para ti mismo (a menos que seas admin)
+    - El jugador debe existir.
+    - No puede tener otra partida activa.
+    - Solo puedes crear partidas para ti mismo (a menos que seas admin).
 
     Args:
-        game_data: Datos de la partida (player_id opcional, se usa el autenticado si no se envía)
-        request: Request de FastAPI
-        service: Servicio inyectado
+        game_data (GameCreate): Datos de la partida (player_id opcional, se usa el autenticado).
+        request (Request): Request de FastAPI.
+        service (GameService): Servicio inyectado.
 
     Returns:
-        Game: Partida creada
+        Game: Partida creada.
 
     Raises:
-        HTTPException 403: Si intentas crear partida para otro jugador
-        HTTPException 404: Si el jugador no existe
-        HTTPException 409: Si ya tiene partida activa
+        HTTPException: Si intentas crear partida para otro jugador (403).
+        HTTPException: Si el jugador no existe (404).
+        HTTPException: Si ya tiene partida activa (409).
     """
     is_admin = getattr(request.state, "is_admin", False)
     authenticated_player_id = getattr(request.state, "player_id", None)
@@ -190,22 +210,21 @@ def get_all_games(
     limit: int = 1000,
     service: GameService = Depends(get_game_service),
 ):
-    """
-    Obtener todas las partidas de todos los jugadores (ADMIN ONLY).
+    """Obtener todas las partidas de todos los jugadores (ADMIN ONLY).
 
     Este endpoint está diseñado para analytics y herramientas de administración.
     Requiere autenticación admin (JWT con rol admin o API Key).
 
     Args:
-        request: Request de FastAPI
-        limit: Máximo número de partidas a retornar (default: 1000)
-        service: Servicio inyectado
+        request (Request): Request de FastAPI.
+        limit (int): Máximo número de partidas a retornar (default: 1000).
+        service (GameService): Servicio inyectado.
 
     Returns:
-        List[Game]: Lista de todas las partidas
+        List[Game]: Lista de todas las partidas.
 
     Raises:
-        HTTPException 403: Si no tiene permisos de admin
+        HTTPException: Si no tiene permisos de admin (403).
     """
     # Verificar que es admin
     is_admin = getattr(request.state, "is_admin", False)
@@ -221,22 +240,21 @@ def get_all_games(
 
 @router.get("/{game_id}", response_model=Game)
 def get_game(game_id: str, request: Request, service: GameService = Depends(get_game_service)):
-    """
-    Obtener una partida por ID.
+    """Obtener una partida por ID.
 
     Solo puedes ver tus propias partidas, a menos que uses API Key (admin).
 
     Args:
-        game_id: ID de la partida
-        request: Request de FastAPI
-        service: Servicio inyectado
+        game_id (str): ID de la partida.
+        request (Request): Request de FastAPI.
+        service (GameService): Servicio inyectado.
 
     Returns:
-        Game: Partida completa
+        Game: Partida completa.
 
     Raises:
-        HTTPException 403: Si intentas ver la partida de otro jugador
-        HTTPException 404: Si la partida no existe
+        HTTPException: Si intentas ver la partida de otro jugador (403).
+        HTTPException: Si la partida no existe (404).
     """
     game = service.get_game(game_id)
 
@@ -256,22 +274,21 @@ def get_player_games(
     limit: int = 100,
     service: GameService = Depends(get_game_service),
 ):
-    """
-    Obtener todas las partidas de un jugador.
+    """Obtener todas las partidas de un jugador.
 
     Solo puedes ver tus propias partidas, a menos que uses API Key (admin).
 
     Args:
-        player_id: ID del jugador
-        request: Request de FastAPI
-        limit: Máximo número de partidas a retornar
-        service: Servicio inyectado
+        player_id (str): ID del jugador.
+        request (Request): Request de FastAPI.
+        limit (int): Máximo número de partidas a retornar.
+        service (GameService): Servicio inyectado.
 
     Returns:
-        List[Game]: Lista de partidas
+        List[Game]: Lista de partidas.
 
     Raises:
-        HTTPException 403: Si intentas ver partidas de otro jugador
+        HTTPException: Si intentas ver partidas de otro jugador (403).
     """
     # Verificar permisos (admin o propio jugador)
     check_player_games_access(request, player_id)
@@ -286,23 +303,22 @@ def update_game(
     request: Request,
     service: GameService = Depends(get_game_service),
 ):
-    """
-    Actualizar una partida.
+    """Actualizar una partida.
 
     Solo puedes actualizar tus propias partidas, a menos que uses API Key (admin).
 
     Args:
-        game_id: ID de la partida
-        game_update: Campos a actualizar
-        request: Request de FastAPI
-        service: Servicio inyectado
+        game_id (str): ID de la partida.
+        game_update (GameUpdate): Campos a actualizar.
+        request (Request): Request de FastAPI.
+        service (GameService): Servicio inyectado.
 
     Returns:
-        Game: Partida actualizada
+        Game: Partida actualizada.
 
     Raises:
-        HTTPException 403: Si intentas actualizar la partida de otro jugador
-        HTTPException 404: Si la partida no existe
+        HTTPException: Si intentas actualizar la partida de otro jugador (403).
+        HTTPException: Si la partida no existe (404).
     """
     # Primero obtener la partida para verificar permisos
     game = service.get_game(game_id)
@@ -326,24 +342,23 @@ def start_level(
     request: Request,
     service: GameService = Depends(get_game_service),
 ):
-    """
-    Registrar inicio de un nivel.
+    """Registrar inicio de un nivel.
 
     Solo puedes iniciar niveles en tus propias partidas, a menos que uses API Key (admin).
 
     Args:
-        game_id: ID de la partida
-        level_data: Datos del nivel a iniciar
-        request: Request de FastAPI
-        service: Servicio inyectado
+        game_id (str): ID de la partida.
+        level_data (LevelStart): Datos del nivel a iniciar.
+        request (Request): Request de FastAPI.
+        service (GameService): Servicio inyectado.
 
     Returns:
-        Game: Partida actualizada
+        Game: Partida actualizada.
 
     Raises:
-        HTTPException 403: Si intentas modificar la partida de otro jugador
-        HTTPException 404: Si la partida no existe
-        HTTPException 400: Si la partida no está activa
+        HTTPException: Si intentas modificar la partida de otro jugador (403).
+        HTTPException: Si la partida no existe (404).
+        HTTPException: Si la partida no está activa (400).
     """
     # Primero obtener la partida para verificar permisos
     game = service.get_game(game_id)
@@ -369,8 +384,7 @@ def complete_level(
     request: Request,
     service: GameService = Depends(get_game_service),
 ):
-    """
-    Registrar completado de un nivel.
+    """Registrar completado de un nivel.
 
     Solo puedes completar niveles en tus propias partidas, a menos que uses API Key (admin).
 
@@ -382,18 +396,18 @@ def complete_level(
     - Porcentaje de completado
 
     Args:
-        game_id: ID de la partida
-        level_data: Datos del nivel completado
-        request: Request de FastAPI
-        service: Servicio inyectado
+        game_id (str): ID de la partida.
+        level_data (LevelComplete): Datos del nivel completado.
+        request (Request): Request de FastAPI.
+        service (GameService): Servicio inyectado.
 
     Returns:
-        Game: Partida actualizada
+        Game: Partida actualizada.
 
     Raises:
-        HTTPException 403: Si intentas modificar la partida de otro jugador
-        HTTPException 404: Si la partida no existe
-        HTTPException 400: Si la partida no está activa
+        HTTPException: Si intentas modificar la partida de otro jugador (403).
+        HTTPException: Si la partida no existe (404).
+        HTTPException: Si la partida no está activa (400).
     """
     # Primero obtener la partida para verificar permisos
     game = service.get_game(game_id)
@@ -418,22 +432,21 @@ def complete_game(
     request: Request,
     service: GameService = Depends(get_game_service),
 ):
-    """
-    Finalizar una partida (marcarla como completada).
+    """Finalizar una partida (marcarla como completada).
 
     Solo puedes finalizar tus propias partidas, a menos que uses API Key (admin).
 
     Args:
-        game_id: ID de la partida
-        request: Request de FastAPI
-        service: Servicio inyectado
+        game_id (str): ID de la partida.
+        request (Request): Request de FastAPI.
+        service (GameService): Servicio inyectado.
 
     Returns:
-        Game: Partida actualizada con status="completed"
+        Game: Partida actualizada con status="completed".
 
     Raises:
-        HTTPException 403: Si intentas finalizar la partida de otro jugador
-        HTTPException 404: Si la partida no existe
+        HTTPException: Si intentas finalizar la partida de otro jugador (403).
+        HTTPException: Si la partida no existe (404).
     """
     game = service.get_game(game_id)
 
@@ -448,22 +461,21 @@ def complete_game(
 
 @router.delete("/{game_id}")
 def delete_game(game_id: str, request: Request, service: GameService = Depends(get_game_service)):
-    """
-    Eliminar una partida.
+    """Eliminar una partida.
 
     Solo puedes eliminar tus propias partidas, a menos que uses API Key (admin).
 
     Args:
-        game_id: ID de la partida
-        request: Request de FastAPI
-        service: Servicio inyectado
+        game_id (str): ID de la partida.
+        request (Request): Request de FastAPI.
+        service (GameService): Servicio inyectado.
 
     Returns:
-        dict: Mensaje de confirmación
+        dict: Mensaje de confirmación.
 
     Raises:
-        HTTPException 403: Si intentas eliminar la partida de otro jugador
-        HTTPException 404: Si la partida no existe
+        HTTPException: Si intentas eliminar la partida de otro jugador (403).
+        HTTPException: Si la partida no existe (404).
     """
     # Primero obtener la partida para verificar permisos
     game = service.get_game(game_id)

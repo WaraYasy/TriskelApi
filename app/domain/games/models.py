@@ -1,7 +1,8 @@
-"""
-Modelos de dominio para Games
+"""Modelos de dominio para Games.
 
 Estas son las entidades de negocio que representan partidas del juego.
+
+Autor: Mandrágora
 """
 
 from datetime import datetime
@@ -12,11 +13,15 @@ from pydantic import BaseModel, Field
 
 
 class GameChoices(BaseModel):
-    """
-    Decisiones morales tomadas en cada nivel.
+    """Decisiones morales tomadas en cada nivel.
 
     Cada nivel tiene una decisión binaria (buena/mala).
     None significa que aún no se ha tomado la decisión.
+
+    Attributes:
+        senda_ebano (Optional[str]): forzar (malo) | sanar (bueno).
+        fortaleza_gigantes (Optional[str]): destruir (malo) | construir (bueno).
+        aquelarre_sombras (Optional[str]): ocultar (malo) | revelar (bueno).
     """
 
     senda_ebano: Optional[str] = None  # forzar (malo) | sanar (bueno)
@@ -25,10 +30,14 @@ class GameChoices(BaseModel):
 
 
 class GameMetrics(BaseModel):
-    """
-    Métricas de gameplay de la partida.
+    """Métricas de gameplay de la partida.
 
     Registra desempeño del jugador por nivel y global.
+
+    Attributes:
+        total_deaths (int): Muertes totales en toda la partida.
+        time_per_level (Dict[str, int]): Segundos por nivel.
+        deaths_per_level (Dict[str, int]): Muertes por nivel.
     """
 
     total_deaths: int = 0  # Muertes totales en toda la partida
@@ -37,11 +46,26 @@ class GameMetrics(BaseModel):
 
 
 class Game(BaseModel):
-    """
-    Entidad principal: Partida.
+    """Entidad principal: Partida.
 
     Representa una sesión de juego de un jugador.
     Contiene todo el progreso, decisiones y métricas.
+
+    Attributes:
+        game_id (str): ID único de la partida.
+        player_id (str): ID del jugador (FK).
+        started_at (datetime): Fecha de inicio (UTC).
+        ended_at (Optional[datetime]): Fecha de fin (UTC).
+        status (str): Estado (in_progress | completed | abandoned).
+        completion_percentage (float): Porcentaje completado (0-100).
+        total_time_seconds (int): Tiempo total acumulado.
+        levels_completed (List[str]): Lista de niveles terminados.
+        current_level (Optional[str]): Nivel actual.
+        choices (GameChoices): Decisiones tomadas.
+        relics (List[str]): Reliquias obtenidas.
+        boss_defeated (bool): Si derrotó al jefe final.
+        npcs_helped (List[str]): Lista de NPCs ayudados.
+        metrics (GameMetrics): Métricas detalladas.
     """
 
     # Identificación
@@ -73,11 +97,10 @@ class Game(BaseModel):
     metrics: GameMetrics = Field(default_factory=GameMetrics)
 
     def to_dict(self) -> dict:
-        """
-        Convierte el Game a diccionario para guardar en Firestore.
+        """Convierte el Game a diccionario para guardar en Firestore.
 
         Returns:
-            dict: Representación de la partida para la BD
+            dict: Representación de la partida para la BD.
         """
         data = self.model_dump()
         # Los datetime se guardan tal cual
@@ -87,14 +110,14 @@ class Game(BaseModel):
         return data
 
     @classmethod
+    @classmethod
     def from_dict(cls, data: dict) -> "Game":
-        """
-        Crea un Game desde un diccionario de Firestore.
+        """Crea un Game desde un diccionario de Firestore.
 
         Args:
-            data: Diccionario con los datos de la partida
+            data (dict): Diccionario con los datos de la partida.
 
         Returns:
-            Game: Instancia de la partida
+            Game: Instancia de la partida.
         """
         return cls(**data)

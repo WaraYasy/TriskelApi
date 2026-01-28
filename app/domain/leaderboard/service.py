@@ -1,7 +1,8 @@
-"""
-Service para Leaderboard
+"""Service para Leaderboard.
 
-Logica de calculo y actualizacion de rankings.
+Lógica de cálculo y actualización de rankings.
+
+Autor: Mandrágora
 """
 
 from datetime import datetime, timezone
@@ -31,13 +32,12 @@ LEADERBOARD_DESCRIPTIONS = {
 
 
 class LeaderboardService:
-    """
-    Servicio de leaderboards.
+    """Servicio de leaderboards.
 
     Responsabilidades:
-    - Calcular rankings para cada tipo
-    - Actualizar leaderboards en Firestore
-    - Consultar leaderboards existentes
+    - Calcular rankings para cada tipo.
+    - Actualizar leaderboards en Firestore.
+    - Consultar leaderboards existentes.
     """
 
     MAX_ENTRIES = 100  # Maximo entradas por leaderboard
@@ -48,21 +48,20 @@ class LeaderboardService:
         player_repo: Optional[FirestorePlayerRepository] = None,
         game_repo: Optional[FirestoreGameRepository] = None,
     ):
-        """Inicializa el servicio"""
+        """Inicializa el servicio."""
         self.repository = repository
         self.player_repo = player_repo or FirestorePlayerRepository()
         self.game_repo = game_repo or FirestoreGameRepository()
 
     def get_leaderboard(self, leaderboard_type: LeaderboardType) -> Optional[Leaderboard]:
-        """Obtiene un leaderboard por tipo"""
+        """Obtiene un leaderboard por tipo."""
         return self.repository.get_by_type(leaderboard_type)
 
     def get_all_leaderboards_info(self) -> List[dict]:
-        """
-        Obtiene informacion basica de todos los leaderboards.
+        """Obtiene información básica de todos los leaderboards.
 
         Returns:
-            Lista con info de cada leaderboard disponible
+            List[dict]: Lista con info de cada leaderboard disponible.
         """
         return [
             {
@@ -74,13 +73,12 @@ class LeaderboardService:
         ]
 
     def refresh_all_leaderboards(self) -> List[str]:
-        """
-        Recalcula y actualiza todos los leaderboards.
+        """Recalcula y actualiza todos los leaderboards.
 
-        Este metodo es llamado por el scheduler cada 6 horas.
+        Este método es llamado por el scheduler cada 6 horas.
 
         Returns:
-            Lista de leaderboards actualizados
+            List[str]: Lista de leaderboards actualizados.
         """
         logger.info("Iniciando recalculo de leaderboards...")
         updated = []
@@ -108,10 +106,9 @@ class LeaderboardService:
         return updated
 
     def _refresh_speedrun(self, players) -> None:
-        """
-        Recalcula el leaderboard de speedrun.
+        """Recalcula el leaderboard de speedrun.
 
-        Criterio: Menor best_speedrun_seconds = mejor
+        Criterio: Menor best_speedrun_seconds = mejor.
         """
         # Filtrar jugadores con speedrun registrado
         speedrun_players = [p for p in players if p.stats.best_speedrun_seconds is not None]
@@ -152,10 +149,9 @@ class LeaderboardService:
         self.repository.save(leaderboard)
 
     def _refresh_moral_good(self, players) -> None:
-        """
-        Recalcula el leaderboard moral_good.
+        """Recalcula el leaderboard moral_good.
 
-        Criterio: Mayor moral_alignment (+1) = mejor
+        Criterio: Mayor moral_alignment (+1) = mejor.
         """
         # Ordenar por moral_alignment (mayor = mejor para bien)
         sorted_players = sorted(
@@ -189,10 +185,9 @@ class LeaderboardService:
         self.repository.save(leaderboard)
 
     def _refresh_moral_evil(self, players) -> None:
-        """
-        Recalcula el leaderboard moral_evil.
+        """Recalcula el leaderboard moral_evil.
 
-        Criterio: Menor moral_alignment (-1) = mejor
+        Criterio: Menor moral_alignment (-1) = mejor.
         """
         # Ordenar por moral_alignment (menor = mejor para mal)
         sorted_players = sorted(
@@ -225,10 +220,9 @@ class LeaderboardService:
         self.repository.save(leaderboard)
 
     def _refresh_completions(self, players) -> None:
-        """
-        Recalcula el leaderboard de completions.
+        """Recalcula el leaderboard de completions.
 
-        Criterio: Mayor games_completed = mejor
+        Criterio: Mayor games_completed = mejor.
         """
         # Ordenar por games_completed (mayor = mejor)
         sorted_players = sorted(players, key=lambda p: p.games_completed, reverse=True)
