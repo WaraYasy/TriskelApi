@@ -155,6 +155,34 @@ class EventRepository:
 
         return events
 
+    def get_all(self, limit: int = 5000) -> List[GameEvent]:
+        """
+        Obtiene todos los eventos de todos los jugadores (admin only).
+
+        ADVERTENCIA: Esta query puede ser muy costosa en colecciones grandes.
+        Solo debe ser usada por endpoints admin con autenticación.
+
+        Args:
+            limit: Máximo número de eventos a retornar (default: 5000)
+
+        Returns:
+            List[GameEvent]: Lista de eventos ordenados por timestamp descendente
+        """
+        query = (
+            self.collection
+            .order_by("timestamp", direction=Query.DESCENDING)
+            .limit(limit)
+        )
+        docs = query.stream()
+
+        events = []
+        for doc in docs:
+            data = doc.to_dict()
+            events.append(GameEvent.from_dict(data))
+
+        print(f"✅ Fetched {len(events)} events (all players)")
+        return events
+
     def get_by_type(
         self, event_type: str, game_id: Optional[str] = None, limit: int = 1000
     ) -> List[GameEvent]:

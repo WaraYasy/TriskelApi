@@ -6,7 +6,7 @@ Implementación concreta del repositorio usando Firestore.
 
 from typing import List, Optional
 
-from google.cloud.firestore_v1 import Client
+from google.cloud.firestore_v1 import Client, Query
 from google.cloud.firestore_v1.base_query import FieldFilter
 
 from app.infrastructure.database.firebase_client import get_firestore_client
@@ -85,6 +85,31 @@ class FirestoreGameRepository(IGameRepository):
             return Game.from_dict(data)
 
         return None
+
+    def get_all(self, limit: int = 1000) -> List[Game]:
+        """
+        Obtiene todas las partidas de todos los jugadores.
+
+        ADVERTENCIA: Esta query puede ser costosa en colecciones grandes.
+        Solo debe ser usada por endpoints admin con autenticación.
+
+        Args:
+            limit: Máximo número de partidas a retornar
+
+        Returns:
+            Lista de partidas ordenadas por fecha de inicio descendente
+        """
+        # Query: ORDER BY started_at DESC LIMIT N
+        query = self.collection.order_by("started_at", direction=Query.DESCENDING).limit(limit)
+        docs = query.stream()
+
+        games = []
+        for doc in docs:
+            data = doc.to_dict()
+            games.append(Game.from_dict(data))
+
+        print(f"✅ Fetched {len(games)} games (all players)")
+        return games
 
     def update(self, game_id: str, game_update: GameUpdate) -> Optional[Game]:
         """Actualiza una partida existente"""

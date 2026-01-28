@@ -98,6 +98,20 @@ class GameService:
         """
         return self.game_repository.get_by_player(player_id, limit=limit)
 
+    def get_all_games(self, limit: int = 1000) -> List[Game]:
+        """
+        Obtiene todas las partidas de todos los jugadores.
+
+        ADMIN ONLY: Este método no debe ser expuesto a jugadores normales.
+
+        Args:
+            limit: Máximo número de partidas a retornar
+
+        Returns:
+            Lista de todas las partidas
+        """
+        return self.game_repository.get_all(limit=limit)
+
     def update_game(self, game_id: str, game_update: GameUpdate) -> Optional[Game]:
         """
         Actualiza una partida.

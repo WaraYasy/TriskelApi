@@ -113,6 +113,20 @@ class EventService:
         """Obtiene todos los eventos de un jugador"""
         return self.repository.get_by_player(player_id, limit)
 
+    def get_all_events(self, limit: int = 5000) -> List[GameEvent]:
+        """
+        Obtiene todos los eventos de todos los jugadores.
+
+        ADMIN ONLY: Este método no debe ser expuesto a jugadores normales.
+
+        Args:
+            limit: Máximo número de eventos a retornar
+
+        Returns:
+            Lista de todos los eventos
+        """
+        return self.repository.get_all(limit=limit)
+
     def get_events_by_type(
         self, event_type: str, game_id: Optional[str] = None, limit: int = 1000
     ) -> List[GameEvent]:

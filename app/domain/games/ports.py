@@ -60,6 +60,22 @@ class IGameRepository(ABC):
         pass
 
     @abstractmethod
+    def get_all(self, limit: int = 1000) -> List[Game]:
+        """
+        Obtiene todas las partidas de todos los jugadores (admin only).
+
+        Este método está diseñado para uso exclusivo de administradores
+        y herramientas de análisis. No debe ser expuesto a jugadores normales.
+
+        Args:
+            limit: Máximo número de partidas a retornar
+
+        Returns:
+            Lista de todas las partidas ordenadas por fecha de inicio (desc)
+        """
+        pass
+
+    @abstractmethod
     def get_active_game(self, player_id: str) -> Optional[Game]:
         """
         Obtiene la partida activa de un jugador (si existe).

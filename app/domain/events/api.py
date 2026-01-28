@@ -281,6 +281,41 @@ def get_player_events(
     return service.get_player_events(player_id, limit)
 
 
+@router.get("", response_model=List[GameEvent])
+def get_all_events(
+    request: Request,
+    limit: int = 5000,
+    service: EventService = Depends(get_event_service),
+):
+    """
+    Obtener todos los eventos de todos los jugadores (ADMIN ONLY).
+
+    Este endpoint está diseñado para analytics y herramientas de administración.
+    Requiere autenticación admin (JWT con rol admin o API Key).
+
+    Args:
+        request: Request de FastAPI
+        limit: Máximo número de eventos a retornar (default: 5000)
+        service: Servicio inyectado
+
+    Returns:
+        List[GameEvent]: Lista de todos los eventos
+
+    Raises:
+        HTTPException 403: Si no tiene permisos de admin
+    """
+    # Verificar que es admin
+    is_admin = getattr(request.state, "is_admin", False)
+
+    if not is_admin:
+        raise HTTPException(
+            status_code=403,
+            detail="Este endpoint requiere permisos de administrador. Usa API Key o JWT token de admin."
+        )
+
+    return service.get_all_events(limit=limit)
+
+
 @router.get("/game/{game_id}/type/{event_type}", response_model=List[GameEvent])
 def get_game_events_by_type(
     game_id: str,

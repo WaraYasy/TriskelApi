@@ -14,7 +14,6 @@ Esto mantiene el desacoplamiento y asegura que:
 
 import time
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
@@ -328,7 +327,10 @@ class AnalyticsService:
 
     def get_all_games(self) -> List[Dict[str, Any]]:
         """
-        Obtiene todas las partidas desde la API (requiere admin).
+        Obtiene todas las partidas usando endpoint admin optimizado.
+
+        OPTIMIZADO: Usa GET /v1/games en lugar de iterar sobre jugadores.
+        Reduce de ~100 llamadas HTTP a 1 sola llamada.
 
         Usa cache con TTL de 5 minutos para evitar llamadas repetidas.
 
@@ -352,52 +354,40 @@ class AnalyticsService:
         if not self.client:
             return []
 
-        # Por ahora, recopilamos partidas de todos los jugadores
-        # En el futuro podríamos tener un endpoint admin /v1/games
-
         start_time = time.time()
 
-        players = self.get_all_players()
-        print(f"[Analytics] Fetched {len(players)} players in {time.time() - start_time:.2f}s")
+        try:
+            # OPTIMIZACIÓN: Llamar endpoint admin directo en lugar de iterar jugadores
+            response = self.client.get("/v1/games", params={"limit": 1000})
+            response.raise_for_status()
+            all_games = response.json()
 
-        all_games = []
-        player_fetch_start = time.time()
+            elapsed = time.time() - start_time
+            print(f"[Analytics] ✅ Fetched {len(all_games)} games in {elapsed:.2f}s (1 HTTP call)")
 
-        # Función helper para obtener juegos de un jugador
-        def fetch_player_games(player):
-            try:
-                response = self.client.get(f"/v1/games/player/{player['player_id']}")
-                response.raise_for_status()
-                return response.json()
-            except Exception as e:
-                print(f"Error obteniendo partidas del jugador {player['player_id']}: {e}")
-                return []
+            # Guardar en cache
+            self._set_cache(cache_key, all_games)
+            print(f"[Analytics] Cached {len(all_games)} games for {self._cache_ttl}s")
 
-        # Paralelizar peticiones con ThreadPoolExecutor
-        # Usar 3 workers para no exceder rate limits de Firebase
-        with ThreadPoolExecutor(max_workers=3) as executor:
-            futures = {executor.submit(fetch_player_games, player): player for player in players}
-            completed = 0
-            for future in as_completed(futures):
-                games = future.result()
-                all_games.extend(games)
-                completed += 1
-                if completed % 5 == 0:  # Log cada 5 jugadores
-                    print(
-                        f"[Analytics] Processed {completed}/{len(players)} players ({time.time() - player_fetch_start:.2f}s elapsed)"
-                    )
+            return all_games
 
-        print(f"[Analytics] Total games fetch time: {time.time() - start_time:.2f}s (parallelized)")
-
-        # Guardar en cache
-        self._set_cache(cache_key, all_games)
-        print(f"[Analytics] Cached {len(all_games)} games for {self._cache_ttl}s")
-
-        return all_games
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 403:
+                print("[Analytics] ❌ ERROR: Endpoint requires admin auth. Make sure API Key is set.")
+                print("           Old behavior (iterating players) removed. Use API Key in AnalyticsService.__init__")
+            else:
+                print(f"[Analytics] ❌ HTTP Error fetching games: {e}")
+            return []
+        except Exception as e:
+            print(f"[Analytics] ❌ Error fetching games: {e}")
+            return []
 
     def get_all_events(self) -> List[Dict[str, Any]]:
         """
-        Obtiene todos los eventos de todos los jugadores.
+        Obtiene todos los eventos usando endpoint admin optimizado.
+
+        OPTIMIZADO: Usa GET /v1/events en lugar de iterar sobre jugadores.
+        Reduce de ~100 llamadas HTTP a 1 sola llamada.
 
         Usa cache con TTL de 5 minutos para evitar llamadas repetidas.
 
@@ -423,48 +413,38 @@ class AnalyticsService:
 
         start_time = time.time()
 
-        players = self.get_all_players()
-        print(f"[Analytics] Fetching events for {len(players)} players...")
+        try:
+            # OPTIMIZACIÓN: Llamar endpoint admin directo
+            response = self.client.get("/v1/events", params={"limit": 5000})
+            response.raise_for_status()
+            all_events = response.json()
 
-        all_events = []
+            # Enriquecer eventos con usernames
+            players = self.get_all_players()
+            player_map = {p["player_id"]: p.get("username", "Unknown") for p in players}
 
-        # Función helper para obtener eventos de un jugador
-        def fetch_player_events(player):
-            try:
-                response = self.client.get(f"/v1/events/player/{player['player_id']}")
-                response.raise_for_status()
-                events = response.json()
-                # Enriquecer evento con datos del jugador
-                for event in events:
-                    event["player_username"] = player.get("username", "Unknown")
-                return events
-            except Exception:
-                # Silenciosamente ignorar errores de eventos individuales
-                return []
+            for event in all_events:
+                event["player_username"] = player_map.get(event.get("player_id"), "Unknown")
 
-        # Paralelizar peticiones con ThreadPoolExecutor
-        # Usar 3 workers para no exceder rate limits de Firebase
-        with ThreadPoolExecutor(max_workers=3) as executor:
-            futures = {executor.submit(fetch_player_events, player): player for player in players}
-            completed = 0
-            for future in as_completed(futures):
-                events = future.result()
-                all_events.extend(events)
-                completed += 1
-                if completed % 5 == 0:  # Log cada 5 jugadores
-                    print(
-                        f"[Analytics] Processed events for {completed}/{len(players)} players ({time.time() - start_time:.2f}s elapsed)"
-                    )
+            elapsed = time.time() - start_time
+            print(f"[Analytics] ✅ Fetched {len(all_events)} events in {elapsed:.2f}s (1 HTTP call)")
 
-        print(
-            f"[Analytics] Total events fetch time: {time.time() - start_time:.2f}s, fetched {len(all_events)} events (parallelized)"
-        )
+            # Guardar en cache
+            self._set_cache(cache_key, all_events)
+            print(f"[Analytics] Cached {len(all_events)} events for {self._cache_ttl}s")
 
-        # Guardar en cache
-        self._set_cache(cache_key, all_events)
-        print(f"[Analytics] Cached {len(all_events)} events for {self._cache_ttl}s")
+            return all_events
 
-        return all_events
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 403:
+                print("[Analytics] ❌ ERROR: Endpoint requires admin auth. Make sure API Key is set.")
+                print("           Old behavior (iterating players) removed. Use API Key in AnalyticsService.__init__")
+            else:
+                print(f"[Analytics] ❌ HTTP Error fetching events: {e}")
+            return []
+        except Exception as e:
+            print(f"[Analytics] ❌ Error fetching events: {e}")
+            return []
 
     def calculate_global_metrics(self, players: List[Dict], games: List[Dict]) -> Dict[str, Any]:
         """
