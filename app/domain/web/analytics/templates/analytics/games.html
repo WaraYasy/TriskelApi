@@ -48,6 +48,7 @@
 {% block footer_text %}Triskel Analytics - Partidas © 2026 - Mandrágora{% endblock %}
 
 {% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
 <script>
     // Esperar a que Plotly esté disponible antes de cargar gráficos
     function waitForPlotly(callback) {
@@ -79,9 +80,9 @@
                     <td style="font-family:monospace;">${game.game_id.substring(0,8)}...</td>
                     <td style="font-family:monospace;">${game.player_id.substring(0,8)}...</td>
                     <td>${game.status === 'completed' ? '<span class="event-status completed">completado</span>' : game.status === 'in_progress' ? '<span class="event-status started">en progreso</span>' : `<span class="event-status event">${game.status}</span>`}</td>
-                    <td>${(game.completion_percentage || 0).toFixed(1)}%</td>
-                    <td>${game.metrics?.total_deaths || 0}</td>
-                    <td style="color:#9ca3af;">${game.started_at || '-'}</td>
+                    <td>${isInvalidValue(game.completion_percentage) ? 'Sin datos' : (game.completion_percentage).toFixed(1) + '%'}</td>
+                    <td>${game.metrics?.total_deaths || 'Sin datos'}</td>
+                    <td style="color:#9ca3af;">${formatDate(game.started_at)}</td>
                 </tr>
             `).join('');
         } catch (error) {

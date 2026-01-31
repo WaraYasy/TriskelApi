@@ -72,6 +72,7 @@
 {% block footer_text %}Triskel Analytics - Jugadores © 2026 - Mandrágora{% endblock %}
 
 {% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
 <script>
     // Esperar a que Plotly esté disponible antes de cargar gráficos
     function waitForPlotly(callback) {
@@ -104,11 +105,11 @@
             tbody.innerHTML = players.map(player => `
                 <tr>
                     <td style="font-family: monospace;">${player.player_id.substring(0, 8)}...</td>
-                    <td>${player.username || '-'}</td>
-                    <td style="color: #9ca3af;">${player.email || '-'}</td>
-                    <td>${player.moral_alignment ? `<span class="event-status completed">${player.moral_alignment}</span>` : '<span style="color: #6b7280;">-</span>'}</td>
-                    <td>${(player.total_playtime / 3600).toFixed(1)}h</td>
-                    <td style="color: #9ca3af;">${player.created_at || '-'}</td>
+                    <td>${player.username || 'Sin nombre'}</td>
+                    <td style="color: #9ca3af;">${player.email || 'Sin email'}</td>
+                    <td>${player.moral_alignment ? `<span class="event-status completed">${player.moral_alignment}</span>` : '<span style="color: #6b7280;">Sin datos</span>'}</td>
+                    <td>${isInvalidValue(player.total_playtime) ? 'Sin datos' : (player.total_playtime / 3600).toFixed(1) + 'h'}</td>
+                    <td style="color: #9ca3af;">${formatDate(player.created_at)}</td>
                 </tr>
             `).join('');
         } catch (error) {
