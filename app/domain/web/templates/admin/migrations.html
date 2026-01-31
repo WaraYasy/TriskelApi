@@ -544,6 +544,12 @@
                 <div class="table-header">
                     <span class="table-title">Historial de Migraciones</span>
                     <div class="table-actions">
+                        <button id="btnDownloadSQL" class="btn btn-secondary" onclick="downloadSQL()" disabled>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                            </svg>
+                            Descargar SQL
+                        </button>
                         <button id="btnDowngrade" class="btn btn-danger" onclick="confirmDowngrade()" disabled>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M3 12a9 9 0 1018 0 9 9 0 10-18 0M12 8v4M12 16h.01" />
@@ -624,15 +630,23 @@
                     pendingCount.textContent = data.pending_count || '0';
                     statusMessage.textContent = data.message;
 
-                    // Habilitar botones si hay conexion
-                    document.getElementById('btnUpgrade').disabled = false;
+                    // Habilitar botones según estado
+                    const hasPending = data.pending_count > 0;
+                    document.getElementById('btnUpgrade').disabled = !hasPending;
                     document.getElementById('btnDowngrade').disabled = !data.current_revision;
+                    // Descargar SQL siempre habilitado si hay conexión
+                    document.getElementById('btnDownloadSQL').disabled = false;
                 } else {
                     statusBadge.textContent = data.configured ? 'Error' : 'No configurado';
                     statusBadge.className = 'status-badge disconnected';
                     currentRevision.textContent = '-';
                     pendingCount.textContent = '-';
                     statusMessage.textContent = data.message;
+
+                    // Deshabilitar todos los botones si no hay conexión
+                    document.getElementById('btnUpgrade').disabled = true;
+                    document.getElementById('btnDowngrade').disabled = true;
+                    document.getElementById('btnDownloadSQL').disabled = true;
                 }
             } catch (error) {
                 document.getElementById('connectionStatus').textContent = 'Error';
@@ -735,6 +749,15 @@
                 ? '/web/admin/migrations/api/upgrade'
                 : '/web/admin/migrations/api/downgrade';
 
+            // Deshabilitar botones durante la operación
+            const btnUpgrade = document.getElementById('btnUpgrade');
+            const btnDowngrade = document.getElementById('btnDowngrade');
+            const btnDownloadSQL = document.getElementById('btnDownloadSQL');
+
+            btnUpgrade.disabled = true;
+            btnDowngrade.disabled = true;
+            btnDownloadSQL.disabled = true;
+
             addLog(`Ejecutando ${action}...`, 'info');
 
             try {
@@ -758,11 +781,14 @@
                     addLog(result.message || result.error || 'Error desconocido', 'error');
                 }
 
-                // Recargar datos
+                // Recargar datos (esto rehabilitará los botones según el estado)
                 await refreshData();
             } catch (error) {
                 addLog(`Error: ${error.message}`, 'error');
                 console.error('Migration error:', error);
+
+                // Rehabilitar botones en caso de error
+                await refreshData();
             }
         }
 
@@ -783,6 +809,79 @@
 
         function clearLog() {
             document.getElementById('logContent').innerHTML = 'Esperando operaciones...';
+        }
+
+        async function downloadSQL() {
+            addLog('Generando SQL de migraciones...', 'info');
+
+            // Deshabilitar botón durante la operación
+            const btn = document.getElementById('btnDownloadSQL');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="width: 16px; height: 16px; margin: 0 auto;"></div>';
+
+            try {
+                const response = await fetch('/web/admin/migrations/api/download-sql', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        revision: 'head',
+                        direction: 'upgrade'
+                    })
+                });
+
+                // Primero verificar el content-type para saber si es error o SQL
+                const contentType = response.headers.get('Content-Type');
+
+                if (!response.ok) {
+                    // Es un error, parsear como JSON
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                // Verificar que sea texto plano (SQL)
+                if (!contentType || !contentType.includes('text/plain')) {
+                    // Podría ser un error en formato JSON
+                    const errorData = await response.json().catch(() => ({}));
+                    if (errorData.error) {
+                        throw new Error(errorData.error);
+                    }
+                }
+
+                // Obtener el contenido SQL como texto
+                const sqlContent = await response.text();
+
+                // Crear blob y descargar
+                const blob = new Blob([sqlContent], { type: 'text/plain' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+
+                // Extraer nombre del archivo del header Content-Disposition
+                const contentDisposition = response.headers.get('Content-Disposition');
+                let filename = 'migration.sql';
+                if (contentDisposition) {
+                    const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+                    if (filenameMatch && filenameMatch[1]) {
+                        filename = filenameMatch[1].replace(/['"]/g, '');
+                    }
+                }
+
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                addLog(`SQL descargado: ${filename}`, 'success');
+            } catch (error) {
+                addLog(`Error al descargar SQL: ${error.message}`, 'error');
+                console.error('Download SQL error:', error);
+            } finally {
+                // Restaurar botón
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
         }
     </script>
 </body>

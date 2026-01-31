@@ -107,6 +107,69 @@ def _create_export_audit_log(
         logger.warning(f"No se pudo crear audit log: {e}")
 
 
+def _create_migration_audit_log(
+    action: str,
+    revision: str = None,
+    direction: str = None,
+    filename: str = None,
+    ip_address: str = None,
+    user_agent: str = None,
+    success: bool = True,
+    error_message: str = None,
+):
+    """
+    Crea un registro de auditoría para operaciones de migración.
+    Si la base de datos SQL no está disponible, solo registra en logs.
+    Obtiene la información del usuario actual desde g.current_user.
+    """
+    from app.core.logger import logger
+    from app.domain.auth.adapters.sql_repository import SQLAuthRepository
+    from app.infrastructure.database.sql_client import sql_manager
+
+    # Obtener información del usuario actual
+    current_user = getattr(g, "current_user", None)
+    user_id = current_user.get("id") if current_user else None
+    username = current_user.get("username", "anonymous") if current_user else "anonymous"
+
+    try:
+        # Intentar obtener sesión SQL directamente del manager
+        session = sql_manager.get_session()
+        if not session:
+            logger.warning("Base de datos SQL no disponible, no se puede registrar audit log")
+            return
+
+        # Crear repositorio y registrar
+        repository = SQLAuthRepository(session)
+
+        # Crear detalles JSON
+        details = {}
+        if revision:
+            details["revision"] = revision
+        if direction:
+            details["direction"] = direction
+        if filename:
+            details["filename"] = filename
+
+        repository.create_audit_log(
+            user_id=user_id,
+            username=username,
+            action=action,
+            resource_type="migration",
+            ip_address=ip_address,
+            user_agent=user_agent,
+            details=json.dumps(details),
+            success=success,
+            error_message=error_message,
+        )
+
+        session.close()
+        logger.debug(f"Audit log creado para migración: {action} por {username}")
+
+    except Exception as e:
+        # Si falla el audit log, solo logear pero no fallar la operación
+        logger.warning(f"No se pudo crear audit log: {e}")
+
+
 @admin_bp.route("/login")
 def login():
     """Página de login para administradores"""
@@ -412,6 +475,17 @@ def migrations_upgrade():
     else:
         logger.error("Error en upgrade", **result)
 
+    # Registrar en audit log
+    _create_migration_audit_log(
+        action="migration_upgrade",
+        revision=revision,
+        direction="upgrade",
+        ip_address=request.remote_addr,
+        user_agent=request.headers.get("User-Agent"),
+        success=result["success"],
+        error_message=result.get("error"),
+    )
+
     return jsonify(result)
 
 
@@ -445,4 +519,102 @@ def migrations_downgrade():
     else:
         logger.error("Error en downgrade", **result)
 
+    # Registrar en audit log
+    _create_migration_audit_log(
+        action="migration_downgrade",
+        revision=revision,
+        direction="downgrade",
+        ip_address=request.remote_addr,
+        user_agent=request.headers.get("User-Agent"),
+        success=result["success"],
+        error_message=result.get("error"),
+    )
+
     return jsonify(result)
+
+
+@admin_bp.route("/migrations/api/download-sql", methods=["POST"])
+@login_required
+@admin_required
+def migrations_download_sql():
+    """Genera y descarga el SQL de las migraciones sin ejecutarlo."""
+    from app.core.logger import logger
+    from app.domain.web.migrations.service import MigrationService
+
+    service = MigrationService()
+
+    if not service.is_database_configured():
+        return jsonify({"error": "Base de datos no configurada"}), 400
+
+    # Obtener parámetros
+    data = request.get_json() or {}
+    revision = data.get("revision", "head")
+    direction = data.get("direction", "upgrade")
+
+    current_user = getattr(g, "current_user", {})
+    logger.info(
+        f"Generación de SQL iniciada por {current_user.get('username')}",
+        revision=revision,
+        direction=direction,
+    )
+
+    try:
+        result = service.generate_sql(revision, direction)
+
+        if not result["success"]:
+            logger.error("Error al generar SQL", **result)
+
+            # Registrar error en audit log
+            _create_migration_audit_log(
+                action="download_migration_sql",
+                revision=revision,
+                direction=direction,
+                filename=None,
+                ip_address=request.remote_addr,
+                user_agent=request.headers.get("User-Agent"),
+                success=False,
+                error_message=result.get("message"),
+            )
+
+            return jsonify({"error": result["message"]}), 500
+
+        # Generar nombre de archivo
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"migration_{direction}_{revision}_{timestamp}.sql"
+
+        logger.info("SQL generado exitosamente", filename=filename)
+
+        # Registrar en audit log
+        _create_migration_audit_log(
+            action="download_migration_sql",
+            revision=revision,
+            direction=direction,
+            filename=filename,
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get("User-Agent"),
+            success=True,
+        )
+
+        # Retornar como archivo descargable
+        return Response(
+            result["sql"],
+            mimetype="text/plain",
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
+        )
+
+    except Exception as e:
+        logger.error("Error al descargar SQL de migración", error=str(e))
+
+        # Registrar error en audit log
+        _create_migration_audit_log(
+            action="download_migration_sql",
+            revision=revision,
+            direction=direction,
+            filename=None,
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get("User-Agent"),
+            success=False,
+            error_message=str(e),
+        )
+
+        return jsonify({"error": str(e)}), 500

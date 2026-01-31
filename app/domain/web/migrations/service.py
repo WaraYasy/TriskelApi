@@ -5,7 +5,9 @@ Proporciona funciones para gestionar migraciones de Alembic
 desde el dashboard web.
 """
 
+import io
 import os
+import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -255,4 +257,69 @@ class MigrationService:
                 "configured": True,
                 "connected": False,
                 "message": f"Error de conexión: {str(e)}",
+            }
+
+    def generate_sql(self, revision: str = "head", direction: str = "upgrade") -> dict:
+        """
+        Genera el SQL de las migraciones sin ejecutarlo.
+
+        Equivalente a: alembic upgrade head --sql
+
+        Args:
+            revision: ID de revisión objetivo o "head" para la última.
+            direction: "upgrade" o "downgrade"
+
+        Returns:
+            Diccionario con el SQL generado o error.
+        """
+        try:
+            config = self._get_alembic_config()
+
+            # Capturar la salida del comando en un buffer
+            sql_buffer = io.StringIO()
+
+            # Redirigir stdout temporalmente
+            old_stdout = sys.stdout
+            sys.stdout = sql_buffer
+
+            try:
+                if direction == "upgrade":
+                    command.upgrade(config, revision, sql=True)
+                else:
+                    command.downgrade(config, revision, sql=True)
+            finally:
+                # Restaurar stdout
+                sys.stdout = old_stdout
+
+            sql_content = sql_buffer.getvalue()
+            sql_buffer.close()
+
+            # Si no hay SQL generado, crear un archivo informativo
+            if not sql_content or sql_content.strip() == "":
+                current_rev = self.get_current_revision()
+                sql_content = f"""-- Migraciones de Base de Datos Triskel/Mandrágora
+-- Generado: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+-- Revisión actual: {current_rev or 'base (sin migraciones)'}
+-- Estado: Sin migraciones pendientes
+
+-- No hay cambios de esquema pendientes de aplicar.
+-- La base de datos está actualizada.
+"""
+                message = "No hay migraciones pendientes (base de datos actualizada)"
+            else:
+                message = f"SQL generado para {direction} {revision}"
+
+            return {
+                "success": True,
+                "message": message,
+                "sql": sql_content,
+                "revision": revision,
+            }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Error al generar SQL: {str(e)}",
+                "error": str(e),
+                "sql": "",
             }
