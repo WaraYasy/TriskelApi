@@ -108,7 +108,7 @@
                     <td>${player.username || 'Sin nombre'}</td>
                     <td style="color: #9ca3af;">${player.email || 'Sin email'}</td>
                     <td>${player.moral_alignment ? `<span class="event-status completed">${player.moral_alignment}</span>` : '<span style="color: #6b7280;">Sin datos</span>'}</td>
-                    <td>${isInvalidValue(player.total_playtime) ? 'Sin datos' : (player.total_playtime / 3600).toFixed(1) + 'h'}</td>
+                    <td>${formatDuration(player.total_playtime_seconds || player.total_playtime)}</td>
                     <td style="color: #9ca3af;">${formatDate(player.created_at)}</td>
                 </tr>
             `).join('');

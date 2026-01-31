@@ -110,7 +110,6 @@ class Game(BaseModel):
         return data
 
     @classmethod
-    @classmethod
     def from_dict(cls, data: dict) -> "Game":
         """Crea un Game desde un diccionario de Firestore.
 

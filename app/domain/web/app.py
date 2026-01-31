@@ -65,8 +65,9 @@ def create_flask_app():
         try:
             players = analytics_service.get_all_players()
             games = analytics_service.get_all_games()
+            events = analytics_service.get_all_events()
             metrics = analytics_service.calculate_global_metrics(players, games)
-            chart_active_players = analytics_service.create_active_players_chart(games)
+            chart_active_players = analytics_service.create_active_players_chart(events)
         except Exception as e:
             print(f"Error obteniendo métricas: {e}")
             metrics = {

@@ -746,7 +746,6 @@ Usa esto antes de cada migración:
 - [Documentación oficial de Alembic](https://alembic.sqlalchemy.org/)
 - [SQLAlchemy ORM Tutorial](https://docs.sqlalchemy.org/en/20/orm/tutorial.html)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [Triskel API - CLAUDE.md](./CLAUDE.md) - Arquitectura del proyecto
 
 ---
 

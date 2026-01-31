@@ -237,7 +237,6 @@ docker run -p 8000:8000 --env-file .env triskel-api
 | [docs/UNITY_INTEGRATION.md](docs/UNITY_INTEGRATION.md) | Integracion con Unity |
 | [docs/RAILWAY_DEPLOYMENT.md](docs/RAILWAY_DEPLOYMENT.md) | Guia de despliegue |
 | [docs/SECURITY_KEYS.md](docs/SECURITY_KEYS.md) | Gestion de claves |
-| [CLAUDE.md](CLAUDE.md) | Guia para desarrollo con IA |
 
 ---
 

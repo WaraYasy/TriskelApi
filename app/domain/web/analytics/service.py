@@ -104,6 +104,10 @@ class AnalyticsService:
 
     def _generate_mock_players(self) -> List[Dict[str, Any]]:
         """Genera datos mock de jugadores para pruebas sin Firebase."""
+        from datetime import datetime, timedelta
+
+        base_date = datetime.now()
+
         return [
             {
                 "player_id": "player001",
@@ -111,7 +115,8 @@ class AnalyticsService:
                 "email": "test1@example.com",
                 "moral_alignment": 0.75,  # Jugador bueno
                 "stats": {"moral_alignment": 0.75},
-                "total_playtime": 1200,  # 20 minutos
+                "total_playtime_seconds": 1200,  # 20 minutos
+                "created_at": (base_date - timedelta(days=30)).isoformat(),
             },
             {
                 "player_id": "player002",
@@ -119,7 +124,8 @@ class AnalyticsService:
                 "email": "test2@example.com",
                 "moral_alignment": 0.30,  # Jugador malo
                 "stats": {"moral_alignment": 0.30},
-                "total_playtime": 1800,  # 30 minutos
+                "total_playtime_seconds": 1800,  # 30 minutos
+                "created_at": (base_date - timedelta(days=15)).isoformat(),
             },
             {
                 "player_id": "player003",
@@ -127,7 +133,8 @@ class AnalyticsService:
                 "email": "test3@example.com",
                 "moral_alignment": 0.50,  # Jugador neutral
                 "stats": {"moral_alignment": 0.50},
-                "total_playtime": 900,  # 15 minutos
+                "total_playtime_seconds": 900,  # 15 minutos
+                "created_at": (base_date - timedelta(days=7)).isoformat(),
             },
         ]
 
@@ -500,16 +507,19 @@ class AnalyticsService:
         # Total de tiempo jugado (suma de todos los tiempos de niveles)
         total_playtime = 0
         for game in games:
-            for level_data in game.get("levels_data", {}).values():
-                total_playtime += level_data.get("time_seconds", 0)
+            metrics_data = game.get("metrics", {})
+            # Sumar tiempo de cada nivel desde metrics.time_per_level
+            time_per_level = metrics_data.get("time_per_level", {})
+            for time_seconds in time_per_level.values():
+                total_playtime += time_seconds
 
         avg_playtime = total_playtime / len(games) if games else 0
 
-        # Total de muertes
+        # Total de muertes (usar metrics.total_deaths directamente)
         total_deaths = 0
         for game in games:
-            for level_data in game.get("levels_data", {}).values():
-                total_deaths += level_data.get("deaths", 0)
+            metrics_data = game.get("metrics", {})
+            total_deaths += metrics_data.get("total_deaths", 0)
 
         avg_deaths = total_deaths / len(games) if games else 0
 
@@ -660,7 +670,8 @@ class AnalyticsService:
         if not ANALYTICS_AVAILABLE or not players:
             return self._empty_chart("No hay datos disponibles")
 
-        playtimes = [p.get("total_playtime", 0) for p in players]
+        # Usar total_playtime_seconds (nombre correcto) o total_playtime (legacy/mock data)
+        playtimes = [p.get("total_playtime_seconds") or p.get("total_playtime", 0) for p in players]
 
         df = pd.DataFrame(
             {
@@ -676,6 +687,8 @@ class AnalyticsService:
             labels={"Tiempo (min)": "Tiempo total de juego (minutos)"},
             nbins=20,
         )
+
+        fig.update_layout(self._get_dark_layout())
 
         return fig.to_json()
 
@@ -1076,7 +1089,14 @@ class AnalyticsService:
                 continue
 
             try:
-                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                # Manejar diferentes tipos de timestamp
+                if isinstance(ts, datetime):
+                    dt = ts
+                elif isinstance(ts, str):
+                    dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                else:
+                    continue
+
                 event_date = dt.date()
 
                 # Solo últimos 7 días
@@ -1084,6 +1104,7 @@ class AnalyticsService:
                     if event_date not in daily_players:
                         daily_players[event_date] = set()
                     daily_players[event_date].add(player_id)
+
             except ValueError:
                 continue
 
@@ -1111,7 +1132,9 @@ class AnalyticsService:
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None)
 
-        return fig.to_json()
+        return fig.to_html(
+            include_plotlyjs="cdn", div_id="active-players-chart", config={"displayModeBar": False}
+        )
 
     def export_to_csv(self, data: List[Dict], filename: str) -> str:
         """
