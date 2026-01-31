@@ -274,8 +274,8 @@ def api_chart_playtime_level():
 def api_chart_active_players():
     """API endpoint para gráfico de jugadores activos en los últimos 7 días."""
     events = analytics_service.get_all_events()
-    chart_html = analytics_service.create_active_players_chart(events)
-    return jsonify({"html": chart_html})
+    chart_json = analytics_service.create_active_players_chart_json(events)
+    return jsonify({"html": chart_json})
 
 
 @analytics_bp.route("/api/advanced")

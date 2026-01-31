@@ -1129,12 +1129,103 @@ class AnalyticsService:
             color_continuous_scale="Greens",
         )
 
-        fig.update_layout(self._get_dark_layout())
-        fig.update_layout(title=None)
+        # Layout adaptativo para modo claro/oscuro
+        fig.update_layout(
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            font={"family": "Inter, sans-serif", "color": "#e5e7eb", "size": 12},
+            margin={"t": 40, "r": 20, "b": 40, "l": 60},
+            title=None,
+            xaxis={
+                "showline": False,
+                "zeroline": False,
+                "tickfont": {"color": "#e5e7eb", "size": 11},
+                "gridcolor": "rgba(229, 231, 235, 0.1)",
+            },
+            yaxis={
+                "showline": False,
+                "zeroline": False,
+                "tickfont": {"color": "#e5e7eb", "size": 11},
+                "gridcolor": "rgba(229, 231, 235, 0.1)",
+            },
+        )
 
         return fig.to_html(
             include_plotlyjs="cdn", div_id="active-players-chart", config={"displayModeBar": False}
         )
+
+    def create_active_players_chart_json(self, events: List[Dict]) -> str:
+        """
+        Genera gráfico de jugadores activos en los últimos 7 días (formato JSON para dashboard).
+
+        Args:
+            events: Lista de eventos
+
+        Returns:
+            JSON del gráfico
+        """
+        if not ANALYTICS_AVAILABLE or not events:
+            return self._empty_chart("No hay datos disponibles")
+
+        # Calcular fecha límite (7 días atrás)
+        today = datetime.now().date()
+        seven_days_ago = today - timedelta(days=7)
+
+        # Agrupar eventos por fecha y contar jugadores únicos
+        daily_players = {}
+
+        for event in events:
+            ts = event.get("timestamp")
+            player_id = event.get("player_id")
+
+            if not ts or not player_id:
+                continue
+
+            try:
+                # Manejar diferentes tipos de timestamp
+                if isinstance(ts, datetime):
+                    dt = ts
+                elif isinstance(ts, str):
+                    dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                else:
+                    continue
+
+                event_date = dt.date()
+
+                # Solo últimos 7 días
+                if event_date >= seven_days_ago and event_date <= today:
+                    if event_date not in daily_players:
+                        daily_players[event_date] = set()
+                    daily_players[event_date].add(player_id)
+
+            except ValueError:
+                continue
+
+        if not daily_players:
+            return self._empty_chart("No hay actividad en 7 días")
+
+        # Asegurar que todos los días estén representados (incluso con 0)
+        all_dates = [seven_days_ago + timedelta(days=i) for i in range(8)]
+        data = []
+        for date in all_dates:
+            count = len(daily_players.get(date, set()))
+            data.append({"Fecha": date, "Jugadores": count})
+
+        df = pd.DataFrame(data)
+
+        fig = px.bar(
+            df,
+            x="Fecha",
+            y="Jugadores",
+            labels={"Jugadores": "Jugadores únicos"},
+            color="Jugadores",
+            color_continuous_scale="Greens",
+        )
+
+        fig.update_layout(self._get_dark_layout())
+        fig.update_layout(title=None)
+
+        return fig.to_json()
 
     def export_to_csv(self, data: List[Dict], filename: str) -> str:
         """

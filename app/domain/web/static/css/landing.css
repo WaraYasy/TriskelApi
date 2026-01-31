@@ -152,8 +152,8 @@
 
 .pulse-card-value {
     font-family: 'Inter', sans-serif;
-    font-size: 4rem;
-    font-weight: 300;
+    font-size: 2.5rem;
+    font-weight: 800;
     color: #e5e7eb;
     line-height: 1;
     display: flex;
@@ -597,4 +597,15 @@
 
 .hero-logo:hover {
     filter: drop-shadow(0 0 40px rgba(255, 255, 255, 0.25));
+}
+
+/* Plotly Chart Adaptive Styles */
+/* Light mode - dark text for readability on light background */
+[data-theme="light"] #active-players-chart svg text {
+    fill: #111827 !important;
+}
+
+[data-theme="light"] #active-players-chart .gridlayer path,
+[data-theme="light"] #active-players-chart .gridlayer line {
+    stroke: rgba(17, 24, 39, 0.35) !important;
 }
