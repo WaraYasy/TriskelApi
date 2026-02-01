@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
 import bcrypt
@@ -105,14 +105,14 @@ class AuthService:
         Returns:
             str: Token JWT codificado.
         """
-        expire = datetime.utcnow() + timedelta(minutes=settings.jwt_access_token_expire_minutes)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_access_token_expire_minutes)
         payload = {
             "type": "access",
             "user_id": user_id,
             "username": username,
             "role": role,
             "exp": expire,
-            "iat": datetime.utcnow(),
+            "iat": datetime.now(timezone.utc),
         }
         return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
@@ -126,13 +126,13 @@ class AuthService:
         Returns:
             str: Token JWT codificado.
         """
-        expire = datetime.utcnow() + timedelta(days=settings.jwt_refresh_token_expire_days)
+        expire = datetime.now(timezone.utc) + timedelta(days=settings.jwt_refresh_token_expire_days)
         payload = {
             "type": "refresh",
             "user_id": user_id,
             "username": username,
             "exp": expire,
-            "iat": datetime.utcnow(),
+            "iat": datetime.now(timezone.utc),
         }
         return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 

@@ -6,7 +6,7 @@ Depende de interfaces, no de implementaciones concretas.
 Autor: Mandrágora
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 
 from ..players.ports import IPlayerRepository
@@ -66,7 +66,7 @@ class GameService:
         # Si tiene partida activa, cerrarla automáticamente
         active_game = self.game_repository.get_active_game(game_data.player_id)
         if active_game:
-            close_update = GameUpdate(status="abandoned", ended_at=datetime.utcnow())
+            close_update = GameUpdate(status="abandoned", ended_at=datetime.now(timezone.utc))
             closed_game = self.game_repository.update(active_game.game_id, close_update)
             # Actualizar stats del jugador con la partida abandonada
             if closed_game:
@@ -230,7 +230,7 @@ class GameService:
 
         # Preparar actualización
         status = "completed" if completed else "abandoned"
-        update_data = GameUpdate(status=status, ended_at=datetime.utcnow())
+        update_data = GameUpdate(status=status, ended_at=datetime.now(timezone.utc))
 
         # Actualizar partida
         updated_game = self.game_repository.update(game_id, update_data)

@@ -76,7 +76,7 @@ class Settings(BaseSettings):
 
     # ==================== CORS ====================
     # Orígenes permitidos (separados por comas).
-    # En desarrollo: permite todo (*).
+    # En desarrollo: permite solo orígenes locales comunes.
     # En producción: debe especificarse explícitamente.
     @property
     def cors_origins(self) -> str:
@@ -84,7 +84,8 @@ class Settings(BaseSettings):
         if self.environment == "production" and env_origins:
             return env_origins
         elif self.environment == "development":
-            return "*"
+            # Solo orígenes locales en desarrollo (no "*")
+            return "http://localhost:3000,http://localhost:5173,http://localhost:8080,http://127.0.0.1:3000,http://127.0.0.1:5173,http://127.0.0.1:8080"
         else:
             # Producción sin CORS_ORIGINS definido - modo restrictivo
             return ""
