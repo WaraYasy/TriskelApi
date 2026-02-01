@@ -73,8 +73,8 @@ class GameService:
             # Actualizar stats del jugador con la partida abandonada
             if closed_game:
                 self.player_service.update_player_stats_after_game(game_data.player_id, closed_game)
-            print(
-                f"⚠️  Partida anterior {active_game.game_id} cerrada automáticamente como 'abandoned'"
+            logger.warning(
+                f"Partida anterior {active_game.game_id} cerrada automáticamente como 'abandoned'"
             )
 
         # Crear y retornar la nueva partida
@@ -263,3 +263,27 @@ class GameService:
         self.player_service.update_player_stats_after_game(game.player_id, updated_game)
 
         return updated_game
+
+    def count_games(
+        self,
+        player_id: Optional[str] = None,
+        status: Optional[str] = None,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> int:
+        """Cuenta partidas de forma eficiente sin traer todos los documentos.
+
+        Args:
+            player_id (Optional[str]): Filtrar por jugador.
+            status (Optional[str]): Filtrar por estado.
+            days (Optional[int]): Solo partidas de últimos N días.
+            since (Optional[datetime]): Partidas desde esta fecha.
+            until (Optional[datetime]): Partidas hasta esta fecha.
+
+        Returns:
+            int: Número total de partidas que cumplen los filtros.
+        """
+        return self.game_repository.count(
+            player_id=player_id, status=status, days=days, since=since, until=until
+        )

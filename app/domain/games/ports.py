@@ -168,3 +168,28 @@ class IGameRepository(ABC):
             bool: True si se eliminó, False si no existía.
         """
         pass
+
+    @abstractmethod
+    def count(
+        self,
+        player_id: Optional[str] = None,
+        status: Optional[str] = None,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> int:
+        """Cuenta partidas de forma eficiente usando agregación.
+
+        En lugar de traer todos los documentos, usa count aggregation de Firestore.
+
+        Args:
+            player_id (Optional[str]): Filtrar por jugador.
+            status (Optional[str]): Filtrar por estado.
+            days (Optional[int]): Solo partidas de últimos N días.
+            since (Optional[datetime]): Partidas desde esta fecha.
+            until (Optional[datetime]): Partidas hasta esta fecha.
+
+        Returns:
+            int: Número total de partidas que cumplen los filtros.
+        """
+        pass

@@ -10,11 +10,12 @@ NOTA: La base de datos SQL es OPCIONAL. Si no está configurada, la app funciona
 
 from typing import Generator, Optional
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.config.settings import settings
+from app.core.logger import logger
 
 # Base para crear modelos de tablas SQL
 Base = declarative_base()
@@ -45,7 +46,7 @@ class SQLManager:
 
         # Si no hay configuración de base de datos, saltar
         if not settings.db_host:
-            print("⚠️  Base de datos SQL no configurada (opcional)")
+            logger.warning("Base de datos SQL no configurada (opcional)")
             return
 
         try:
@@ -55,21 +56,25 @@ class SQLManager:
                 f"@{settings.db_host}:{settings.db_port}/{settings.db_name}"
             )
 
-            # Crear motor de conexión
+            # Crear motor de conexión con pooling optimizado para Railway/producción
             self._engine = create_engine(
                 db_url,
-                pool_pre_ping=True,  # Verifica que la conexión esté viva
-                pool_recycle=3600,  # Recicla conexiones cada hora
+                pool_pre_ping=True,  # Verifica que la conexión esté viva antes de usar
+                pool_recycle=300,  # Recicla conexiones cada 5 min (Railway cierra idle connections)
+                pool_size=5,  # Número de conexiones permanentes en el pool
+                max_overflow=10,  # Conexiones adicionales temporales permitidas
+                pool_timeout=30,  # Timeout para obtener conexión del pool (segundos)
+                echo=False,  # No loguear todas las queries SQL (verbose)
             )
 
             # Crear fábrica de sesiones
             self._session_factory = sessionmaker(bind=self._engine)
 
             self._initialized = True
-            print("✅ Base de datos SQL conectada correctamente")
+            logger.info("Base de datos SQL conectada correctamente")
 
         except Exception as e:
-            print(f"❌ Error conectando a la base de datos SQL: {e}")
+            logger.error(f"Error conectando a la base de datos SQL: {e}")
             raise
 
     def get_session(self) -> Optional[Session]:
@@ -102,7 +107,36 @@ class SQLManager:
             raise RuntimeError("Base de datos SQL no está inicializada")
 
         Base.metadata.create_all(bind=self._engine)
-        print("✅ Tablas creadas en la base de datos SQL")
+        logger.info("Tablas creadas en la base de datos SQL")
+
+    def dispose(self) -> None:
+        """Cierra todas las conexiones del pool de forma segura.
+
+        Útil para:
+        - Shutdown de la aplicación
+        - Limpiar conexiones obsoletas
+        - Liberar recursos
+        """
+        if self._engine:
+            self._engine.dispose()
+            logger.info("Connection pool de SQL cerrado")
+
+    def health_check(self) -> bool:
+        """Verifica que la conexión a la base de datos funcione.
+
+        Returns:
+            bool: True si la conexión es exitosa, False si falla.
+        """
+        if not self._engine:
+            return False
+
+        try:
+            with self._engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            return True
+        except Exception as e:
+            logger.error(f"Health check de SQL falló: {e}")
+            return False
 
 
 # Instancia única compartida

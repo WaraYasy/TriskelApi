@@ -446,3 +446,87 @@ def get_game_events_by_type(
     check_game_events_access(request, game_id)
 
     return service.get_events_by_type(event_type, game_id, limit)
+
+
+@router.get("/count")
+def count_events(
+    request: Request,
+    game_id: Optional[str] = Query(default=None, description="Filtrar por partida"),
+    player_id: Optional[str] = Query(default=None, description="Filtrar por jugador"),
+    event_type: Optional[str] = Query(default=None, description="Filtrar por tipo"),
+    days: Optional[int] = Query(default=None, ge=1, le=90, description="Filtrar últimos N días"),
+    since: Optional[str] = Query(default=None, description="Filtrar desde fecha ISO"),
+    until: Optional[str] = Query(default=None, description="Filtrar hasta fecha ISO"),
+    service: EventService = Depends(get_event_service),
+):
+    """Cuenta eventos de forma eficiente usando Firestore aggregation.
+
+    Este endpoint usa count aggregation de Firestore en lugar de traer
+    todos los documentos, lo que lo hace mucho más eficiente y económico.
+
+    REQUIERE API KEY (admin only).
+
+    Examples:
+        GET /events/count                → Total de eventos
+        GET /events/count?days=7         → Eventos de últimos 7 días
+        GET /events/count?game_id=abc    → Eventos de una partida
+        GET /events/count?player_id=xyz  → Eventos de un jugador
+
+    Args:
+        request (Request): Request de FastAPI.
+        game_id (str, optional): Filtrar por partida.
+        player_id (str, optional): Filtrar por jugador.
+        event_type (str, optional): Filtrar por tipo.
+        days (int, optional): Filtrar últimos N días.
+        since (str, optional): Filtrar desde fecha ISO 8601.
+        until (str, optional): Filtrar hasta fecha ISO 8601.
+        service (EventService): Servicio inyectado.
+
+    Returns:
+        JSON: {"count": int, "filters": dict}
+
+    Raises:
+        HTTPException: Si no eres admin (403) o formato de fecha inválido (400).
+    """
+    # Solo admin puede contar eventos globales
+    if not getattr(request.state, "is_admin", False):
+        raise HTTPException(status_code=403, detail="Requiere permisos de administrador")
+
+    # Parsear fechas si se especificaron
+    since_date = None
+    until_date = None
+
+    if since:
+        try:
+            since_date = datetime.fromisoformat(since.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Formato de fecha 'since' inválido")
+
+    if until:
+        try:
+            until_date = datetime.fromisoformat(until.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Formato de fecha 'until' inválido")
+
+    # Contar eventos con filtros
+    count = service.count_events(
+        game_id=game_id,
+        player_id=player_id,
+        event_type=event_type,
+        days=days,
+        since=since_date,
+        until=until_date,
+    )
+
+    # Retornar count con información de filtros aplicados
+    return {
+        "count": count,
+        "filters": {
+            "game_id": game_id,
+            "player_id": player_id,
+            "event_type": event_type,
+            "days": days,
+            "since": since,
+            "until": until,
+        },
+    }

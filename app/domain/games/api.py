@@ -563,3 +563,85 @@ def delete_game(game_id: str, request: Request, service: GameService = Depends(g
     service.delete_game(game_id)
 
     return {"message": "Partida eliminada correctamente"}
+
+
+@router.get("/count")
+def count_games(
+    request: Request,
+    player_id: Optional[str] = Query(default=None, description="Filtrar por jugador"),
+    status: Optional[str] = Query(
+        default=None, description="Filtrar por estado (in_progress, completed, abandoned)"
+    ),
+    days: Optional[int] = Query(default=None, ge=1, le=365, description="Filtrar últimos N días"),
+    since: Optional[str] = Query(default=None, description="Filtrar desde fecha ISO"),
+    until: Optional[str] = Query(default=None, description="Filtrar hasta fecha ISO"),
+    service: GameService = Depends(get_game_service),
+):
+    """Cuenta partidas de forma eficiente usando Firestore aggregation.
+
+    Este endpoint usa count aggregation de Firestore en lugar de traer
+    todos los documentos, lo que lo hace mucho más eficiente y económico.
+
+    REQUIERE API KEY (admin only).
+
+    Examples:
+        GET /games/count                    → Total de partidas
+        GET /games/count?days=30            → Partidas de últimos 30 días
+        GET /games/count?player_id=abc      → Partidas de un jugador
+        GET /games/count?status=completed   → Partidas completadas
+
+    Args:
+        request (Request): Request de FastAPI.
+        player_id (str, optional): Filtrar por jugador.
+        status (str, optional): Filtrar por estado.
+        days (int, optional): Filtrar últimos N días.
+        since (str, optional): Filtrar desde fecha ISO 8601.
+        until (str, optional): Filtrar hasta fecha ISO 8601.
+        service (GameService): Servicio inyectado.
+
+    Returns:
+        JSON: {"count": int, "filters": dict}
+
+    Raises:
+        HTTPException: Si no eres admin (403) o formato de fecha inválido (400).
+    """
+    # Solo admin puede contar partidas globales
+    if not getattr(request.state, "is_admin", False):
+        raise HTTPException(status_code=403, detail="Requiere permisos de administrador")
+
+    # Parsear fechas si se especificaron
+    since_date = None
+    until_date = None
+
+    if since:
+        try:
+            since_date = datetime.fromisoformat(since.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Formato de fecha 'since' inválido")
+
+    if until:
+        try:
+            until_date = datetime.fromisoformat(until.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Formato de fecha 'until' inválido")
+
+    # Contar partidas con filtros
+    count = service.count_games(
+        player_id=player_id,
+        status=status,
+        days=days,
+        since=since_date,
+        until=until_date,
+    )
+
+    # Retornar count con información de filtros aplicados
+    return {
+        "count": count,
+        "filters": {
+            "player_id": player_id,
+            "status": status,
+            "days": days,
+            "since": since,
+            "until": until,
+        },
+    }

@@ -12,6 +12,7 @@ from typing import List, Optional
 from google.cloud.firestore_v1 import Client, Query
 from google.cloud.firestore_v1.base_query import FieldFilter
 
+from app.core.logger import logger
 from app.infrastructure.database.firebase_client import get_firestore_client
 
 from .models import GameEvent
@@ -57,7 +58,7 @@ class EventRepository:
         doc_ref = self.collection.document(event.event_id)
         doc_ref.set(event.to_dict())
 
-        print(f"✅ Evento creado: {event.event_type} en {event.level}")
+        logger.info(f"Evento creado: {event.event_type} en {event.level}")
         return event
 
     def create_batch(self, events_data: List[EventCreate]) -> List[GameEvent]:
@@ -92,7 +93,7 @@ class EventRepository:
 
         # Ejecutar batch
         batch.commit()
-        print(f"✅ Batch de {len(created_events)} eventos creado")
+        logger.info(f"Batch de {len(created_events)} eventos creado")
 
         return created_events
 
@@ -245,7 +246,7 @@ class EventRepository:
         elif since or until:
             filter_info = " (filtrado por fecha)"
 
-        print(f"✅ Fetched {len(events)} events{filter_info}")
+        logger.info(f"Fetched {len(events)} events{filter_info}")
         return events
 
     def get_by_type(
@@ -278,9 +279,9 @@ class EventRepository:
             return events
         except Exception as e:
             # Si la query falla por índice compuesto faltante en Firestore
-            print(f"⚠️ Query get_by_type falló: {e}")
-            print("   Puede que necesites crear un índice compuesto en Firestore")
-            print("   Índice requerido: event_type (ASC) + game_id (ASC) + timestamp (DESC)")
+            logger.warning(f"Query get_by_type falló: {e}")
+            logger.warning("Puede que necesites crear un índice compuesto en Firestore")
+            logger.warning("Índice requerido: event_type (ASC) + game_id (ASC) + timestamp (DESC)")
             return []
 
     def query_events(
@@ -345,6 +346,84 @@ class EventRepository:
             return events
         except Exception as e:
             # Si la query falla por índice compuesto faltante en Firestore
-            print(f"⚠️ Query compleja falló: {e}")
-            print("   Puede que necesites crear un índice compuesto en Firestore")
+            logger.warning(f"Query compleja falló: {e}")
+            logger.warning("Puede que necesites crear un índice compuesto en Firestore")
             return []
+
+    def count(
+        self,
+        game_id: Optional[str] = None,
+        player_id: Optional[str] = None,
+        event_type: Optional[str] = None,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> int:
+        """Cuenta eventos usando Firestore count aggregation (eficiente).
+
+        En lugar de traer todos los documentos con get_all() y hacer len(),
+        este método usa la API de agregación de Firestore que es mucho más
+        eficiente y económica (no cuenta hacia read operations).
+
+        Args:
+            game_id (Optional[str]): Filtrar por partida.
+            player_id (Optional[str]): Filtrar por jugador.
+            event_type (Optional[str]): Filtrar por tipo.
+            days (Optional[int]): Solo eventos de últimos N días.
+            since (Optional[datetime]): Eventos desde esta fecha.
+            until (Optional[datetime]): Eventos hasta esta fecha.
+
+        Returns:
+            int: Número total de eventos que cumplen los filtros.
+
+        Examples:
+            # Contar todos los eventos
+            total = repo.count()
+
+            # Contar eventos de una partida
+            game_events = repo.count(game_id="abc123")
+
+            # Contar eventos de últimos 7 días
+            recent = repo.count(days=7)
+        """
+
+        query = self.collection
+
+        # Aplicar filtros
+        if game_id:
+            query = query.where(filter=FieldFilter("game_id", "==", game_id))
+
+        if player_id:
+            query = query.where(filter=FieldFilter("player_id", "==", player_id))
+
+        if event_type:
+            query = query.where(filter=FieldFilter("event_type", "==", event_type))
+
+        # Filtros de fecha
+        if days is not None:
+            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            query = query.where(filter=FieldFilter("timestamp", ">=", cutoff))
+        elif since is not None:
+            query = query.where(filter=FieldFilter("timestamp", ">=", since))
+
+        if until is not None:
+            query = query.where(filter=FieldFilter("timestamp", "<=", until))
+
+        # Ejecutar count aggregation (NO trae documentos, solo cuenta)
+        try:
+            aggregate_query = query.count(alias="event_count")
+            results = aggregate_query.get()
+
+            # Extraer el count del resultado
+            count_value = results[0][0].value
+            logger.debug(f"Counted {count_value} events (aggregation query)")
+            return count_value
+
+        except Exception as e:
+            logger.error(f"Error en count aggregation: {e}")
+            # Fallback a método ineficiente si falla aggregation
+            logger.warning("Usando fallback ineficiente: get_all + len()")
+            events = self.get_all(
+                limit=10000, days=days, since=since, until=until  # Límite alto para fallback
+            )
+            return len(events)

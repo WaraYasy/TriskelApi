@@ -18,6 +18,8 @@ from slowapi import Limiter
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address as slowapi_get_remote_address
 
+from app.core.logger import logger
+
 
 def get_remote_address(request):
     """
@@ -58,7 +60,7 @@ def get_storage_uri():
     # 1. Intentar usar REDIS_URL de entorno (producción)
     redis_url = os.getenv("REDIS_URL")
     if redis_url:
-        print(f"✅ Rate limiting usando Redis: {redis_url.split('@')[0]}@***")
+        logger.info(f"Rate limiting usando Redis: {redis_url.split('@')[0]}@***")
         return redis_url
 
     # 2. Intentar conectar a Redis local (desarrollo)
@@ -67,14 +69,14 @@ def get_storage_uri():
 
         client = redis.Redis(host="localhost", port=6379, db=0, socket_connect_timeout=1)
         client.ping()
-        print("✅ Rate limiting usando Redis local: redis://localhost:6379")
+        logger.info("Rate limiting usando Redis local: redis://localhost:6379")
         return "redis://localhost:6379"
     except Exception:
         pass
 
     # 3. Fallback a memoria
-    print("⚠️  Redis no disponible, usando memoria para rate limiting")
-    print("   Para producción, configura REDIS_URL en variables de entorno")
+    logger.warning("Redis no disponible, usando memoria para rate limiting")
+    logger.warning("Para producción, configura REDIS_URL en variables de entorno")
     return "memory://"
 
 

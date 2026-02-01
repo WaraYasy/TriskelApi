@@ -173,3 +173,34 @@ class EventService:
             end_time=end_time,
             limit=limit,
         )
+
+    def count_events(
+        self,
+        game_id: Optional[str] = None,
+        player_id: Optional[str] = None,
+        event_type: Optional[str] = None,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> int:
+        """Cuenta eventos de forma eficiente sin traer todos los documentos.
+
+        Args:
+            game_id (Optional[str]): Filtrar por partida.
+            player_id (Optional[str]): Filtrar por jugador.
+            event_type (Optional[str]): Filtrar por tipo.
+            days (Optional[int]): Solo eventos de últimos N días.
+            since (Optional[datetime]): Eventos desde esta fecha.
+            until (Optional[datetime]): Eventos hasta esta fecha.
+
+        Returns:
+            int: Número total de eventos que cumplen los filtros.
+        """
+        return self.repository.count(
+            game_id=game_id,
+            player_id=player_id,
+            event_type=event_type,
+            days=days,
+            since=since,
+            until=until,
+        )

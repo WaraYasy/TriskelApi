@@ -16,6 +16,8 @@ Autor: Mandrágora
 from flask import Blueprint, jsonify, render_template, request, send_file
 
 from app.config.settings import settings
+from app.core.logger import logger
+from app.domain.events.repository import EventRepository
 
 from .service import AnalyticsService
 
@@ -124,9 +126,10 @@ def api_metrics():
     games = analytics_service.get_all_games()
     metrics = analytics_service.calculate_global_metrics(players, games)
 
-    # Obtener total de eventos
-    events_data = analytics_service.get_all_events()
-    metrics["total_events"] = len(events_data)
+    # Obtener total de eventos usando count() eficiente
+    # En lugar de traer todos los eventos con get_all_events() y hacer len()
+    event_repo = EventRepository()
+    metrics["total_events"] = event_repo.count()
 
     return jsonify(metrics)
 
@@ -209,7 +212,7 @@ def api_chart_events():
         chart_html = analytics_service.create_events_by_type_chart(all_events)
         return jsonify({"html": chart_html, "total": len(all_events)})
     except Exception as e:
-        print(f"[ERROR] /api/charts/events failed: {e}")
+        logger.error(f"/api/charts/events failed: {e}")
         import traceback
 
         traceback.print_exc()
@@ -224,7 +227,7 @@ def api_chart_events_timeline():
         chart_html = analytics_service.create_events_timeline_chart(all_events)
         return jsonify({"html": chart_html})
     except Exception as e:
-        print(f"[ERROR] /api/charts/events/timeline failed: {e}")
+        logger.error(f"/api/charts/events/timeline failed: {e}")
         import traceback
 
         traceback.print_exc()
@@ -239,7 +242,7 @@ def api_chart_events_deaths():
         chart_html = analytics_service.create_deaths_event_chart(all_events)
         return jsonify({"html": chart_html})
     except Exception as e:
-        print(f"[ERROR] /api/charts/events/deaths failed: {e}")
+        logger.error(f"/api/charts/events/deaths failed: {e}")
         import traceback
 
         traceback.print_exc()
@@ -318,3 +321,33 @@ def api_events():
     recent_events = all_events[:10]
 
     return jsonify(recent_events)
+
+
+@analytics_bp.route("/api/cache/clear", methods=["POST"])
+def api_clear_cache():
+    """API endpoint para invalidar el cache de analytics.
+
+    Query params:
+        key (str, optional): Clave específica a limpiar (players|games|events).
+                            Si no se especifica, limpia todo el cache.
+
+    Returns:
+        JSON: Confirmación de qué se limpió.
+
+    Examples:
+        POST /dashboard/api/cache/clear              → Limpia todo
+        POST /dashboard/api/cache/clear?key=games    → Solo limpia games
+    """
+    cache_key = request.args.get("key")
+
+    # Validar clave si se especificó
+    valid_keys = ["players", "games", "events"]
+    if cache_key and cache_key not in valid_keys:
+        return jsonify({"error": f"Clave inválida. Válidas: {valid_keys}"}), 400
+
+    # Limpiar cache
+    result = analytics_service.clear_cache(cache_key)
+
+    return jsonify(
+        {"message": "Cache invalidado exitosamente", "result": result, "ttl_seconds": 300}
+    )

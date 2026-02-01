@@ -21,6 +21,7 @@ import os
 from flask import Flask, render_template
 
 from app.config.settings import settings as app_settings
+from app.core.logger import logger
 
 from .analytics.routes import analytics_bp, analytics_service
 
@@ -69,7 +70,7 @@ def create_flask_app():
             metrics = analytics_service.calculate_global_metrics(players, games)
             chart_active_players = analytics_service.create_active_players_chart(events)
         except Exception as e:
-            print(f"Error obteniendo métricas: {e}")
+            logger.error(f"Error obteniendo métricas para landing page: {e}")
             metrics = {
                 "total_players": 0,
                 "total_games": 0,

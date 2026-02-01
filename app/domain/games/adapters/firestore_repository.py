@@ -11,6 +11,7 @@ from typing import List, Optional
 from google.cloud.firestore_v1 import Client, Query
 from google.cloud.firestore_v1.base_query import FieldFilter
 
+from app.core.logger import logger
 from app.infrastructure.database.firebase_client import get_firestore_client
 
 from ..models import Game
@@ -47,7 +48,7 @@ class FirestoreGameRepository(IGameRepository):
         doc_ref = self.collection.document(game.game_id)
         doc_ref.set(game.to_dict())
 
-        print(f"✅ Partida creada: {game.game_id}")
+        logger.info(f"Partida creada: {game.game_id}")
         return game
 
     def get_by_id(self, game_id: str) -> Optional[Game]:
@@ -195,7 +196,7 @@ class FirestoreGameRepository(IGameRepository):
         elif since or until:
             filter_info = " (filtrado por fecha)"
 
-        print(f"✅ Fetched {len(games)} games{filter_info}")
+        logger.info(f"Fetched {len(games)} games{filter_info}")
         return games
 
     def update(self, game_id: str, game_update: GameUpdate) -> Optional[Game]:
@@ -223,7 +224,7 @@ class FirestoreGameRepository(IGameRepository):
 
         # Actualizar en Firestore
         doc_ref.update(update_data)
-        print(f"✅ Partida actualizada: {game_id}")
+        logger.info(f"Partida actualizada: {game_id}")
 
         return self.get_by_id(game_id)
 
@@ -246,7 +247,7 @@ class FirestoreGameRepository(IGameRepository):
         # Actualizar nivel actual
         doc_ref.update({"current_level": level_data.level})
 
-        print(f"✅ Nivel iniciado: {level_data.level} en partida {game_id}")
+        logger.info(f"Nivel iniciado: {level_data.level} en partida {game_id}")
         return self.get_by_id(game_id)
 
     def complete_level(self, game_id: str, level_data: LevelComplete) -> Optional[Game]:
@@ -306,7 +307,7 @@ class FirestoreGameRepository(IGameRepository):
         # Guardar todos los cambios
         doc_ref.set(game.to_dict())
 
-        print(f"✅ Nivel completado: {level_data.level} en partida {game_id}")
+        logger.info(f"Nivel completado: {level_data.level} en partida {game_id}")
         return game
 
     def delete(self, game_id: str) -> bool:
@@ -325,5 +326,74 @@ class FirestoreGameRepository(IGameRepository):
             return False
 
         doc_ref.delete()
-        print(f"✅ Partida eliminada: {game_id}")
+        logger.info(f"Partida eliminada: {game_id}")
         return True
+
+    def count(
+        self,
+        player_id: Optional[str] = None,
+        status: Optional[str] = None,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> int:
+        """Cuenta partidas usando Firestore count aggregation (eficiente).
+
+        En lugar de traer todos los documentos y hacer len(), usa la API
+        de agregación de Firestore que es mucho más eficiente.
+
+        Args:
+            player_id (Optional[str]): Filtrar por jugador.
+            status (Optional[str]): Filtrar por estado (in_progress, completed, abandoned).
+            days (Optional[int]): Solo partidas de últimos N días.
+            since (Optional[datetime]): Partidas desde esta fecha.
+            until (Optional[datetime]): Partidas hasta esta fecha.
+
+        Returns:
+            int: Número total de partidas que cumplen los filtros.
+
+        Examples:
+            # Contar todas las partidas
+            total = repo.count()
+
+            # Contar partidas de un jugador
+            player_games = repo.count(player_id="player123")
+
+            # Contar partidas completadas de últimos 30 días
+            completed = repo.count(status="completed", days=30)
+        """
+
+        query = self.collection
+
+        # Aplicar filtros
+        if player_id:
+            query = query.where(filter=FieldFilter("player_id", "==", player_id))
+
+        if status:
+            query = query.where(filter=FieldFilter("status", "==", status))
+
+        # Filtros de fecha
+        if days is not None:
+            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            query = query.where(filter=FieldFilter("started_at", ">=", cutoff))
+        elif since is not None:
+            query = query.where(filter=FieldFilter("started_at", ">=", since))
+
+        if until is not None:
+            query = query.where(filter=FieldFilter("started_at", "<=", until))
+
+        # Ejecutar count aggregation
+        try:
+            aggregate_query = query.count(alias="game_count")
+            results = aggregate_query.get()
+
+            count_value = results[0][0].value
+            logger.debug(f"Counted {count_value} games (aggregation query)")
+            return count_value
+
+        except Exception as e:
+            logger.error(f"Error en count aggregation: {e}")
+            # Fallback a método ineficiente si falla
+            logger.warning("Usando fallback ineficiente: get_all + len()")
+            games = self.get_all(limit=10000, days=days, since=since, until=until)
+            return len(games)

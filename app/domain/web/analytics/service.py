@@ -18,6 +18,8 @@ from collections import Counter
 from datetime import datetime, timedelta
 from typing import Any, Dict, List
 
+from app.core.logger import logger
+
 # Imports opcionales (instalar si se necesitan visualizaciones)
 try:
     import httpx
@@ -27,7 +29,7 @@ try:
     ANALYTICS_AVAILABLE = True
 except ImportError:
     ANALYTICS_AVAILABLE = False
-    print("⚠️  Analytics libs no instaladas. Instala: pip install httpx pandas plotly")
+    logger.warning("  Analytics libs no instaladas. Instala: pip install httpx pandas plotly")
 
 
 class AnalyticsService:
@@ -62,16 +64,16 @@ class AnalyticsService:
         self._cache_ttl = 300  # 5 minutos
 
         # DEBUG: Log de inicialización
-        print("[Analytics] Initializing service:")
-        print(f"  - API Base URL: {api_base_url}")
-        print(f"  - API Key: {'SET' if api_key else 'NOT SET'}")
-        print(f"  - Mock Mode: {use_mock_data}")
+        logger.info("[Analytics] Initializing service:")
+        logger.debug(f"API Base URL: {api_base_url}")
+        logger.debug(f"API Key: {'SET' if api_key else 'NOT SET'}")
+        logger.debug(f"Mock Mode: {use_mock_data}")
 
         if ANALYTICS_AVAILABLE:
             headers = {}
             if api_key:
                 headers["X-API-Key"] = api_key
-                print("  - X-API-Key header: Added to client")
+                logger.debug("X-API-Key header: Added to client")
             # Configurar timeout extendido para peticiones lentas de Firebase
             # timeout=60s para requests individuales, 120s para todo el proceso
             self.client = httpx.Client(
@@ -101,6 +103,35 @@ class AnalyticsService:
         """Guarda un valor en el cache con timestamp."""
         self._cache[key] = value
         self._cache_timestamp[key] = time.time()
+
+    def clear_cache(self, cache_key: str = None) -> Dict[str, Any]:
+        """Invalida el cache manualmente.
+
+        Args:
+            cache_key (str, optional): Clave específica a invalidar.
+                Si es None, limpia todo el cache.
+                Valores válidos: 'players', 'games', 'events'.
+
+        Returns:
+            Dict: Información sobre qué se limpió.
+        """
+        if cache_key is None:
+            # Limpiar todo el cache
+            cleared_keys = list(self._cache.keys())
+            self._cache.clear()
+            self._cache_timestamp.clear()
+            logger.info(f"[Analytics] Cache completamente limpiado ({len(cleared_keys)} claves)")
+            return {"cleared": "all", "keys": cleared_keys}
+        else:
+            # Limpiar una clave específica
+            if cache_key in self._cache:
+                del self._cache[cache_key]
+                del self._cache_timestamp[cache_key]
+                logger.info(f"[Analytics] Cache limpiado: {cache_key}")
+                return {"cleared": cache_key}
+            else:
+                logger.warning(f"[Analytics] Clave de cache no encontrada: {cache_key}")
+                return {"cleared": None, "error": "Cache key not found"}
 
     def _generate_mock_players(self) -> List[Dict[str, Any]]:
         """Genera datos mock de jugadores para pruebas sin Firebase."""
@@ -314,7 +345,7 @@ class AnalyticsService:
         """
         # 🎨 MODO MOCK: Retornar datos ficticios sin Firebase
         if self.use_mock_data:
-            print("[Analytics] 🎨 Using MOCK players data (no Firebase)")
+            logger.info("[Analytics] 🎨 Using MOCK players data (no Firebase)")
             return self._generate_mock_players()
 
         cache_key = "players"
@@ -322,7 +353,7 @@ class AnalyticsService:
         # Verificar si hay cache válido
         if self._is_cache_valid(cache_key):
             age = time.time() - self._cache_timestamp[cache_key]
-            print(f"[Analytics] Using cached players (age: {age:.1f}s)")
+            logger.info(f"[Analytics] Using cached players (age: {age:.1f}s)")
             return self._get_from_cache(cache_key)
 
         if not self.client:
@@ -335,13 +366,13 @@ class AnalyticsService:
 
             # Guardar en cache
             self._set_cache(cache_key, players)
-            print(
+            logger.debug(
                 f"[Analytics] Fetched {len(players)} players from API (cached for {self._cache_ttl}s)"
             )
 
             return players
         except Exception as e:
-            print(f"Error obteniendo jugadores: {e}")
+            logger.error(f"Error obteniendo jugadores: {e}")
             return []
 
     def get_all_games(self) -> List[Dict[str, Any]]:
@@ -357,7 +388,7 @@ class AnalyticsService:
         """
         # 🎨 MODO MOCK: Retornar datos ficticios sin Firebase
         if self.use_mock_data:
-            print("[Analytics] 🎨 Using MOCK games data (no Firebase)")
+            logger.info("[Analytics] 🎨 Using MOCK games data (no Firebase)")
             return self._generate_mock_games()
 
         cache_key = "games"
@@ -366,7 +397,9 @@ class AnalyticsService:
         if self._is_cache_valid(cache_key):
             age = time.time() - self._cache_timestamp[cache_key]
             cached_games = self._get_from_cache(cache_key)
-            print(f"[Analytics] Using cached games (age: {age:.1f}s, {len(cached_games)} games)")
+            logger.info(
+                f"[Analytics] Using cached games (age: {age:.1f}s, {len(cached_games)} games)"
+            )
             return cached_games
 
         if not self.client:
@@ -376,34 +409,40 @@ class AnalyticsService:
 
         try:
             # OPTIMIZACIÓN: Llamar endpoint admin directo en lugar de iterar jugadores
-            print("[Analytics] Calling GET /v1/games with limit=1000")
-            print(f"[Analytics] Client headers: {dict(self.client.headers)}")
+            logger.info("[Analytics] Calling GET /v1/games with limit=1000")
+            logger.info(f"[Analytics] Client headers: {dict(self.client.headers)}")
 
             response = self.client.get("/v1/games", params={"limit": 1000})
 
-            print(f"[Analytics] Response status: {response.status_code}")
-            print(f"[Analytics] Response content-type: {response.headers.get('content-type')}")
+            logger.info(f"[Analytics] Response status: {response.status_code}")
+            logger.info(
+                f"[Analytics] Response content-type: {response.headers.get('content-type')}"
+            )
 
             response.raise_for_status()
             all_games = response.json()
 
             elapsed = time.time() - start_time
-            print(f"[Analytics] ✅ Fetched {len(all_games)} games in {elapsed:.2f}s (1 HTTP call)")
+            logger.info(
+                f"[Analytics] ✅ Fetched {len(all_games)} games in {elapsed:.2f}s (1 HTTP call)"
+            )
 
             # Guardar en cache
             self._set_cache(cache_key, all_games)
-            print(f"[Analytics] Cached {len(all_games)} games for {self._cache_ttl}s")
+            logger.info(f"[Analytics] Cached {len(all_games)} games for {self._cache_ttl}s")
 
             return all_games
 
         except httpx.HTTPStatusError as e:
-            print(f"[Analytics] ❌ HTTP Error {e.response.status_code}")
-            print(f"[Analytics] Response preview: {e.response.text[:500]}")
+            logger.info(f"[Analytics] ❌ HTTP Error {e.response.status_code}")
+            logger.info(f"[Analytics] Response preview: {e.response.text[:500]}")
             if e.response.status_code == 403:
-                print("[Analytics] ERROR: Endpoint requires admin auth. Make sure API Key is set.")
+                logger.info(
+                    "[Analytics] ERROR: Endpoint requires admin auth. Make sure API Key is set."
+                )
             return []
         except Exception as e:
-            print(f"[Analytics] ❌ Error fetching games: {type(e).__name__}: {e}")
+            logger.info(f"[Analytics] ❌ Error fetching games: {type(e).__name__}: {e}")
             return []
 
     def get_all_events(self) -> List[Dict[str, Any]]:
@@ -419,7 +458,7 @@ class AnalyticsService:
         """
         # 🎨 MODO MOCK: Retornar datos ficticios sin Firebase
         if self.use_mock_data:
-            print("[Analytics] 🎨 Using MOCK events data (no Firebase)")
+            logger.info("[Analytics] 🎨 Using MOCK events data (no Firebase)")
             return self._generate_mock_events()
 
         cache_key = "events"
@@ -428,7 +467,9 @@ class AnalyticsService:
         if self._is_cache_valid(cache_key):
             age = time.time() - self._cache_timestamp[cache_key]
             cached_events = self._get_from_cache(cache_key)
-            print(f"[Analytics] Using cached events (age: {age:.1f}s, {len(cached_events)} events)")
+            logger.info(
+                f"[Analytics] Using cached events (age: {age:.1f}s, {len(cached_events)} events)"
+            )
             return cached_events
 
         if not self.client:
@@ -438,12 +479,14 @@ class AnalyticsService:
 
         try:
             # OPTIMIZACIÓN: Llamar endpoint admin directo
-            print("[Analytics] Calling GET /v1/events with limit=5000")
+            logger.info("[Analytics] Calling GET /v1/events with limit=5000")
 
             response = self.client.get("/v1/events", params={"limit": 5000})
 
-            print(f"[Analytics] Response status: {response.status_code}")
-            print(f"[Analytics] Response content-type: {response.headers.get('content-type')}")
+            logger.info(f"[Analytics] Response status: {response.status_code}")
+            logger.info(
+                f"[Analytics] Response content-type: {response.headers.get('content-type')}"
+            )
 
             response.raise_for_status()
             all_events = response.json()
@@ -456,24 +499,26 @@ class AnalyticsService:
                 event["player_username"] = player_map.get(event.get("player_id"), "Unknown")
 
             elapsed = time.time() - start_time
-            print(
+            logger.debug(
                 f"[Analytics] ✅ Fetched {len(all_events)} events in {elapsed:.2f}s (1 HTTP call)"
             )
 
             # Guardar en cache
             self._set_cache(cache_key, all_events)
-            print(f"[Analytics] Cached {len(all_events)} events for {self._cache_ttl}s")
+            logger.info(f"[Analytics] Cached {len(all_events)} events for {self._cache_ttl}s")
 
             return all_events
 
         except httpx.HTTPStatusError as e:
-            print(f"[Analytics] ❌ HTTP Error {e.response.status_code}")
-            print(f"[Analytics] Response preview: {e.response.text[:500]}")
+            logger.info(f"[Analytics] ❌ HTTP Error {e.response.status_code}")
+            logger.info(f"[Analytics] Response preview: {e.response.text[:500]}")
             if e.response.status_code == 403:
-                print("[Analytics] ERROR: Endpoint requires admin auth. Make sure API Key is set.")
+                logger.info(
+                    "[Analytics] ERROR: Endpoint requires admin auth. Make sure API Key is set."
+                )
             return []
         except Exception as e:
-            print(f"[Analytics] ❌ Error fetching events: {type(e).__name__}: {e}")
+            logger.info(f"[Analytics] ❌ Error fetching events: {type(e).__name__}: {e}")
             return []
 
     def calculate_global_metrics(self, players: List[Dict], games: List[Dict]) -> Dict[str, Any]:

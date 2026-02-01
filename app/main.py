@@ -199,6 +199,12 @@ def shutdown_event():
     except Exception as e:
         logger.warning(f"Error deteniendo scheduler: {e}")
 
+    # Cerrar connection pool de SQL
+    try:
+        sql_manager.dispose()
+    except Exception as e:
+        logger.warning(f"Error cerrando SQL pool: {e}")
+
     logger.info("Triskel API cerrada")
 
 
