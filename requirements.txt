@@ -40,7 +40,7 @@ slowapi==0.1.9                     # Rate limiting para FastAPI
 gunicorn==21.2.0                 # WSGI server (producción)
 
 # ==================== Scheduling ====================
-APScheduler==3.10.4              # Tareas programadas para leaderboards
+APScheduler==3.11.2              # Tareas programadas para leaderboards
 
 # ==================== Rate Limiting ====================
 redis==5.0.1                     # Redis para rate limiting en producción
