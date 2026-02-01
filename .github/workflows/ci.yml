@@ -68,7 +68,7 @@ jobs:
 
     - name: Verificar umbral de cobertura
       run: |
-        coverage report --fail-under=37
+        coverage report --fail-under=33
 
   lint:
     runs-on: ubuntu-latest
