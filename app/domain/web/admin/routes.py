@@ -76,7 +76,10 @@ def _create_export_audit_log(
         # Intentar obtener sesión SQL directamente del manager
         session = sql_manager.get_session()
         if not session:
-            logger.warning("Base de datos SQL no disponible, no se puede registrar audit log")
+            logger.warning(
+                "Audit log no registrado: Base de datos SQL no disponible",
+                extra={"action": f"export_{data_type}_csv", "user": username},
+            )
             return
 
         # Crear repositorio y registrar
@@ -100,11 +103,14 @@ def _create_export_audit_log(
         )
 
         session.close()
-        logger.debug(f"Audit log creado para exportación: {data_type} por {username}")
+        logger.debug(f"Audit log registrado: export_{data_type}_csv")
 
     except Exception as e:
         # Si falla el audit log, solo logear pero no fallar la exportación
-        logger.warning(f"No se pudo crear audit log: {e}")
+        logger.error(
+            f"Error al registrar audit log de exportación: {e}",
+            extra={"action": f"export_{data_type}_csv", "user": username},
+        )
 
 
 def _create_migration_audit_log(
@@ -135,7 +141,10 @@ def _create_migration_audit_log(
         # Intentar obtener sesión SQL directamente del manager
         session = sql_manager.get_session()
         if not session:
-            logger.warning("Base de datos SQL no disponible, no se puede registrar audit log")
+            logger.warning(
+                "Audit log no registrado: Base de datos SQL no disponible",
+                extra={"action": action, "user": username},
+            )
             return
 
         # Crear repositorio y registrar
@@ -163,11 +172,14 @@ def _create_migration_audit_log(
         )
 
         session.close()
-        logger.debug(f"Audit log creado para migración: {action} por {username}")
+        logger.debug(f"Audit log registrado: {action}")
 
     except Exception as e:
         # Si falla el audit log, solo logear pero no fallar la operación
-        logger.warning(f"No se pudo crear audit log: {e}")
+        logger.error(
+            f"Error al registrar audit log de migración: {e}",
+            extra={"action": action, "user": username},
+        )
 
 
 @admin_bp.route("/login")

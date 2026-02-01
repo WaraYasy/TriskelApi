@@ -247,6 +247,16 @@ class AuthService:
         new_access_token = self.create_access_token(user["id"], user["username"], user["role"])
         new_refresh_token = self.create_refresh_token(user["id"], user["username"])
 
+        # Registrar renovación de token en audit log
+        self.repository.create_audit_log(
+            user_id=user["id"],
+            username=user["username"],
+            action="token_refresh",
+            ip_address=ip_address,
+            user_agent=user_agent,
+            success=True,
+        )
+
         return {
             "access_token": new_access_token,
             "refresh_token": new_refresh_token,

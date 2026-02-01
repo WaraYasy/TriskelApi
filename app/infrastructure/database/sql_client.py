@@ -72,16 +72,24 @@ class SQLManager:
             print(f"❌ Error conectando a la base de datos SQL: {e}")
             raise
 
-    def get_session(self) -> Session:
+    def get_session(self) -> Optional[Session]:
         """
         Obtiene una nueva sesión de base de datos.
         Cada operación debe usar su propia sesión.
+
+        Returns:
+            Session si la BD está configurada, None si no lo está.
         """
         if not self._initialized:
-            self.initialize()
+            try:
+                self.initialize()
+            except Exception:
+                # Si falla la inicialización, retornar None
+                return None
 
         if not self._session_factory:
-            raise RuntimeError("Base de datos SQL no está configurada")
+            # Retornar None en lugar de lanzar excepción
+            return None
 
         return self._session_factory()
 

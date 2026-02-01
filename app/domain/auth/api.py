@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from jose import JWTError
 from sqlalchemy.orm import Session
 
+from app.core.logger import logger
 from app.infrastructure.database.sql_client import get_db_session
 
 from .adapters.sql_repository import SQLAuthRepository
@@ -120,6 +121,24 @@ def login(
         )
     except ValueError as e:
         error_msg = str(e)
+
+        # Registrar intento fallido en audit log
+        try:
+            service.repository.create_audit_log(
+                user_id=None,
+                username=login_data.username,
+                action="login_failed",
+                ip_address=ip_address,
+                user_agent=user_agent,
+                success=False,
+                error_message=error_msg,
+            )
+        except Exception as audit_error:
+            logger.error(
+                f"Error al registrar login_failed en audit log: {audit_error}",
+                extra={"username": login_data.username},
+            )
+
         if "72 caracteres" in error_msg:
             raise HTTPException(status_code=400, detail="Password excede longitud máxima")
         elif "Credenciales inválidas" in error_msg or "Password inválido" in error_msg:

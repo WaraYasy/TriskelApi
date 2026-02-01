@@ -47,7 +47,7 @@ class GameService:
 
         Reglas de negocio:
         - El jugador debe existir.
-        - El jugador NO puede tener otra partida activa.
+        - Si el jugador tiene otra partida activa, se cierra automáticamente como "abandoned".
 
         Args:
             game_data (GameCreate): Datos de la partida a crear.
@@ -56,19 +56,26 @@ class GameService:
             Game: Partida creada.
 
         Raises:
-            ValueError: Si el jugador no existe o ya tiene partida activa.
+            ValueError: Si el jugador no existe.
         """
         # Verificar que el jugador existe
         player = self.player_repository.get_by_id(game_data.player_id)
         if not player:
             raise ValueError("Jugador no encontrado")
 
-        # Verificar que no tenga partida activa
+        # Si tiene partida activa, cerrarla automáticamente
         active_game = self.game_repository.get_active_game(game_data.player_id)
         if active_game:
-            raise ValueError(f"El jugador ya tiene una partida activa: {active_game.game_id}")
+            close_update = GameUpdate(status="abandoned", ended_at=datetime.utcnow())
+            closed_game = self.game_repository.update(active_game.game_id, close_update)
+            # Actualizar stats del jugador con la partida abandonada
+            if closed_game:
+                self.player_service.update_player_stats_after_game(game_data.player_id, closed_game)
+            print(
+                f"⚠️  Partida anterior {active_game.game_id} cerrada automáticamente como 'abandoned'"
+            )
 
-        # Crear y retornar
+        # Crear y retornar la nueva partida
         return self.game_repository.create(game_data)
 
     def get_game(self, game_id: str) -> Optional[Game]:
