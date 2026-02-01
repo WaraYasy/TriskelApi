@@ -6,7 +6,7 @@ El repository accede directamente a Firestore.
 Autor: Mandrágora
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from google.cloud.firestore_v1 import Client, Query
@@ -114,67 +114,39 @@ class EventRepository:
         data = doc.to_dict()
         return GameEvent.from_dict(data)
 
-    def get_by_game(self, game_id: str, limit: int = 1000) -> List[GameEvent]:
-        """Obtiene todos los eventos de una partida.
+    def get_by_game(
+        self,
+        game_id: str,
+        limit: int = 500,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> List[GameEvent]:
+        """Obtiene todos los eventos de una partida con filtros opcionales.
 
         Args:
             game_id (str): ID de la partida.
-            limit (int): Máximo número de eventos a retornar.
-
-        Returns:
-            List[GameEvent]: Lista de eventos ordenados por timestamp.
-        """
-        query = (
-            self.collection.where(filter=FieldFilter("game_id", "==", game_id))
-            .order_by("timestamp", direction=Query.DESCENDING)
-            .limit(limit)
-        )
-        docs = query.stream()
-
-        events = []
-        for doc in docs:
-            data = doc.to_dict()
-            events.append(GameEvent.from_dict(data))
-
-        return events
-
-    def get_by_player(self, player_id: str, limit: int = 1000) -> List[GameEvent]:
-        """Obtiene todos los eventos de un jugador.
-
-        Args:
-            player_id (str): ID del jugador.
-            limit (int): Máximo número de eventos a retornar.
-
-        Returns:
-            List[GameEvent]: Lista de eventos ordenados por timestamp.
-        """
-        query = (
-            self.collection.where(filter=FieldFilter("player_id", "==", player_id))
-            .order_by("timestamp", direction=Query.DESCENDING)
-            .limit(limit)
-        )
-        docs = query.stream()
-
-        events = []
-        for doc in docs:
-            data = doc.to_dict()
-            events.append(GameEvent.from_dict(data))
-
-        return events
-
-    def get_all(self, limit: int = 5000) -> List[GameEvent]:
-        """Obtiene todos los eventos de todos los jugadores (admin only).
-
-        ADVERTENCIA: Esta query puede ser muy costosa en colecciones grandes.
-        Solo debe ser usada por endpoints admin con autenticación.
-
-        Args:
-            limit (int): Máximo número de eventos a retornar (default: 5000).
+            limit (int): Máximo número de eventos a retornar (default: 500, antes: 1000).
+            days (Optional[int]): Si se especifica, solo eventos de últimos N días.
+            since (Optional[datetime]): Si se especifica, solo eventos después de esta fecha.
+            until (Optional[datetime]): Si se especifica, solo eventos antes de esta fecha.
 
         Returns:
             List[GameEvent]: Lista de eventos ordenados por timestamp descendente.
         """
-        query = self.collection.order_by("timestamp", direction=Query.DESCENDING).limit(limit)
+        query = self.collection.where(filter=FieldFilter("game_id", "==", game_id))
+
+        # Aplicar filtros de fecha si se especificaron
+        if days is not None:
+            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            query = query.where(filter=FieldFilter("timestamp", ">=", cutoff))
+        elif since is not None:
+            query = query.where(filter=FieldFilter("timestamp", ">=", since))
+
+        if until is not None:
+            query = query.where(filter=FieldFilter("timestamp", "<=", until))
+
+        query = query.order_by("timestamp", direction=Query.DESCENDING).limit(limit)
         docs = query.stream()
 
         events = []
@@ -182,7 +154,98 @@ class EventRepository:
             data = doc.to_dict()
             events.append(GameEvent.from_dict(data))
 
-        print(f"✅ Fetched {len(events)} events (all players)")
+        return events
+
+    def get_by_player(
+        self,
+        player_id: str,
+        limit: int = 200,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> List[GameEvent]:
+        """Obtiene todos los eventos de un jugador con filtros opcionales.
+
+        Args:
+            player_id (str): ID del jugador.
+            limit (int): Máximo número de eventos a retornar (default: 200, antes: 1000).
+            days (Optional[int]): Si se especifica, solo eventos de últimos N días.
+            since (Optional[datetime]): Si se especifica, solo eventos después de esta fecha.
+            until (Optional[datetime]): Si se especifica, solo eventos antes de esta fecha.
+
+        Returns:
+            List[GameEvent]: Lista de eventos ordenados por timestamp descendente.
+        """
+        query = self.collection.where(filter=FieldFilter("player_id", "==", player_id))
+
+        # Aplicar filtros de fecha si se especificaron
+        if days is not None:
+            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            query = query.where(filter=FieldFilter("timestamp", ">=", cutoff))
+        elif since is not None:
+            query = query.where(filter=FieldFilter("timestamp", ">=", since))
+
+        if until is not None:
+            query = query.where(filter=FieldFilter("timestamp", "<=", until))
+
+        query = query.order_by("timestamp", direction=Query.DESCENDING).limit(limit)
+        docs = query.stream()
+
+        events = []
+        for doc in docs:
+            data = doc.to_dict()
+            events.append(GameEvent.from_dict(data))
+
+        return events
+
+    def get_all(
+        self,
+        limit: int = 100,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> List[GameEvent]:
+        """Obtiene todos los eventos de todos los jugadores con filtros opcionales (admin only).
+
+        OPTIMIZACIÓN CRÍTICA: Límite reducido de 5000 → 100 por defecto.
+        Events son muy numerosos y pesados. Se RECOMIENDA usar filtros de fecha.
+
+        Args:
+            limit (int): Máximo número de eventos a retornar (default: 100, antes: 5000).
+            days (Optional[int]): Si se especifica, solo eventos de últimos N días.
+            since (Optional[datetime]): Si se especifica, solo eventos después de esta fecha.
+            until (Optional[datetime]): Si se especifica, solo eventos antes de esta fecha.
+
+        Returns:
+            List[GameEvent]: Lista de eventos ordenados por timestamp descendente.
+        """
+        query = self.collection
+
+        # Aplicar filtros de fecha si se especificaron
+        if days is not None:
+            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            query = query.where(filter=FieldFilter("timestamp", ">=", cutoff))
+        elif since is not None:
+            query = query.where(filter=FieldFilter("timestamp", ">=", since))
+
+        if until is not None:
+            query = query.where(filter=FieldFilter("timestamp", "<=", until))
+
+        query = query.order_by("timestamp", direction=Query.DESCENDING).limit(limit)
+        docs = query.stream()
+
+        events = []
+        for doc in docs:
+            data = doc.to_dict()
+            events.append(GameEvent.from_dict(data))
+
+        filter_info = ""
+        if days:
+            filter_info = f" (últimos {days} días)"
+        elif since or until:
+            filter_info = " (filtrado por fecha)"
+
+        print(f"✅ Fetched {len(events)} events{filter_info}")
         return events
 
     def get_by_type(

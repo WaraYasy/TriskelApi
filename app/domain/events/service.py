@@ -102,26 +102,50 @@ class EventService:
         """Obtiene un evento por ID."""
         return self.repository.get_by_id(event_id)
 
-    def get_game_events(self, game_id: str, limit: int = 1000) -> List[GameEvent]:
-        """Obtiene todos los eventos de una partida."""
-        return self.repository.get_by_game(game_id, limit)
+    def get_game_events(
+        self,
+        game_id: str,
+        limit: int = 500,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> List[GameEvent]:
+        """Obtiene todos los eventos de una partida con filtros opcionales."""
+        return self.repository.get_by_game(game_id, limit, days, since, until)
 
-    def get_player_events(self, player_id: str, limit: int = 1000) -> List[GameEvent]:
-        """Obtiene todos los eventos de un jugador."""
-        return self.repository.get_by_player(player_id, limit)
+    def get_player_events(
+        self,
+        player_id: str,
+        limit: int = 200,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> List[GameEvent]:
+        """Obtiene todos los eventos de un jugador con filtros opcionales."""
+        return self.repository.get_by_player(player_id, limit, days, since, until)
 
-    def get_all_events(self, limit: int = 5000) -> List[GameEvent]:
-        """Obtiene todos los eventos de todos los jugadores.
+    def get_all_events(
+        self,
+        limit: int = 100,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> List[GameEvent]:
+        """Obtiene todos los eventos de todos los jugadores con filtros opcionales.
 
         ADMIN ONLY: Este método no debe ser expuesto a jugadores normales.
+        OPTIMIZACIÓN: Límite reducido de 5000 → 100. Usar filtros de fecha.
 
         Args:
-            limit (int): Máximo número de eventos a retornar.
+            limit (int): Máximo número de eventos a retornar (default: 100).
+            days (Optional[int]): Filtrar últimos N días.
+            since (Optional[datetime]): Filtrar desde fecha.
+            until (Optional[datetime]): Filtrar hasta fecha.
 
         Returns:
-            List[GameEvent]: Lista de todos los eventos.
+            List[GameEvent]: Lista de todos los eventos filtrados.
         """
-        return self.repository.get_all(limit=limit)
+        return self.repository.get_all(limit, days, since, until)
 
     def get_events_by_type(
         self, event_type: str, game_id: Optional[str] = None, limit: int = 1000

@@ -5,6 +5,7 @@ Implementación concreta del repositorio usando Firestore.
 Autor: Mandrágora
 """
 
+from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 
 from google.cloud.firestore_v1 import Client, Query
@@ -67,18 +68,41 @@ class FirestoreGameRepository(IGameRepository):
         data = doc.to_dict()
         return Game.from_dict(data)
 
-    def get_by_player(self, player_id: str, limit: int = 100) -> List[Game]:
-        """Obtiene todas las partidas de un jugador.
+    def get_by_player(
+        self,
+        player_id: str,
+        limit: int = 100,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> List[Game]:
+        """Obtiene todas las partidas de un jugador con filtros opcionales.
 
         Args:
             player_id (str): ID del jugador.
             limit (int): Máximo número de partidas.
+            days (Optional[int]): Si se especifica, solo partidas de últimos N días.
+            since (Optional[datetime]): Si se especifica, solo partidas después de esta fecha.
+            until (Optional[datetime]): Si se especifica, solo partidas antes de esta fecha.
 
         Returns:
-            List[Game]: Lista de partidas del jugador.
+            List[Game]: Lista de partidas del jugador filtradas.
         """
-        # Query: WHERE player_id == X LIMIT N
-        query = self.collection.where(filter=FieldFilter("player_id", "==", player_id)).limit(limit)
+        # Base query: WHERE player_id == X
+        query = self.collection.where(filter=FieldFilter("player_id", "==", player_id))
+
+        # Aplicar filtro de fecha si se especificó
+        if days is not None:
+            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            query = query.where(filter=FieldFilter("started_at", ">=", cutoff))
+        elif since is not None:
+            query = query.where(filter=FieldFilter("started_at", ">=", since))
+
+        if until is not None:
+            query = query.where(filter=FieldFilter("started_at", "<=", until))
+
+        # Ordenar por fecha descendente y limitar
+        query = query.order_by("started_at", direction=Query.DESCENDING).limit(limit)
         docs = query.stream()
 
         games = []
@@ -113,20 +137,51 @@ class FirestoreGameRepository(IGameRepository):
 
         return None
 
-    def get_all(self, limit: int = 1000) -> List[Game]:
-        """Obtiene todas las partidas de todos los jugadores.
+    def get_all(
+        self,
+        limit: int = 200,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> List[Game]:
+        """Obtiene todas las partidas de todos los jugadores con filtros opcionales.
 
-        ADVERTENCIA: Esta query puede ser costosa en colecciones grandes.
-        Solo debe ser usada por endpoints admin con autenticación.
+        OPTIMIZACIÓN: Usar filtros de fecha reduce significativamente los costos de Firestore
+        y mejora el rendimiento. Por defecto, limitar a 200 partidas.
 
         Args:
-            limit (int): Máximo número de partidas a retornar.
+            limit (int): Máximo número de partidas a retornar (default: 200, antes: 1000).
+            days (Optional[int]): Si se especifica, solo partidas de últimos N días.
+            since (Optional[datetime]): Si se especifica, solo partidas después de esta fecha.
+            until (Optional[datetime]): Si se especifica, solo partidas antes de esta fecha.
 
         Returns:
             List[Game]: Lista de partidas ordenadas por fecha de inicio descendente.
+
+        Examples:
+            # Últimos 7 días
+            repo.get_all(days=7, limit=100)
+
+            # Rango específico
+            repo.get_all(since=datetime(2026, 1, 1), until=datetime(2026, 1, 31))
+
+            # Solo límite (comportamiento legacy)
+            repo.get_all(limit=500)
         """
-        # Query: ORDER BY started_at DESC LIMIT N
-        query = self.collection.order_by("started_at", direction=Query.DESCENDING).limit(limit)
+        query = self.collection
+
+        # Aplicar filtros de fecha si se especificaron
+        if days is not None:
+            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            query = query.where(filter=FieldFilter("started_at", ">=", cutoff))
+        elif since is not None:
+            query = query.where(filter=FieldFilter("started_at", ">=", since))
+
+        if until is not None:
+            query = query.where(filter=FieldFilter("started_at", "<=", until))
+
+        # Ordenar por fecha descendente y limitar
+        query = query.order_by("started_at", direction=Query.DESCENDING).limit(limit)
         docs = query.stream()
 
         games = []
@@ -134,7 +189,13 @@ class FirestoreGameRepository(IGameRepository):
             data = doc.to_dict()
             games.append(Game.from_dict(data))
 
-        print(f"✅ Fetched {len(games)} games (all players)")
+        filter_info = ""
+        if days:
+            filter_info = f" (últimos {days} días)"
+        elif since or until:
+            filter_info = " (filtrado por fecha)"
+
+        print(f"✅ Fetched {len(games)} games{filter_info}")
         return games
 
     def update(self, game_id: str, game_update: GameUpdate) -> Optional[Game]:

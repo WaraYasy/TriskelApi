@@ -89,30 +89,52 @@ class GameService:
         """
         return self.game_repository.get_by_id(game_id)
 
-    def get_player_games(self, player_id: str, limit: int = 100) -> List[Game]:
-        """Obtiene todas las partidas de un jugador.
+    def get_player_games(
+        self,
+        player_id: str,
+        limit: int = 100,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> List[Game]:
+        """Obtiene todas las partidas de un jugador con filtros opcionales.
 
         Args:
             player_id (str): ID del jugador.
             limit (int): Máximo número de partidas a retornar.
+            days (Optional[int]): Si se especifica, solo partidas de últimos N días.
+            since (Optional[datetime]): Si se especifica, solo partidas después de esta fecha.
+            until (Optional[datetime]): Si se especifica, solo partidas antes de esta fecha.
 
         Returns:
-            List[Game]: Lista de partidas.
+            List[Game]: Lista de partidas filtradas.
         """
-        return self.game_repository.get_by_player(player_id, limit=limit)
+        return self.game_repository.get_by_player(
+            player_id, limit=limit, days=days, since=since, until=until
+        )
 
-    def get_all_games(self, limit: int = 1000) -> List[Game]:
-        """Obtiene todas las partidas de todos los jugadores.
+    def get_all_games(
+        self,
+        limit: int = 200,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> List[Game]:
+        """Obtiene todas las partidas de todos los jugadores con filtros opcionales.
 
         ADMIN ONLY: Este método no debe ser expuesto a jugadores normales.
+        OPTIMIZACIÓN: Límite reducido de 1000 → 200. Usa filtros de fecha para mejor rendimiento.
 
         Args:
-            limit (int): Máximo número de partidas a retornar.
+            limit (int): Máximo número de partidas a retornar (default: 200).
+            days (Optional[int]): Si se especifica, solo partidas de últimos N días.
+            since (Optional[datetime]): Si se especifica, solo partidas después de esta fecha.
+            until (Optional[datetime]): Si se especifica, solo partidas antes de esta fecha.
 
         Returns:
-            List[Game]: Lista de todas las partidas.
+            List[Game]: Lista de todas las partidas filtradas.
         """
-        return self.game_repository.get_all(limit=limit)
+        return self.game_repository.get_all(limit=limit, days=days, since=since, until=until)
 
     def update_game(self, game_id: str, game_update: GameUpdate) -> Optional[Game]:
         """Actualiza una partida.

@@ -13,9 +13,10 @@ Autor: Mandrágora
 
 """
 
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from app.middleware.rate_limit import EVENT_CREATE_LIMIT, limiter
 
@@ -235,7 +236,12 @@ def create_batch(
 @router.get("", response_model=List[GameEvent])
 def get_all_events(
     request: Request,
-    limit: int = 5000,
+    limit: int = Query(default=100, ge=1, le=500, description="Máximo de eventos a retornar"),
+    days: Optional[int] = Query(
+        default=1, ge=1, le=30, description="Filtrar últimos N días (default: 1, máx: 30)"
+    ),
+    since: Optional[str] = Query(default=None, description="Filtrar desde fecha ISO"),
+    until: Optional[str] = Query(default=None, description="Filtrar hasta fecha ISO"),
     service: EventService = Depends(get_event_service),
 ):
     """Obtener todos los eventos de todos los jugadores (ADMIN ONLY).
@@ -243,16 +249,27 @@ def get_all_events(
     Este endpoint está diseñado para analytics y herramientas de administración.
     Requiere autenticación admin (JWT con rol admin o API Key).
 
+    OPTIMIZACIÓN CRÍTICA: Límite reducido de 5000 → 100 por defecto (máx 500).
+    Por defecto filtra últimos 1 día. Events son MUY numerosos, usar filtros de fecha.
+
+    Examples:
+        GET /events?days=1         → Últimas 24 horas (default)
+        GET /events?days=7         → Última semana
+        GET /events?since=2026-01-25&limit=200  → Desde fecha específica
+
     Args:
         request (Request): Request de FastAPI.
-        limit (int): Máximo número de eventos a retornar (default: 5000).
+        limit (int): Máximo de eventos (default: 100, máx: 500).
+        days (int): Filtrar últimos N días (default: 1, máx: 30).
+        since (str, optional): Filtrar desde fecha ISO 8601.
+        until (str, optional): Filtrar hasta fecha ISO 8601.
         service (EventService): Servicio inyectado.
 
     Returns:
-        List[GameEvent]: Lista de todos los eventos.
+        List[GameEvent]: Lista de todos los eventos filtrados.
 
     Raises:
-        HTTPException: Si no tiene permisos de admin (403).
+        HTTPException: Si no tiene permisos de admin (403) o formato de fecha inválido (400).
     """
     # Verificar que es admin
     is_admin = getattr(request.state, "is_admin", False)
@@ -263,24 +280,51 @@ def get_all_events(
             detail="Este endpoint requiere permisos de administrador. Usa API Key o JWT token de admin.",
         )
 
-    return service.get_all_events(limit=limit)
+    # Parsear fechas si se proporcionaron
+    since_date = None
+    until_date = None
+
+    if since:
+        try:
+            since_date = datetime.fromisoformat(since.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Formato de fecha 'since' inválido")
+
+    if until:
+        try:
+            until_date = datetime.fromisoformat(until.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Formato de fecha 'until' inválido")
+
+    return service.get_all_events(limit=limit, days=days, since=since_date, until=until_date)
 
 
 @router.get("/game/{game_id}", response_model=List[GameEvent])
 def get_game_events(
     game_id: str,
     request: Request,
-    limit: int = 1000,
+    limit: int = Query(default=500, ge=1, le=1000, description="Máximo de eventos"),
+    days: Optional[int] = Query(default=None, ge=1, le=90, description="Filtrar últimos N días"),
+    since: Optional[str] = Query(default=None, description="Filtrar desde fecha ISO"),
+    until: Optional[str] = Query(default=None, description="Filtrar hasta fecha ISO"),
     service: EventService = Depends(get_event_service),
 ):
-    """Obtener eventos de una partida.
+    """Obtener eventos de una partida con filtros opcionales.
 
     Solo puedes ver eventos de tus propias partidas (a menos que seas admin).
+
+    Examples:
+        GET /events/game/{id}              → Últimos 500 eventos
+        GET /events/game/{id}?days=1       → Última sesión
+        GET /events/game/{id}?limit=100    → Primeros 100
 
     Args:
         game_id (str): ID de la partida.
         request (Request): Request de FastAPI.
-        limit (int): Máximo número de eventos.
+        limit (int): Máximo de eventos (default: 500, máx: 1000).
+        days (int, optional): Filtrar últimos N días.
+        since (str, optional): Filtrar desde fecha ISO 8601.
+        until (str, optional): Filtrar hasta fecha ISO 8601.
         service (EventService): Servicio inyectado.
 
     Returns:
@@ -288,41 +332,88 @@ def get_game_events(
 
     Raises:
         HTTPException: Si intentas ver eventos de otra partida (403).
-        HTTPException: Si la partida no existe (404).
+        HTTPException: Si la partida no existe (404) o formato de fecha inválido (400).
     """
     # Verificar permisos
     check_game_events_access(request, game_id)
 
-    return service.get_game_events(game_id, limit)
+    # Parsear fechas si se proporcionaron
+    since_date = None
+    until_date = None
+
+    if since:
+        try:
+            since_date = datetime.fromisoformat(since.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Formato de fecha 'since' inválido")
+
+    if until:
+        try:
+            until_date = datetime.fromisoformat(until.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Formato de fecha 'until' inválido")
+
+    return service.get_game_events(
+        game_id, limit=limit, days=days, since=since_date, until=until_date
+    )
 
 
 @router.get("/player/{player_id}", response_model=List[GameEvent])
 def get_player_events(
     player_id: str,
     request: Request,
-    limit: int = 1000,
+    limit: int = Query(default=200, ge=1, le=500, description="Máximo de eventos"),
+    days: Optional[int] = Query(default=None, ge=1, le=90, description="Filtrar últimos N días"),
+    since: Optional[str] = Query(default=None, description="Filtrar desde fecha ISO"),
+    until: Optional[str] = Query(default=None, description="Filtrar hasta fecha ISO"),
     service: EventService = Depends(get_event_service),
 ):
-    """Obtener eventos de un jugador.
+    """Obtener eventos de un jugador con filtros opcionales.
 
     Solo puedes ver tus propios eventos (a menos que seas admin).
+
+    Examples:
+        GET /events/player/{id}           → Últimos 200 eventos
+        GET /events/player/{id}?days=7    → Última semana
+        GET /events/player/{id}?limit=50  → Primeros 50
 
     Args:
         player_id (str): ID del jugador.
         request (Request): Request de FastAPI.
-        limit (int): Máximo número de eventos.
+        limit (int): Máximo de eventos (default: 200, máx: 500).
+        days (int, optional): Filtrar últimos N días.
+        since (str, optional): Filtrar desde fecha ISO 8601.
+        until (str, optional): Filtrar hasta fecha ISO 8601.
         service (EventService): Servicio inyectado.
 
     Returns:
         List[GameEvent]: Lista de eventos ordenados por timestamp.
 
     Raises:
-        HTTPException: Si intentas ver eventos de otro jugador (403).
+        HTTPException: Si intentas ver eventos de otro jugador (403) o formato inválido (400).
     """
     # Verificar permisos
     check_player_events_access(request, player_id)
 
-    return service.get_player_events(player_id, limit)
+    # Parsear fechas si se proporcionaron
+    since_date = None
+    until_date = None
+
+    if since:
+        try:
+            since_date = datetime.fromisoformat(since.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Formato de fecha 'since' inválido")
+
+    if until:
+        try:
+            until_date = datetime.fromisoformat(until.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Formato de fecha 'until' inválido")
+
+    return service.get_player_events(
+        player_id, limit=limit, days=days, since=since_date, until=until_date
+    )
 
 
 @router.get("/game/{game_id}/type/{event_type}", response_model=List[GameEvent])

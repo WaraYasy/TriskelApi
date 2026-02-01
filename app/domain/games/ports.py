@@ -6,6 +6,7 @@ Autor: Mandrágora
 """
 
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import List, Optional
 
 from .models import Game
@@ -44,27 +45,49 @@ class IGameRepository(ABC):
         pass
 
     @abstractmethod
-    def get_by_player(self, player_id: str, limit: int = 100) -> List[Game]:
-        """Obtiene todas las partidas de un jugador.
+    def get_by_player(
+        self,
+        player_id: str,
+        limit: int = 100,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> List[Game]:
+        """Obtiene todas las partidas de un jugador con filtros opcionales.
 
         Args:
             player_id (str): ID del jugador.
             limit (int): Máximo número de partidas a retornar.
+            days (Optional[int]): Si se especifica, solo partidas de últimos N días.
+            since (Optional[datetime]): Si se especifica, solo partidas después de esta fecha.
+            until (Optional[datetime]): Si se especifica, solo partidas antes de esta fecha.
 
         Returns:
-            List[Game]: Lista de partidas del jugador.
+            List[Game]: Lista de partidas del jugador filtradas.
         """
         pass
 
     @abstractmethod
-    def get_all(self, limit: int = 1000) -> List[Game]:
-        """Obtiene todas las partidas de todos los jugadores (admin only).
+    def get_all(
+        self,
+        limit: int = 200,
+        days: Optional[int] = None,
+        since: Optional[datetime] = None,
+        until: Optional[datetime] = None,
+    ) -> List[Game]:
+        """Obtiene todas las partidas de todos los jugadores con filtros opcionales (admin only).
 
         Este método está diseñado para uso exclusivo de administradores
         y herramientas de análisis. No debe ser expuesto a jugadores normales.
 
+        OPTIMIZACIÓN: Usar filtros de fecha reduce significativamente los costos.
+        Límite por defecto reducido de 1000 → 200 para mejor rendimiento.
+
         Args:
-            limit (int): Máximo número de partidas a retornar.
+            limit (int): Máximo número de partidas a retornar (default: 200).
+            days (Optional[int]): Si se especifica, solo partidas de últimos N días.
+            since (Optional[datetime]): Si se especifica, solo partidas después de esta fecha.
+            until (Optional[datetime]): Si se especifica, solo partidas antes de esta fecha.
 
         Returns:
             List[Game]: Lista de todas las partidas ordenadas por fecha de inicio (desc).

@@ -7,7 +7,7 @@ Implementa la interfaz IAuthRepository.
 Autor: Mandrágora
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy.exc import IntegrityError
@@ -146,7 +146,7 @@ class SQLAuthRepository(IAuthRepository):
         user = self.session.query(AdminUser).filter_by(id=user_id).first()
 
         if user:
-            user.last_login = datetime.utcnow()
+            user.last_login = datetime.now(timezone.utc)
             self.session.commit()
             logger.debug(f"Last login actualizado para user {user_id}")
 

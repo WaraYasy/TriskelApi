@@ -121,6 +121,11 @@ def get_db_session() -> Generator[Session, None, None]:
             return users
     """
     session = sql_manager.get_session()
+    if session is None:
+        raise RuntimeError(
+            "Base de datos SQL no está configurada. "
+            "Configura DB_HOST, DB_NAME, DB_USER y DB_PASSWORD en variables de entorno."
+        )
     try:
         yield session
     finally:

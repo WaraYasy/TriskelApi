@@ -105,7 +105,9 @@ class AuthService:
         Returns:
             str: Token JWT codificado.
         """
-        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_access_token_expire_minutes)
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=settings.jwt_access_token_expire_minutes
+        )
         payload = {
             "type": "access",
             "user_id": user_id,

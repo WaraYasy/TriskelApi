@@ -13,9 +13,10 @@ Reglas de acceso:
 Autor: Mandrágora
 """
 
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from app.middleware.rate_limit import GAME_CREATE_LIMIT, limiter
 
@@ -210,7 +211,14 @@ def create_game(
 @router.get("", response_model=List[Game])
 def get_all_games(
     request: Request,
-    limit: int = 1000,
+    limit: int = Query(default=100, ge=1, le=500, description="Máximo de partidas a retornar"),
+    days: Optional[int] = Query(
+        default=None, ge=1, le=90, description="Filtrar últimos N días (máx 90)"
+    ),
+    since: Optional[str] = Query(
+        default=None, description="Filtrar desde fecha ISO (ej: 2026-01-25)"
+    ),
+    until: Optional[str] = Query(default=None, description="Filtrar hasta fecha ISO"),
     service: GameService = Depends(get_game_service),
 ):
     """Obtener todas las partidas de todos los jugadores (ADMIN ONLY).
@@ -218,16 +226,27 @@ def get_all_games(
     Este endpoint está diseñado para analytics y herramientas de administración.
     Requiere autenticación admin (JWT con rol admin o API Key).
 
+    OPTIMIZACIÓN: Límite reducido de 1000 → 100 por defecto (máx 500).
+    Se recomienda usar filtros de fecha para reducir costos de Firestore.
+
+    Examples:
+        GET /games?days=7              → Últimos 7 días
+        GET /games?days=30&limit=50    → Últimos 30 días, máx 50
+        GET /games?since=2026-01-01    → Desde 1 de enero
+
     Args:
         request (Request): Request de FastAPI.
-        limit (int): Máximo número de partidas a retornar (default: 1000).
+        limit (int): Máximo número de partidas a retornar (default: 100, máx: 500).
+        days (int, optional): Filtrar últimos N días (1-90).
+        since (str, optional): Filtrar desde fecha ISO 8601.
+        until (str, optional): Filtrar hasta fecha ISO 8601.
         service (GameService): Servicio inyectado.
 
     Returns:
-        List[Game]: Lista de todas las partidas.
+        List[Game]: Lista de todas las partidas filtradas.
 
     Raises:
-        HTTPException: Si no tiene permisos de admin (403).
+        HTTPException: Si no tiene permisos de admin (403) o formato de fecha inválido (400).
     """
     # Verificar que es admin
     is_admin = getattr(request.state, "is_admin", False)
@@ -238,7 +257,29 @@ def get_all_games(
             detail="Este endpoint requiere permisos de administrador. Usa API Key o JWT token de admin.",
         )
 
-    return service.get_all_games(limit=limit)
+    # Parsear fechas si se proporcionaron
+    since_date = None
+    until_date = None
+
+    if since:
+        try:
+            since_date = datetime.fromisoformat(since.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Formato de fecha 'since' inválido. Usa ISO 8601: YYYY-MM-DD o YYYY-MM-DDTHH:MM:SS",
+            )
+
+    if until:
+        try:
+            until_date = datetime.fromisoformat(until.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(
+                status_code=400,
+                detail="Formato de fecha 'until' inválido. Usa ISO 8601: YYYY-MM-DD o YYYY-MM-DDTHH:MM:SS",
+            )
+
+    return service.get_all_games(limit=limit, days=days, since=since_date, until=until_date)
 
 
 @router.get("/{game_id}", response_model=Game)
@@ -274,29 +315,58 @@ def get_game(game_id: str, request: Request, service: GameService = Depends(get_
 def get_player_games(
     player_id: str,
     request: Request,
-    limit: int = 100,
+    limit: int = Query(default=50, ge=1, le=200, description="Máximo de partidas a retornar"),
+    days: Optional[int] = Query(default=None, ge=1, le=90, description="Filtrar últimos N días"),
+    since: Optional[str] = Query(default=None, description="Filtrar desde fecha ISO"),
+    until: Optional[str] = Query(default=None, description="Filtrar hasta fecha ISO"),
     service: GameService = Depends(get_game_service),
 ):
-    """Obtener todas las partidas de un jugador.
+    """Obtener todas las partidas de un jugador con filtros opcionales.
 
     Solo puedes ver tus propias partidas, a menos que uses API Key (admin).
+
+    Examples:
+        GET /games/player/{id}?days=7      → Últimos 7 días
+        GET /games/player/{id}?days=30     → Último mes
+        GET /games/player/{id}?since=2026-01-01  → Desde enero
 
     Args:
         player_id (str): ID del jugador.
         request (Request): Request de FastAPI.
-        limit (int): Máximo número de partidas a retornar.
+        limit (int): Máximo número de partidas a retornar (default: 50, máx: 200).
+        days (int, optional): Filtrar últimos N días (1-90).
+        since (str, optional): Filtrar desde fecha ISO 8601.
+        until (str, optional): Filtrar hasta fecha ISO 8601.
         service (GameService): Servicio inyectado.
 
     Returns:
-        List[Game]: Lista de partidas.
+        List[Game]: Lista de partidas filtradas.
 
     Raises:
-        HTTPException: Si intentas ver partidas de otro jugador (403).
+        HTTPException: Si intentas ver partidas de otro jugador (403) o formato inválido (400).
     """
     # Verificar permisos (admin o propio jugador)
     check_player_games_access(request, player_id)
 
-    return service.get_player_games(player_id, limit=limit)
+    # Parsear fechas si se proporcionaron
+    since_date = None
+    until_date = None
+
+    if since:
+        try:
+            since_date = datetime.fromisoformat(since.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Formato de fecha 'since' inválido")
+
+    if until:
+        try:
+            until_date = datetime.fromisoformat(until.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Formato de fecha 'until' inválido")
+
+    return service.get_player_games(
+        player_id, limit=limit, days=days, since=since_date, until=until_date
+    )
 
 
 @router.patch("/{game_id}", response_model=Game)
