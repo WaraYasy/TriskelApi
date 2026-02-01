@@ -53,6 +53,13 @@ class Settings(BaseSettings):
     db_user: Optional[str] = None
     db_password: Optional[str] = None
 
+    # ==================== Redis (Rate Limiting) ====================
+    # OPCIONAL: URL de Redis para rate limiting en producción
+    # Formato: redis://[usuario]:[password]@[host]:[port]/[db]
+    # Ejemplo: redis://default:password@redis-12345.railway.app:6379/0
+    # Si no está configurado, usa memoria local (funciona pero no es distribuido)
+    redis_url: Optional[str] = None
+
     # ==================== Seguridad ====================
     # OBLIGATORIAS en producción - no tienen valor por defecto
     secret_key: str

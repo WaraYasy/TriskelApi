@@ -7,6 +7,12 @@ from sqlalchemy.orm import Session
 
 from app.core.logger import logger
 from app.infrastructure.database.sql_client import get_db_session
+from app.middleware.rate_limit import (
+    AUTH_CHANGE_PASSWORD_LIMIT,
+    AUTH_LOGIN_LIMIT,
+    AUTH_REFRESH_LIMIT,
+    limiter,
+)
 
 from .adapters.sql_repository import SQLAuthRepository
 from .ports import IAuthRepository
@@ -105,9 +111,10 @@ def get_client_info(request: Request) -> tuple:
 
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit(AUTH_LOGIN_LIMIT)
 def login(
-    login_data: LoginRequest,
     request: Request,
+    login_data: LoginRequest,
     service: AuthService = Depends(get_auth_service),
 ):
     ip_address, user_agent = get_client_info(request)
@@ -140,19 +147,40 @@ def login(
             )
 
         if "72 caracteres" in error_msg:
-            raise HTTPException(status_code=400, detail="Password excede longitud máxima")
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "error": "password_too_long",
+                    "message": "La contraseña es demasiado larga. Máximo 72 caracteres.",
+                },
+            )
         elif "Credenciales inválidas" in error_msg or "Password inválido" in error_msg:
-            raise HTTPException(status_code=401, detail="Credenciales inválidas")
+            raise HTTPException(
+                status_code=401,
+                detail={
+                    "error": "invalid_credentials",
+                    "message": "Usuario o contraseña incorrectos. Por favor, verifica tus datos.",
+                },
+            )
         elif "desactivado" in error_msg.lower():
-            raise HTTPException(status_code=403, detail="Usuario desactivado")
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "error": "user_disabled",
+                    "message": "Tu cuenta ha sido desactivada. Contacta al administrador.",
+                },
+            )
         else:
-            raise HTTPException(status_code=400, detail=error_msg)
+            raise HTTPException(
+                status_code=400, detail={"error": "login_failed", "message": error_msg}
+            )
 
 
 @router.post("/refresh", response_model=TokenResponse)
+@limiter.limit(AUTH_REFRESH_LIMIT)
 def refresh_token(
-    refresh_data: RefreshTokenRequest,
     request: Request,
+    refresh_data: RefreshTokenRequest,
     service: AuthService = Depends(get_auth_service),
 ):
     ip_address, user_agent = get_client_info(request)
@@ -192,9 +220,10 @@ def get_current_user_info(current_user: dict = Depends(get_current_admin)):
 
 
 @router.post("/change-password")
+@limiter.limit(AUTH_CHANGE_PASSWORD_LIMIT)
 def change_password(
-    password_data: ChangePasswordRequest,
     request: Request,
+    password_data: ChangePasswordRequest,
     current_user: dict = Depends(get_current_admin),
     service: AuthService = Depends(get_auth_service),
 ):

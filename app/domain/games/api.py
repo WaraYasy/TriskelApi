@@ -17,6 +17,8 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+from app.middleware.rate_limit import GAME_CREATE_LIMIT, limiter
+
 from ..players.adapters.firestore_repository import FirestorePlayerRepository
 
 # Importar dependencies de Players (Games depende de Players)
@@ -158,9 +160,10 @@ def get_game_service(
 
 
 @router.post("", response_model=Game, status_code=201)
+@limiter.limit(GAME_CREATE_LIMIT)
 def create_game(
-    game_data: GameCreate,
     request: Request,
+    game_data: GameCreate,
     service: GameService = Depends(get_game_service),
 ):
     """Iniciar una nueva partida.

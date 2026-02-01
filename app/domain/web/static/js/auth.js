@@ -31,7 +31,12 @@ async function login(username, password) {
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.detail || "Login failed");
+    // Extraer mensaje del objeto detail si existe
+    const errorMessage =
+      typeof error.detail === "object" && error.detail.message
+        ? error.detail.message
+        : error.detail || "Error de autenticación. Verifica tus credenciales.";
+    throw new Error(errorMessage);
   }
 
   const data = await response.json();

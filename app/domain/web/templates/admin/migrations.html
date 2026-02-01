@@ -612,7 +612,19 @@
         let pendingAction = null;
 
         // Cargar datos al iniciar
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Cargar nombre y email del usuario
+            try {
+                const user = await getCurrentUser();
+                const userNameEl = document.getElementById('userName');
+                const userEmailEl = document.getElementById('userEmail');
+                if (userNameEl) userNameEl.textContent = user.username || 'Admin';
+                if (userEmailEl) userEmailEl.textContent = user.email || '';
+            } catch (error) {
+                console.error('Error al cargar usuario:', error);
+            }
+
+            // Cargar datos de migraciones
             refreshData();
         });
 

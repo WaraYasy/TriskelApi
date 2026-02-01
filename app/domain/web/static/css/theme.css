@@ -157,6 +157,20 @@ body {
     border-top-color: var(--border-color);
 }
 
+[data-theme="light"] .user-avatar {
+    background: var(--accent-bg);
+    color: var(--accent);
+}
+
+[data-theme="light"] .user-name {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+[data-theme="light"] .user-email {
+    color: var(--text-secondary);
+}
+
 [data-theme="light"] .btn-admin-access {
     background: var(--accent-bg);
     border-color: rgba(13, 148, 136, 0.3);

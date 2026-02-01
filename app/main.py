@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi.openapi.utils import get_openapi
+from slowapi.errors import RateLimitExceeded
 
 # Imports desde la nueva arquitectura
 from app.config.settings import settings
@@ -26,6 +27,7 @@ from app.domain.web import flask_app  # ⭐ Flask app
 from app.infrastructure.database.firebase_client import firebase_manager
 from app.infrastructure.database.sql_client import sql_manager
 from app.middleware.auth import auth_middleware
+from app.middleware.rate_limit import custom_rate_limit_handler, limiter
 from app.scheduler import shutdown_scheduler, start_scheduler
 
 # Crear aplicación FastAPI
@@ -131,6 +133,11 @@ def custom_openapi():
 
 
 app.openapi = custom_openapi
+
+
+# Rate Limiting - Configuración de slowapi
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, custom_rate_limit_handler)
 
 
 # CORS - Configuración automática según entorno

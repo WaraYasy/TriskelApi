@@ -17,6 +17,8 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
+from app.middleware.rate_limit import EVENT_CREATE_LIMIT, limiter
+
 # Importar game repository para validar permisos de partida
 from ..games.adapters.firestore_repository import FirestoreGameRepository
 from .models import GameEvent
@@ -166,9 +168,10 @@ def get_event_service(
 
 
 @router.post("", response_model=GameEvent, status_code=201)
+@limiter.limit(EVENT_CREATE_LIMIT)
 def create_event(
-    event_data: EventCreate,
     request: Request,
+    event_data: EventCreate,
     service: EventService = Depends(get_event_service),
 ):
     """Crear un evento de gameplay.
@@ -197,9 +200,10 @@ def create_event(
 
 
 @router.post("/batch", response_model=List[GameEvent], status_code=201)
+@limiter.limit(EVENT_CREATE_LIMIT)
 def create_batch(
-    batch_data: EventBatchCreate,
     request: Request,
+    batch_data: EventBatchCreate,
     service: EventService = Depends(get_event_service),
 ):
     """Crear múltiples eventos en una sola petición.

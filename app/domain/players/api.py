@@ -20,6 +20,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.domain.games.adapters.firestore_repository import FirestoreGameRepository
 from app.domain.games.ports import IGameRepository
+from app.middleware.rate_limit import PLAYER_CREATE_LIMIT, limiter
 
 from .adapters.firestore_repository import FirestorePlayerRepository
 from .models import Player
@@ -112,7 +113,12 @@ def get_game_repository() -> IGameRepository:
 
 
 @router.post("", response_model=PlayerAuthResponse, status_code=201)
-def create_player(player_data: PlayerCreate, service: PlayerService = Depends(get_player_service)):
+@limiter.limit(PLAYER_CREATE_LIMIT)
+def create_player(
+    request: Request,
+    player_data: PlayerCreate,
+    service: PlayerService = Depends(get_player_service),
+):
     """Crear un nuevo jugador.
 
     Devuelve player_id y player_token que el juego debe guardar.
