@@ -9,18 +9,15 @@ Autor: Mandrágora
 from datetime import datetime, timezone
 from typing import List, Optional
 
-from passlib.context import CryptContext
+import bcrypt
 
 from .models import Player
 from .ports import IPlayerRepository
 from .schemas import PlayerCreate, PlayerUpdate
 
-# Configurar contexto de hashing con bcrypt
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def hash_password(password: str) -> str:
-    """Hashea una contraseña usando bcrypt (via passlib).
+    """Hashea una contraseña usando bcrypt.
 
     Args:
         password (str): Contraseña en texto plano.
@@ -28,7 +25,9 @@ def hash_password(password: str) -> str:
     Returns:
         str: Hash de la contraseña.
     """
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password.encode("utf-8"), salt)
+    return hashed.decode("utf-8")
 
 
 def verify_password(password: str, password_hash: str) -> bool:
@@ -41,7 +40,7 @@ def verify_password(password: str, password_hash: str) -> bool:
     Returns:
         bool: True si coincide, False si no.
     """
-    return pwd_context.verify(password, password_hash)
+    return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
 
 
 class PlayerService:

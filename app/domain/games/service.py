@@ -9,6 +9,8 @@ Autor: Mandrágora
 from datetime import datetime, timezone
 from typing import List, Optional
 
+from app.core.logger import logger
+
 from ..players.ports import IPlayerRepository
 from ..players.service import PlayerService
 from .models import Game
