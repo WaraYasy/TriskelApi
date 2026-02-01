@@ -349,3 +349,22 @@ class TestGameServiceDelete:
 
         assert result is True
         mock_game_repository.delete.assert_called_once_with("game-123")
+
+
+@pytest.mark.unit
+class TestGameServiceCount:
+    """Tests para contar partidas"""
+
+    def test_count_games(
+        self, mock_game_repository, mock_player_repository, mock_player_service, player_id
+    ):
+        """Contar partidas usando agregación eficiente"""
+        mock_game_repository.count.return_value = 15
+
+        service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
+        result = service.count_games(player_id=player_id, status="completed", days=30)
+
+        assert result == 15
+        mock_game_repository.count.assert_called_once_with(
+            player_id=player_id, status="completed", days=30, since=None, until=None
+        )

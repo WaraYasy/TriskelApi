@@ -189,7 +189,9 @@ class TestEventServiceQuery:
         result = service.get_player_events(player_id)
 
         assert len(result) == 1
-        mock_event_repository.get_by_player.assert_called_once_with(player_id, 200, None, None, None)
+        mock_event_repository.get_by_player.assert_called_once_with(
+            player_id, 200, None, None, None
+        )
 
     def test_query_events_with_filters(
         self, mock_event_repository, sample_event, player_id, game_id
@@ -207,3 +209,20 @@ class TestEventServiceQuery:
 
         assert len(result) == 1
         mock_event_repository.query_events.assert_called_once()
+
+    def test_count_events(self, mock_event_repository, player_id, game_id):
+        """Contar eventos usando agregación eficiente"""
+        mock_event_repository.count.return_value = 42
+
+        service = EventService(mock_event_repository, MagicMock(), MagicMock())
+        result = service.count_events(game_id=game_id, player_id=player_id, days=7)
+
+        assert result == 42
+        mock_event_repository.count.assert_called_once_with(
+            game_id=game_id,
+            player_id=player_id,
+            event_type=None,
+            days=7,
+            since=None,
+            until=None,
+        )
