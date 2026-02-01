@@ -67,21 +67,29 @@ class TestGameServiceCreate:
         mock_player_service,
         sample_player,
         active_game,
+        new_game,
     ):
-        """Rechazar crear partida si jugador ya tiene una activa"""
+        """Auto-cierra partida anterior si jugador ya tiene una activa"""
         # Configurar mocks
         mock_player_repository.get_by_id.return_value = sample_player
         mock_game_repository.get_active_game.return_value = active_game
+        mock_game_repository.update.return_value = active_game
+        mock_game_repository.create.return_value = new_game
 
-        # Ejecutar y verificar
+        # Ejecutar
         service = GameService(mock_game_repository, mock_player_repository, mock_player_service)
         game_data = GameCreate(player_id=sample_player.player_id)
+        result = service.create_game(game_data)
 
-        with pytest.raises(ValueError) as exc_info:
-            service.create_game(game_data)
+        # Verificar que se cerró la partida anterior automáticamente
+        mock_game_repository.update.assert_called_once()
+        update_call = mock_game_repository.update.call_args[0]
+        assert update_call[0] == active_game.game_id  # ID de partida a actualizar
+        assert update_call[1].status == "abandoned"  # Estado de cierre
 
-        assert "partida activa" in str(exc_info.value).lower()
-        mock_game_repository.create.assert_not_called()
+        # Verificar que se creó la nueva partida
+        assert result == new_game
+        mock_game_repository.create.assert_called_once()
 
 
 @pytest.mark.unit
@@ -321,7 +329,9 @@ class TestGameServiceGet:
         result = service.get_player_games(player_id)
 
         assert len(result) == 2
-        mock_game_repository.get_by_player.assert_called_once_with(player_id, limit=100)
+        mock_game_repository.get_by_player.assert_called_once_with(
+            player_id, limit=100, days=None, since=None, until=None
+        )
 
 
 @pytest.mark.unit

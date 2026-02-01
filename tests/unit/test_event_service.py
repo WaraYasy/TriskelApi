@@ -179,7 +179,7 @@ class TestEventServiceQuery:
         result = service.get_game_events(game_id)
 
         assert len(result) == 1
-        mock_event_repository.get_by_game.assert_called_once_with(game_id, 1000)
+        mock_event_repository.get_by_game.assert_called_once_with(game_id, 500, None, None, None)
 
     def test_get_player_events(self, mock_event_repository, sample_event, player_id):
         """Obtener eventos de un jugador"""
@@ -189,7 +189,7 @@ class TestEventServiceQuery:
         result = service.get_player_events(player_id)
 
         assert len(result) == 1
-        mock_event_repository.get_by_player.assert_called_once_with(player_id, 1000)
+        mock_event_repository.get_by_player.assert_called_once_with(player_id, 200, None, None, None)
 
     def test_query_events_with_filters(
         self, mock_event_repository, sample_event, player_id, game_id
