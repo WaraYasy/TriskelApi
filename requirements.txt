@@ -43,7 +43,7 @@ gunicorn==21.2.0                 # WSGI server (producción)
 APScheduler==3.10.4              # Tareas programadas para leaderboards
 
 # ==================== Rate Limiting ====================
-redis==5.0.1                     # Redis para rate limiting en producción
+redis==7.1.0                     # Redis para rate limiting en producción
 
 # ==================== Testing ====================
 pytest==7.4.3                    # Framework de testing
@@ -54,5 +54,5 @@ pytest-cov==4.1.0                # Cobertura de código
 # flask-caching==2.1.0           # Sistema de caché
 # flask-session==0.5.0           # Gestión de sesiones
 # flask-login==0.6.3             # Sistema de login
-# redis==5.0.1                   # Cache distribuido
+# redis==7.1.0                   # Cache distribuido
 # celery==5.3.4                  # Tareas asíncronas
