@@ -182,11 +182,6 @@ class AnalyticsService:
                     "aquelarre_sombras": "revelar",  # Buena decisión
                 },
                 "levels_completed": ["senda_ebano", "fortaleza_gigantes", "aquelarre_sombras"],
-                "levels_data": {
-                    "senda_ebano": {"time_seconds": 300, "deaths": 2},
-                    "fortaleza_gigantes": {"time_seconds": 450, "deaths": 5},
-                    "aquelarre_sombras": {"time_seconds": 600, "deaths": 8},
-                },
                 "relics": ["reliquia_fuego", "reliquia_agua"],
                 "completion_percentage": 100,
                 "metrics": {
@@ -195,6 +190,11 @@ class AnalyticsService:
                         "senda_ebano": 300,
                         "fortaleza_gigantes": 450,
                         "aquelarre_sombras": 600,
+                    },
+                    "deaths_per_level": {
+                        "senda_ebano": 2,
+                        "fortaleza_gigantes": 5,
+                        "aquelarre_sombras": 8,
                     },
                 },
             },
@@ -207,15 +207,12 @@ class AnalyticsService:
                     "fortaleza_gigantes": "destruir",  # Mala decisión
                 },
                 "levels_completed": ["senda_ebano", "fortaleza_gigantes"],
-                "levels_data": {
-                    "senda_ebano": {"time_seconds": 250, "deaths": 1},
-                    "fortaleza_gigantes": {"time_seconds": 400, "deaths": 3},
-                },
                 "relics": ["reliquia_tierra"],
                 "completion_percentage": 66,
                 "metrics": {
                     "total_deaths": 4,
                     "time_per_level": {"senda_ebano": 250, "fortaleza_gigantes": 400},
+                    "deaths_per_level": {"senda_ebano": 1, "fortaleza_gigantes": 3},
                 },
             },
             {
@@ -228,11 +225,6 @@ class AnalyticsService:
                     "aquelarre_sombras": "ocultar",  # Mala decisión
                 },
                 "levels_completed": ["senda_ebano", "fortaleza_gigantes", "aquelarre_sombras"],
-                "levels_data": {
-                    "senda_ebano": {"time_seconds": 350, "deaths": 4},
-                    "fortaleza_gigantes": {"time_seconds": 500, "deaths": 6},
-                    "aquelarre_sombras": {"time_seconds": 550, "deaths": 10},
-                },
                 "relics": ["reliquia_viento"],
                 "completion_percentage": 100,
                 "metrics": {
@@ -241,6 +233,11 @@ class AnalyticsService:
                         "senda_ebano": 350,
                         "fortaleza_gigantes": 500,
                         "aquelarre_sombras": 550,
+                    },
+                    "deaths_per_level": {
+                        "senda_ebano": 4,
+                        "fortaleza_gigantes": 6,
+                        "aquelarre_sombras": 10,
                     },
                 },
             },
@@ -702,6 +699,61 @@ class AnalyticsService:
         fig.update_traces(textinfo="percent+label", textfont_color="#ffffff")
         return fig.to_json()
 
+    def create_game_status_chart(self, games: List[Dict]) -> str:
+        """Genera gráfico circular de distribución de estados de partidas.
+
+        Args:
+            games: Lista de partidas
+
+        Returns:
+            str: JSON del gráfico Plotly
+        """
+        if not ANALYTICS_AVAILABLE or not games:
+            return self._empty_chart("No hay datos disponibles")
+
+        # Contar partidas por estado
+        status_counts = {"completed": 0, "in_progress": 0, "abandoned": 0}
+
+        for game in games:
+            status = game.get("status", "in_progress")
+            if status in status_counts:
+                status_counts[status] += 1
+
+        # Traducir estados al español
+        status_labels = {
+            "completed": "Completadas",
+            "in_progress": "En Progreso",
+            "abandoned": "Abandonadas",
+        }
+
+        # Filtrar estados con 0 partidas
+        data = [
+            {"Estado": status_labels[status], "Cantidad": count}
+            for status, count in status_counts.items()
+            if count > 0
+        ]
+
+        if not data:
+            return self._empty_chart("No hay partidas registradas")
+
+        df = pd.DataFrame(data)
+
+        fig = px.pie(
+            df,
+            values="Cantidad",
+            names="Estado",
+            color="Estado",
+            color_discrete_map={
+                "Completadas": "#10b981",  # Verde
+                "En Progreso": "#3b82f6",  # Azul
+                "Abandonadas": "#ef4444",  # Rojo
+            },
+        )
+
+        fig.update_layout(self._get_dark_layout())
+        fig.update_traces(textinfo="percent+label", textfont_color="#ffffff")
+        return fig.to_json()
+
     def create_playtime_distribution(self, players: List[Dict]) -> str:
         """
         Genera gráfico de distribución de tiempo de juego.
@@ -750,14 +802,17 @@ class AnalyticsService:
         if not ANALYTICS_AVAILABLE or not games:
             return self._empty_chart("No hay datos disponibles")
 
-        # Recopilar muertes por nivel
+        # Recopilar muertes por nivel desde metrics.deaths_per_level
         deaths_by_level = {}
 
         for game in games:
-            for level_name, level_data in game.get("levels_data", {}).items():
+            metrics = game.get("metrics", {})
+            deaths_per_level = metrics.get("deaths_per_level", {})
+
+            for level_name, deaths in deaths_per_level.items():
                 if level_name not in deaths_by_level:
                     deaths_by_level[level_name] = []
-                deaths_by_level[level_name].append(level_data.get("deaths", 0))
+                deaths_by_level[level_name].append(deaths)
 
         # Calcular promedio
         avg_deaths = {

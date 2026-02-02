@@ -150,6 +150,14 @@ def api_chart_deaths():
     return jsonify({"html": chart_html})
 
 
+@analytics_bp.route("/api/charts/game-status")
+def api_chart_game_status():
+    """API endpoint para gráfico de distribución de estados de partidas."""
+    games = analytics_service.get_all_games()
+    chart_html = analytics_service.create_game_status_chart(games)
+    return jsonify({"html": chart_html})
+
+
 @analytics_bp.route("/api/charts/alignment")
 def api_chart_alignment():
     """API endpoint para gráfico de alineación moral."""

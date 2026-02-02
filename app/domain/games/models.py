@@ -38,11 +38,13 @@ class GameMetrics(BaseModel):
         total_deaths (int): Muertes totales en toda la partida.
         time_per_level (Dict[str, int]): Segundos por nivel.
         deaths_per_level (Dict[str, int]): Muertes por nivel.
+        level_start_times (Dict[str, datetime]): Timestamps de inicio de cada nivel.
     """
 
     total_deaths: int = 0  # Muertes totales en toda la partida
     time_per_level: Dict[str, int] = Field(default_factory=dict)  # Segundos por nivel
     deaths_per_level: Dict[str, int] = Field(default_factory=dict)  # Muertes por nivel
+    level_start_times: Dict[str, datetime] = Field(default_factory=dict)  # Timestamps de inicio
 
 
 class Game(BaseModel):

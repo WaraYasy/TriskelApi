@@ -135,14 +135,14 @@ class LevelComplete(BaseModel):
 
     Attributes:
         level (str): Nombre del nivel completado.
-        time_seconds (int): Tiempo que tardó en completar.
+        time_seconds (Optional[int]): Tiempo que tardó (opcional, se calcula automáticamente si no se envía).
         deaths (int): Número de muertes en el nivel.
         choice (Optional[str]): Decisión moral (si aplica).
         relic (Optional[str]): Reliquia obtenida (si aplica).
     """
 
     level: str  # Nombre del nivel completado
-    time_seconds: int  # Tiempo que tardó en completar
+    time_seconds: Optional[int] = None  # Tiempo (opcional, se calcula si no se envía)
     deaths: int  # Número de muertes en el nivel
     choice: Optional[str] = None  # Decisión moral (si el nivel tiene)
     relic: Optional[str] = None  # Reliquia obtenida (si el nivel da una)
@@ -159,8 +159,10 @@ class LevelComplete(BaseModel):
 
     @field_validator("time_seconds")
     @classmethod
-    def validate_time(cls, v: int) -> int:
-        """Valida que el tiempo sea positivo y mayor a 0."""
+    def validate_time(cls, v: Optional[int]) -> Optional[int]:
+        """Valida que el tiempo sea positivo y mayor a 0 (si se proporciona)."""
+        if v is None:
+            return v  # Será calculado automáticamente por el servidor
         if v <= 0:
             raise ValueError(
                 "El tiempo debe ser mayor a 0 segundos (no se permiten valores 0 o negativos)"
@@ -210,9 +212,9 @@ class LevelComplete(BaseModel):
         json_schema_extra = {
             "example": {
                 "level": "senda_ebano",
-                "time_seconds": 245,
                 "deaths": 3,
                 "choice": "sanar",
                 "relic": "lirio",
+                # time_seconds es opcional - se calcula automáticamente si no se envía
             }
         }

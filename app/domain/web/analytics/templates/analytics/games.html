@@ -23,8 +23,8 @@
 
 <section class="charts-section">
     <div class="chart-card large">
-        <div class="chart-header"><h3 class="chart-title">Muertes por Nivel</h3></div>
-        <div class="chart-body" id="chart-deaths">
+        <div class="chart-header"><h3 class="chart-title">Distribución de Estados</h3></div>
+        <div class="chart-body" id="chart-status">
             <div class="chart-loader"><div class="loader-spinner"></div><span>Cargando gráfico...</span></div>
         </div>
     </div>
@@ -93,10 +93,10 @@
     }
 
     async function loadChart() {
-        const container = document.getElementById('chart-deaths');
+        const container = document.getElementById('chart-status');
 
         try {
-            const response = await fetch('/web/dashboard/api/charts/deaths');
+            const response = await fetch('/web/dashboard/api/charts/game-status');
             if (!response.ok) throw new Error('Error cargando gráfico');
 
             const data = await response.json();
@@ -109,7 +109,7 @@
             if (data.html) {
                 const figData = JSON.parse(data.html);
                 Plotly.newPlot(
-                    'chart-deaths',
+                    'chart-status',
                     figData.data,
                     figData.layout,
                     {displayModeBar: false, responsive: true}

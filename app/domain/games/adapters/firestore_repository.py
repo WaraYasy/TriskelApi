@@ -231,6 +231,8 @@ class FirestoreGameRepository(IGameRepository):
     def start_level(self, game_id: str, level_data: LevelStart) -> Optional[Game]:
         """Registra el inicio de un nivel.
 
+        Guarda el timestamp de inicio para calcular duración automáticamente.
+
         Args:
             game_id (str): ID de la partida.
             level_data (LevelStart): Datos del nivel.
@@ -244,11 +246,21 @@ class FirestoreGameRepository(IGameRepository):
         if not doc.exists:
             return None
 
-        # Actualizar nivel actual
-        doc_ref.update({"current_level": level_data.level})
+        # Obtener el game actual para actualizar metrics
+        game = Game.from_dict(doc.to_dict())
 
-        logger.info(f"Nivel iniciado: {level_data.level} en partida {game_id}")
-        return self.get_by_id(game_id)
+        # Guardar timestamp de inicio del nivel para cálculo automático
+        game.metrics.level_start_times[level_data.level] = datetime.now(timezone.utc)
+        game.current_level = level_data.level
+
+        # Guardar cambios
+        doc_ref.set(game.to_dict())
+
+        logger.info(
+            f"⏱️  Nivel iniciado: {level_data.level} en partida {game_id[:8]}... "
+            f"[Timestamp guardado: {game.metrics.level_start_times[level_data.level]}]"
+        )
+        return game
 
     def complete_level(self, game_id: str, level_data: LevelComplete) -> Optional[Game]:
         """Registra la completación de un nivel.
@@ -280,13 +292,61 @@ class FirestoreGameRepository(IGameRepository):
         if level_data.level not in game.levels_completed:
             game.levels_completed.append(level_data.level)
 
+        # CALCULAR TIEMPO AUTOMÁTICAMENTE si no se proporciona
+        time_seconds = level_data.time_seconds
+
+        if time_seconds is None:
+            # Calcular desde timestamp guardado en start_level
+            level_start_time = game.metrics.level_start_times.get(level_data.level)
+
+            if level_start_time:
+                now = datetime.now(timezone.utc)
+                time_delta = now - level_start_time
+                time_seconds = int(time_delta.total_seconds())
+
+                # Validar que el tiempo esté en un rango razonable
+                MAX_LEVEL_TIME = 3600  # 1 hora máximo por nivel
+                MIN_LEVEL_TIME = 1  # 1 segundo mínimo
+
+                if time_seconds < MIN_LEVEL_TIME:
+                    logger.warning(
+                        f"⚠️  Tiempo calculado es {time_seconds}s (muy rápido o error de clock). "
+                        f"Forzando a {MIN_LEVEL_TIME}s. [Nivel: {level_data.level}, Partida: {game_id[:8]}...]"
+                    )
+                    time_seconds = MIN_LEVEL_TIME
+                elif time_seconds > MAX_LEVEL_TIME:
+                    # Posible pérdida de conexión o juego pausado
+                    logger.warning(
+                        f"⚠️  Tiempo calculado es {time_seconds}s ({time_seconds // 60} min) - excede límite razonable. "
+                        f"Posible pérdida de conexión. Forzando a {MAX_LEVEL_TIME}s (1 hora). "
+                        f"[Nivel: {level_data.level}, Partida: {game_id[:8]}...]"
+                    )
+                    time_seconds = MAX_LEVEL_TIME
+                else:
+                    logger.info(
+                        f"⏱️  Tiempo calculado automáticamente: {time_seconds}s ({time_seconds // 60} min) "
+                        f"para nivel '{level_data.level}' "
+                        f"[Inicio: {level_start_time}, Fin: {now}] [Partida: {game_id[:8]}...]"
+                    )
+            else:
+                # No hay timestamp de inicio, usar 1 segundo como fallback
+                time_seconds = 1
+                logger.warning(
+                    f"⚠️  No se encontró timestamp de inicio para '{level_data.level}'. "
+                    f"Usando fallback de 1s. [Partida: {game_id[:8]}...]"
+                )
+        else:
+            logger.info(
+                f"⏱️  Tiempo proporcionado por cliente: {time_seconds}s para nivel '{level_data.level}'"
+            )
+
         # Actualizar métricas del nivel
-        game.metrics.time_per_level[level_data.level] = level_data.time_seconds
+        game.metrics.time_per_level[level_data.level] = time_seconds
         game.metrics.deaths_per_level[level_data.level] = level_data.deaths
         game.metrics.total_deaths += level_data.deaths
 
         # Actualizar tiempo total de juego
-        game.total_time_seconds += level_data.time_seconds
+        game.total_time_seconds += time_seconds
 
         # Registrar decisión moral si el nivel tiene una
         levels_with_choices = {
