@@ -29,34 +29,35 @@ Body:
   }
 ```
 
-**IMPORTANTE en Unity:**
-```csharp
-// Guardar timestamp cuando inicia el nivel
-private float levelStartTime;
+**¿Qué hace la API?**
+- Guarda el timestamp de inicio del nivel
+- Este timestamp se usará para calcular la duración automáticamente
 
+**En Unity (simplificado):**
+```csharp
 void OnLevelStart() {
-    levelStartTime = Time.time;
+    // Solo llama a la API - el servidor guarda el timestamp
+    StartLevel("senda_ebano");
 }
 ```
 
 ### 1.3 Completar un Nivel
 
-**Calcular tiempo en Unity:**
-```csharp
-void OnLevelComplete() {
-    int timeSeconds = Mathf.RoundToInt(Time.time - levelStartTime);
+**⭐ NUEVO: Cálculo Automático de Tiempo**
 
-    // IMPORTANTE: Verificar que el tiempo sea > 0
-    if (timeSeconds <= 0) {
-        Debug.LogWarning("Tiempo inválido, forzando a 1 segundo");
-        timeSeconds = 1;
-    }
+La API ahora **calcula automáticamente** la duración del nivel usando:
+- Timestamp de inicio (guardado en `/level/start`)
+- Timestamp actual (cuando se llama a `/level/complete`)
 
-    SendLevelComplete(timeSeconds);
-}
-```
+**Validaciones de seguridad:**
+- ⏱️ Mínimo: 1 segundo
+- ⏱️ Máximo: 1 hora (3600s)
+- ⚠️ Si el tiempo excede 1 hora → se limita automáticamente
 
-**Llamada a la API:**
+> **Nota:** Como el juego requiere conexión online, el tiempo se mide con precisión.
+> El límite de 1 hora es una medida de seguridad contra edge cases.
+
+**Opción 1: Sin enviar tiempo (RECOMENDADO para juegos online) ✅**
 ```http
 POST /v1/games/{game_id}/level/complete
 Headers:
@@ -64,11 +65,34 @@ Headers:
 Body:
   {
     "level": "senda_ebano",
-    "time_seconds": 245,        // ⚠️ DEBE SER > 0
     "deaths": 3,
     "choice": "sanar",          // REQUERIDO para niveles con decisión moral
     "relic": "lirio"            // Solo si el nivel da reliquia
+    // time_seconds: OMITIDO - se calcula automáticamente
   }
+```
+
+**Opción 2: Enviar tiempo manualmente (opcional)**
+```http
+POST /v1/games/{game_id}/level/complete
+Headers:
+  X-Player-Token: <token_del_jugador>
+Body:
+  {
+    "level": "senda_ebano",
+    "time_seconds": 245,        // Opcional - solo si quieres controlarlo desde Unity
+    "deaths": 3,
+    "choice": "sanar",
+    "relic": "lirio"
+  }
+```
+
+**En Unity (simplificado):**
+```csharp
+void OnLevelComplete() {
+    // Ya NO necesitas medir el tiempo manualmente
+    CompleteLevel("senda_ebano", deaths: playerDeaths, choice: "sanar");
+}
 ```
 
 ## 2. Decisiones Morales
@@ -131,21 +155,26 @@ void OnPlayerMakesChoice(MoralChoice.Choice playerChoice) {
 
 ## 3. Errores Comunes
 
-### 3.1 Tiempo en 0 o Negativo
+### 3.1 Tiempo en 0 o Negativo (RESUELTO ✅)
 ```
 ❌ ERROR: "El tiempo debe ser mayor a 0 segundos"
 ```
 
-**Causa:** Unity no está midiendo el tiempo correctamente o está enviando 0.
+**Causa anterior:** Unity enviaba `time_seconds: 0` o no medía correctamente.
 
-**Solución:**
+**Solución actual:**
 ```csharp
-// MAL ❌
-int timeSeconds = 0; // Siempre falla
+// SIMPLIFICADO ✅ - No envíes time_seconds, el servidor lo calcula
+var data = new {
+    level = levelName,
+    deaths = levelDeaths,
+    choice = moralChoice
+    // time_seconds: OMITIDO
+};
+```
 
-// BIEN ✅
-float levelStartTime = Time.time;
-// ... jugador completa nivel ...
+**Si quieres enviarlo manualmente:**
+```csharp
 int timeSeconds = Mathf.Max(1, Mathf.RoundToInt(Time.time - levelStartTime));
 ```
 
@@ -187,10 +216,16 @@ int timeSeconds = Mathf.Max(1, Mathf.RoundToInt(Time.time - levelStartTime));
 ## 4. Validaciones de la API
 
 ### 4.1 time_seconds
-- ✅ Mayor a 0
-- ✅ Menor a 86400 (24 horas)
-- ❌ 0 o negativo → ERROR
-- ❌ Mayor a 24 horas → ERROR
+- ✅ **Opcional** - Se calcula automáticamente si no se envía
+- ✅ Mayor a 0 (si se envía manualmente)
+- ✅ Menor a 86400 (24 horas) (si se envía manualmente)
+- ❌ 0 o negativo → ERROR (solo si se envía manualmente)
+- ❌ Mayor a 24 horas → ERROR (solo si se envía manualmente)
+- ⏱️ **Cálculo automático**:
+  - `tiempo = timestamp_complete - timestamp_start`
+  - Mínimo: 1 segundo
+  - Máximo: 3600 segundos (1 hora)
+  - Se limita automáticamente si excede los rangos
 
 ### 4.2 deaths
 - ✅ 0 o mayor
@@ -228,38 +263,39 @@ Si algo falla:
 
 ## 6. Ejemplo Completo en Unity (C#)
 
+### Versión para Juego Online (RECOMENDADA) ⭐
+
+**El servidor calcula el tiempo automáticamente - Unity solo reporta eventos**
+
 ```csharp
 using System;
 using UnityEngine;
 
 public class GameAPIManager : MonoBehaviour {
     private string gameId;
-    private float levelStartTime;
     private int levelDeaths = 0;
 
-    // Al iniciar nivel
+    // Al iniciar nivel - Servidor guarda timestamp
     public void StartLevel(string levelName) {
-        levelStartTime = Time.time;
         levelDeaths = 0;
 
         var data = new { level = levelName };
         StartCoroutine(POST($"/v1/games/{gameId}/level/start", data));
+
+        Debug.Log($"✓ Nivel iniciado: {levelName}");
     }
 
-    // Al completar nivel
+    // Al completar nivel - Servidor calcula tiempo automáticamente
     public void CompleteLevel(string levelName, string moralChoice = null, string relic = null) {
-        // Calcular tiempo (NUNCA 0)
-        int timeSeconds = Mathf.Max(1, Mathf.RoundToInt(Time.time - levelStartTime));
-
         var data = new {
             level = levelName,
-            time_seconds = timeSeconds,
+            // time_seconds: OMITIDO - calculado en servidor (inicio → ahora)
             deaths = levelDeaths,
             choice = moralChoice,  // "sanar", "forzar", etc. o null
             relic = relic          // "lirio", "hacha", "manto" o null
         };
 
-        Debug.Log($"Completando nivel: {levelName}, Tiempo: {timeSeconds}s, Muertes: {levelDeaths}, Decisión: {moralChoice ?? "ninguna"}");
+        Debug.Log($"✓ Completando nivel: {levelName} | Muertes: {levelDeaths} | Decisión: {moralChoice ?? "ninguna"}");
 
         StartCoroutine(POST($"/v1/games/{gameId}/level/complete", data));
     }
@@ -273,6 +309,46 @@ public class GameAPIManager : MonoBehaviour {
     public void OnSendaEbanoComplete(bool playerChoseSanar) {
         string choice = playerChoseSanar ? "sanar" : "forzar";
         CompleteLevel("senda_ebano", choice, "lirio");
+    }
+}
+```
+
+**Ventajas para juego online:**
+- ✅ Sin gestión de tiempo en Unity (más simple)
+- ✅ Imposible manipular tiempos desde el cliente
+- ✅ Precisión garantizada por el servidor
+- ✅ Protección automática contra valores anómalos (1s - 1h)
+```
+
+### Versión con Tiempo Manual (Opcional)
+
+Si prefieres controlar el tiempo desde Unity:
+
+```csharp
+public class GameAPIManager : MonoBehaviour {
+    private string gameId;
+    private float levelStartTime;
+    private int levelDeaths = 0;
+
+    public void StartLevel(string levelName) {
+        levelStartTime = Time.time;
+        levelDeaths = 0;
+        var data = new { level = levelName };
+        StartCoroutine(POST($"/v1/games/{gameId}/level/start", data));
+    }
+
+    public void CompleteLevel(string levelName, string moralChoice = null, string relic = null) {
+        int timeSeconds = Mathf.Max(1, Mathf.RoundToInt(Time.time - levelStartTime));
+
+        var data = new {
+            level = levelName,
+            time_seconds = timeSeconds,  // Tiempo manual desde Unity
+            deaths = levelDeaths,
+            choice = moralChoice,
+            relic = relic
+        };
+
+        StartCoroutine(POST($"/v1/games/{gameId}/level/complete", data));
     }
 }
 ```
@@ -310,17 +386,56 @@ curl -X POST http://localhost:8000/v1/games/<game_id>/level/complete \
 
 ### El tiempo siempre aparece como 0 en la base de datos
 
-**Diagnóstico:**
-1. Verificar que Unity está enviando `time_seconds > 0` en el payload
-2. Revisar logs del servidor para ver qué valor se recibe
-3. Comprobar que `Time.time` funciona correctamente en Unity
+**Para juegos online (RECOMENDADO):**
+No envíes `time_seconds` desde Unity. El servidor lo calcula automáticamente:
 
-**Fix:**
 ```csharp
-// Añadir logs de debug
+// Unity NO maneja tiempo - servidor calcula
+var data = new {
+    level = levelName,
+    deaths = levelDeaths,
+    choice = moralChoice
+    // time_seconds se calcula: timestamp_complete - timestamp_start
+};
+```
+
+**Verificar en logs del servidor:**
+```
+⏱️  Tiempo calculado automáticamente: 245s (4 min) para nivel 'senda_ebano'
+[Inicio: 2026-02-02 15:30:45, Fin: 2026-02-02 15:34:50]
+```
+
+**Si ves tiempo de 1 hora (3600s):**
+```
+⚠️  Tiempo calculado es 7200s (120 min) - excede límite razonable.
+Posible pérdida de conexión. Forzando a 3600s (1 hora).
+```
+
+**Causas:**
+- El jugador perdió conexión temporal durante el nivel
+- El juego se pausó por mucho tiempo
+
+**Solución:**
+Como el juego es online, el tiempo debería ser normal. Si esto ocurre frecuentemente, considera:
+1. Verificar que el juego se pausa correctamente en pérdida de conexión
+2. Revisar la lógica de reconexión
+3. Considerar enviar `time_seconds` desde Unity como respaldo
+
+**Flujo correcto:**
+```csharp
+// 1. Primero iniciar (guarda timestamp en servidor)
+StartLevel("senda_ebano");
+
+// ... jugador juega el nivel (requiere conexión) ...
+
+// 2. Luego completar (calcula: ahora - timestamp_inicio)
+CompleteLevel("senda_ebano");
+```
+
+**Diagnóstico manual (si envías tiempo desde Unity):**
+```csharp
 Debug.Log($"Level start time: {levelStartTime}");
 Debug.Log($"Current time: {Time.time}");
-Debug.Log($"Time difference: {Time.time - levelStartTime}");
 int timeSeconds = Mathf.Max(1, Mathf.RoundToInt(Time.time - levelStartTime));
 Debug.Log($"Sending time_seconds: {timeSeconds}");
 ```
