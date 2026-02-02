@@ -11,6 +11,8 @@ from typing import List, Optional
 
 import bcrypt
 
+from app.core.logger import logger
+
 from .models import Player
 from .ports import IPlayerRepository
 from .schemas import PlayerCreate, PlayerUpdate
@@ -224,23 +226,52 @@ class PlayerService:
 
             if player_choice == choices["good"]:
                 good_choices += 1
+                logger.info(
+                    f"✅ Decisión BUENA detectada: {player_choice} en {level} "
+                    f"[Jugador: {player_id[:8]}...]"
+                )
             elif player_choice == choices["bad"]:
                 bad_choices += 1
+                logger.info(
+                    f"❌ Decisión MALA detectada: {player_choice} en {level} "
+                    f"[Jugador: {player_id[:8]}...]"
+                )
             # Si es None, el jugador no tomó decisión en este nivel
 
         # Acumular en el total histórico
         player.stats.total_good_choices += good_choices
         player.stats.total_bad_choices += bad_choices
 
+        if good_choices > 0 or bad_choices > 0:
+            logger.info(
+                f"📊 Resumen partida {game.game_id[:8]}...: "
+                f"{good_choices} buenas, {bad_choices} malas | "
+                f"Total histórico: {player.stats.total_good_choices} buenas, "
+                f"{player.stats.total_bad_choices} malas [Jugador: {player_id[:8]}...]"
+            )
+
         # 5. CALCULAR ALINEACIÓN MORAL
         # Fórmula: (decisiones_buenas - decisiones_malas) / total_decisiones
         # Rango: -1.0 (completamente malo) a +1.0 (completamente bueno)
         total_choices = player.stats.total_good_choices + player.stats.total_bad_choices
 
+        old_alignment = player.stats.moral_alignment
+
         if total_choices > 0:
             player.stats.moral_alignment = (
                 player.stats.total_good_choices - player.stats.total_bad_choices
             ) / total_choices
+
+            # Log del cambio de alineación moral
+            alignment_change = player.stats.moral_alignment - old_alignment
+            change_symbol = "📈" if alignment_change > 0 else "📉" if alignment_change < 0 else "➡️"
+
+            logger.info(
+                f"{change_symbol} ALINEACIÓN MORAL actualizada: "
+                f"{old_alignment:.2f} → {player.stats.moral_alignment:.2f} "
+                f"({'+'if alignment_change >= 0 else ''}{alignment_change:.2f}) "
+                f"[Jugador: {player_id[:8]}...]"
+            )
         # Si total_choices == 0, moral_alignment se queda en 0.0 (neutral)
 
         # 6. RELIQUIA FAVORITA (TODO: mejorar lógica para contar la más usada)

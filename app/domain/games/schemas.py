@@ -160,9 +160,11 @@ class LevelComplete(BaseModel):
     @field_validator("time_seconds")
     @classmethod
     def validate_time(cls, v: int) -> int:
-        """Valida que el tiempo sea positivo."""
-        if v < 0:
-            raise ValueError("El tiempo no puede ser negativo")
+        """Valida que el tiempo sea positivo y mayor a 0."""
+        if v <= 0:
+            raise ValueError(
+                "El tiempo debe ser mayor a 0 segundos (no se permiten valores 0 o negativos)"
+            )
         if v > 86400:  # 24 horas en segundos
             raise ValueError("El tiempo no puede ser mayor a 24 horas")
         return v

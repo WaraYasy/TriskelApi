@@ -102,16 +102,50 @@
                 return;
             }
 
-            tbody.innerHTML = players.map(player => `
-                <tr>
-                    <td style="font-family: monospace;">${player.player_id.substring(0, 8)}...</td>
-                    <td>${player.username || 'Sin nombre'}</td>
-                    <td style="color: #9ca3af;">${player.email || 'Sin email'}</td>
-                    <td>${player.moral_alignment ? `<span class="event-status completed">${player.moral_alignment}</span>` : '<span style="color: #6b7280;">Sin datos</span>'}</td>
-                    <td>${formatDuration(player.total_playtime_seconds || player.total_playtime)}</td>
-                    <td style="color: #9ca3af;">${formatDate(player.created_at)}</td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = players.map(player => {
+                // Obtener moral_alignment desde stats o directamente (compatibilidad)
+                const alignment = player.stats?.moral_alignment ?? player.moral_alignment;
+
+                let alignmentDisplay = '<span style="color: #6b7280;">Sin datos</span>';
+                if (alignment != null) {
+                    // Determinar categoría y color según el valor (-1 a 1)
+                    let category, color, tooltip;
+                    if (alignment >= 0.6) {
+                        category = 'Bueno';
+                        color = '#10b981'; // Verde
+                        tooltip = 'Jugador con decisiones mayormente buenas';
+                    } else if (alignment >= 0.2) {
+                        category = 'Neutral+';
+                        color = '#3b82f6'; // Azul
+                        tooltip = 'Jugador con tendencia a decisiones buenas';
+                    } else if (alignment >= -0.2) {
+                        category = 'Neutral';
+                        color = '#6b7280'; // Gris
+                        tooltip = 'Jugador con decisiones equilibradas';
+                    } else if (alignment >= -0.6) {
+                        category = 'Neutral-';
+                        color = '#f59e0b'; // Naranja
+                        tooltip = 'Jugador con tendencia a decisiones malas';
+                    } else {
+                        category = 'Malo';
+                        color = '#ef4444'; // Rojo
+                        tooltip = 'Jugador con decisiones mayormente malas';
+                    }
+
+                    alignmentDisplay = `<span style="background: ${color}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.875rem; font-weight: 500; cursor: help;" title="${tooltip} (${alignment.toFixed(2)})">${alignment.toFixed(2)} - ${category}</span>`;
+                }
+
+                return `
+                    <tr>
+                        <td style="font-family: monospace;">${player.player_id.substring(0, 8)}...</td>
+                        <td>${player.username || 'Sin nombre'}</td>
+                        <td style="color: #9ca3af;">${player.email || 'Sin email'}</td>
+                        <td>${alignmentDisplay}</td>
+                        <td>${formatDuration(player.total_playtime_seconds || player.total_playtime)}</td>
+                        <td style="color: #9ca3af;">${formatDate(player.created_at)}</td>
+                    </tr>
+                `;
+            }).join('');
         } catch (error) {
             console.error('Error:', error);
             document.getElementById('stat-total').textContent = '-';

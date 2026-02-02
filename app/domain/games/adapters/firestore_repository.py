@@ -289,13 +289,43 @@ class FirestoreGameRepository(IGameRepository):
         game.total_time_seconds += level_data.time_seconds
 
         # Registrar decisión moral si el nivel tiene una
+        levels_with_choices = {
+            "senda_ebano": "sanar/forzar",
+            "fortaleza_gigantes": "construir/destruir",
+            "aquelarre_sombras": "revelar/ocultar",
+        }
+
         if level_data.choice:
+            # Determinar si es buena o mala decisión
+            good_choices = {"sanar", "construir", "revelar"}
+            bad_choices = {"forzar", "destruir", "ocultar"}
+
+            moral_type = (
+                "BUENA"
+                if level_data.choice in good_choices
+                else "MALA" if level_data.choice in bad_choices else "DESCONOCIDA"
+            )
+
+            # Log detallado de la decisión moral
+            logger.info(
+                f"🎭 DECISIÓN MORAL: Jugador {game.player_id[:8]}... "
+                f"eligió '{level_data.choice}' ({moral_type}) en nivel '{level_data.level}' "
+                f"[Partida: {game_id[:8]}...]"
+            )
+
             if level_data.level == "senda_ebano":
                 game.choices.senda_ebano = level_data.choice
             elif level_data.level == "fortaleza_gigantes":
                 game.choices.fortaleza_gigantes = level_data.choice
             elif level_data.level == "aquelarre_sombras":
                 game.choices.aquelarre_sombras = level_data.choice
+        elif level_data.level in levels_with_choices:
+            # El nivel requiere decisión moral pero no se envió
+            logger.warning(
+                f"⚠️  DECISIÓN MORAL FALTANTE: El nivel '{level_data.level}' requiere una decisión moral "
+                f"pero no se recibió el campo 'choice'. Decisiones válidas: {levels_with_choices[level_data.level]} "
+                f"[Jugador: {game.player_id[:8]}..., Partida: {game_id[:8]}...]"
+            )
 
         # Añadir reliquia obtenida (evitar duplicados)
         if level_data.relic and level_data.relic not in game.relics:

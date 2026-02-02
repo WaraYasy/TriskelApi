@@ -409,10 +409,10 @@ class AnalyticsService:
 
         try:
             # OPTIMIZACIÓN: Llamar endpoint admin directo en lugar de iterar jugadores
-            logger.info("[Analytics] Calling GET /v1/games with limit=1000")
+            logger.info("[Analytics] Calling GET /v1/games with limit=500")
             logger.info(f"[Analytics] Client headers: {dict(self.client.headers)}")
 
-            response = self.client.get("/v1/games", params={"limit": 1000})
+            response = self.client.get("/v1/games", params={"limit": 500})
 
             logger.info(f"[Analytics] Response status: {response.status_code}")
             logger.info(
@@ -479,9 +479,9 @@ class AnalyticsService:
 
         try:
             # OPTIMIZACIÓN: Llamar endpoint admin directo
-            logger.info("[Analytics] Calling GET /v1/events with limit=5000")
+            logger.info("[Analytics] Calling GET /v1/events with limit=500")
 
-            response = self.client.get("/v1/events", params={"limit": 5000})
+            response = self.client.get("/v1/events", params={"limit": 500})
 
             logger.info(f"[Analytics] Response status: {response.status_code}")
             logger.info(
