@@ -69,13 +69,26 @@
             const response = await fetch('/web/dashboard/api/games');
             if (!response.ok) throw new Error('Error');
             const games = await response.json();
+
+            // Mostrar el total de partidas en el contador
             document.getElementById('stat-total').textContent = games.length;
+
             const tbody = document.getElementById('games-table-body');
             if (games.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:2rem;">No hay partidas disponibles</td></tr>';
                 return;
             }
-            tbody.innerHTML = games.map(game => `
+
+            // Ordenar por fecha de inicio (más recientes primero) y limitar a las últimas 20
+            const sortedGames = games.sort((a, b) => {
+                const dateA = new Date(a.started_at || 0);
+                const dateB = new Date(b.started_at || 0);
+                return dateB - dateA; // Descendente (más reciente primero)
+            });
+
+            const recentGames = sortedGames.slice(0, 20);
+
+            tbody.innerHTML = recentGames.map(game => `
                 <tr>
                     <td style="font-family:monospace;">${game.game_id.substring(0,8)}...</td>
                     <td style="font-family:monospace;">${game.player_id.substring(0,8)}...</td>
@@ -85,6 +98,11 @@
                     <td style="color:#9ca3af;">${formatDate(game.started_at)}</td>
                 </tr>
             `).join('');
+
+            // Mostrar mensaje si hay más partidas de las que se muestran
+            if (games.length > 20) {
+                tbody.innerHTML += `<tr><td colspan="6" style="text-align:center;color:#9ca3af;padding:1rem;font-style:italic;">Mostrando las 20 partidas más recientes de ${games.length} totales</td></tr>`;
+            }
         } catch (error) {
             console.error('Error:', error);
             document.getElementById('stat-total').textContent = '-';

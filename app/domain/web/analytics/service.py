@@ -555,7 +555,8 @@ class AnalyticsService:
             for time_seconds in time_per_level.values():
                 total_playtime += time_seconds
 
-        avg_playtime = total_playtime / len(games) if games else 0
+        # Convertir a minutos (dividir entre 60)
+        avg_playtime = (total_playtime / len(games) / 60) if games else 0
 
         # Total de muertes (usar metrics.total_deaths directamente)
         total_deaths = 0
@@ -853,14 +854,37 @@ class AnalyticsService:
         if not ANALYTICS_AVAILABLE or not events:
             return self._empty_chart("No hay eventos registrados")
 
-        # Contar eventos por tipo
+        # Mapeo de tipos de eventos a nombres legibles en español
+        event_type_labels = {
+            "player_death": "Muerte de jugador",
+            "death": "Muerte de jugador",  # Variante incorrecta
+            "level_start": "Inicio de nivel",
+            "level_end": "Fin de nivel",
+            "npc_interaction": "Interacción con NPC",
+            "item_collected": "Recolección de reliquia",
+            "itemcollect": "Recolección de reliquia",  # Variante incorrecta
+            "checkpoint_reached": "Checkpoint alcanzado",
+            "boss_encounter": "Encuentro con jefe",
+            "custom_event": "Evento personalizado",
+        }
+
+        # Contar eventos por tipo y traducir
         event_types = [e.get("event_type") for e in events]
         type_counts = Counter(event_types)
 
+        # Aplicar traducción a los nombres
+        translated_counts = {}
+        for event_type, count in type_counts.items():
+            label = event_type_labels.get(event_type, event_type)
+            if label in translated_counts:
+                translated_counts[label] += count
+            else:
+                translated_counts[label] = count
+
         df = pd.DataFrame(
             {
-                "Tipo de evento": list(type_counts.keys()),
-                "Cantidad": list(type_counts.values()),
+                "Tipo de evento": list(translated_counts.keys()),
+                "Cantidad": list(translated_counts.values()),
             }
         )
 
@@ -897,15 +921,17 @@ class AnalyticsService:
         if not ANALYTICS_AVAILABLE or not events:
             return self._empty_chart("No hay eventos registrados")
 
-        # Procesar fechas
+        # Procesar fechas y agrupar por hora
         dates = []
         for e in events:
             ts = e.get("timestamp")
             if ts:
                 try:
-                    # Convertir ISO string a datetime y truncar a fecha (o hora si se prefiere)
+                    # Convertir ISO string a datetime
                     dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                    dates.append(dt.date())
+                    # Truncar a hora (sin minutos ni segundos)
+                    dt_hour = dt.replace(minute=0, second=0, microsecond=0)
+                    dates.append(dt_hour)
                 except ValueError:
                     pass
 
@@ -914,6 +940,7 @@ class AnalyticsService:
 
         date_counts = Counter(dates)
 
+        # Crear DataFrame y ordenar por fecha
         df = pd.DataFrame(
             {
                 "Fecha": list(date_counts.keys()),
@@ -921,17 +948,34 @@ class AnalyticsService:
             }
         ).sort_values("Fecha")
 
+        # Formatear fechas para mostrar
+        df["Fecha_formateada"] = df["Fecha"].apply(
+            lambda x: x.strftime("%d/%m/%Y %H:%M") if isinstance(x, datetime) else str(x)
+        )
+
         fig = px.line(
             df,
             x="Fecha",
             y="Cantidad",
             title="Actividad de Eventos en el Tiempo",
-            labels={"Cantidad": "Número de eventos"},
+            labels={"Cantidad": "Número de eventos", "Fecha": "Fecha y hora"},
             markers=True,
+            hover_data={"Fecha": False, "Fecha_formateada": True},
         )
 
-        fig.update_traces(line_color="#3b82f6")
+        fig.update_traces(
+            line_color="#3b82f6",
+            hovertemplate="<b>%{customdata[0]}</b><br>Eventos: %{y}<extra></extra>",
+        )
+
         fig.update_layout(self._get_dark_layout())
+
+        # Mejorar formato del eje X
+        fig.update_xaxes(
+            tickformat="%d/%m\n%H:%M",
+            tickangle=-45,
+            nticks=20,
+        )
 
         # Retornar JSON para que el frontend use Plotly.newPlot()
         return fig.to_json()

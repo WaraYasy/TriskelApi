@@ -237,7 +237,7 @@
             animateStat('stat-players', metrics.total_players || 0);
             animateStat('stat-games', metrics.total_games || 0);
             document.getElementById('stat-playtime').textContent =
-                ((metrics.avg_playtime || 0) / 3600).toFixed(1) + 'h';
+                (metrics.avg_playtime || 0).toFixed(1) + ' min';
             document.getElementById('stat-completion').textContent =
                 (metrics.completion_rate || 0) + '%';
             animateStat('stat-deaths', metrics.total_deaths || 0);
