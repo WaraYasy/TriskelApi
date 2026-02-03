@@ -53,6 +53,7 @@ def login_required(f):
 def _create_export_audit_log(
     data_type: str,
     filename: str = None,
+    export_format: str = "csv",
     ip_address: str = None,
     user_agent: str = None,
     success: bool = True,
@@ -86,14 +87,14 @@ def _create_export_audit_log(
         repository = SQLAuthRepository(session)
 
         # Crear detalles JSON
-        details = {"data_type": data_type, "format": "csv"}
+        details = {"data_type": data_type, "format": export_format}
         if filename:
             details["filename"] = filename
 
         repository.create_audit_log(
             user_id=user_id,
             username=username,
-            action=f"export_{data_type}_csv",
+            action=f"export_{data_type}_{export_format}",
             resource_type=data_type,
             ip_address=ip_address,
             user_agent=user_agent,
@@ -198,7 +199,7 @@ def export_page():
 @admin_bp.route("/export/download", methods=["POST"])
 @login_required
 def export_download():
-    """Descarga datos en formato CSV"""
+    """Descarga datos en formato CSV o JSON"""
     from app.core.logger import logger
     from app.infrastructure.database.firebase_client import get_firestore_client
 
@@ -208,33 +209,19 @@ def export_download():
 
         # Obtener el tipo de datos a exportar del formulario
         data_type = request.form.get("data_type", "players")
+        export_format = request.form.get("format", "csv")  # csv o json
 
-        # Crear buffer para CSV
-        output = io.StringIO()
+        # Lista para almacenar datos (usado tanto para CSV como JSON)
+        data_list = []
 
         if data_type == "players":
             # Exportar jugadores
             players_ref = db.collection("players")
             players = players_ref.stream()
 
-            writer = csv.DictWriter(
-                output,
-                fieldnames=[
-                    "uid",
-                    "username",
-                    "display_name",
-                    "email",
-                    "created_at",
-                    "last_active",
-                    "total_games",
-                    "total_playtime_minutes",
-                ],
-            )
-            writer.writeheader()
-
             for player in players:
                 data = player.to_dict()
-                writer.writerow(
+                data_list.append(
                     {
                         "uid": player.id,
                         "username": data.get("username", ""),
@@ -252,23 +239,9 @@ def export_download():
             games_ref = db.collection("games")
             games = games_ref.stream()
 
-            writer = csv.DictWriter(
-                output,
-                fieldnames=[
-                    "game_id",
-                    "player_uid",
-                    "started_at",
-                    "ended_at",
-                    "status",
-                    "current_chapter",
-                    "moral_alignment",
-                ],
-            )
-            writer.writeheader()
-
             for game in games:
                 data = game.to_dict()
-                writer.writerow(
+                data_list.append(
                     {
                         "game_id": game.id,
                         "player_uid": data.get("player_uid", ""),
@@ -285,23 +258,9 @@ def export_download():
             decisions_ref = db.collection("decisions")
             decisions = decisions_ref.stream()
 
-            writer = csv.DictWriter(
-                output,
-                fieldnames=[
-                    "decision_id",
-                    "game_id",
-                    "player_uid",
-                    "event_id",
-                    "choice_made",
-                    "timestamp",
-                    "moral_impact",
-                ],
-            )
-            writer.writeheader()
-
             for decision in decisions:
                 data = decision.to_dict()
-                writer.writerow(
+                data_list.append(
                     {
                         "decision_id": decision.id,
                         "game_id": data.get("game_id", ""),
@@ -318,23 +277,9 @@ def export_download():
             events_ref = db.collection("events")
             events = events_ref.stream()
 
-            writer = csv.DictWriter(
-                output,
-                fieldnames=[
-                    "event_id",
-                    "player_uid",
-                    "game_id",
-                    "event_type",
-                    "timestamp",
-                    "chapter",
-                    "data",
-                ],
-            )
-            writer.writeheader()
-
             for event in events:
                 data = event.to_dict()
-                writer.writerow(
+                data_list.append(
                     {
                         "event_id": event.id,
                         "player_uid": data.get("player_uid", ""),
@@ -342,30 +287,60 @@ def export_download():
                         "event_type": data.get("event_type", ""),
                         "timestamp": data.get("timestamp", ""),
                         "chapter": data.get("chapter", ""),
-                        "data": str(data.get("data", "")),
+                        "data": data.get("data", {}),  # Mantener como objeto para JSON
                     }
                 )
 
-        # Obtener el contenido CSV
-        csv_content = output.getvalue()
-        output.close()
-
-        # Crear respuesta con el archivo CSV
+        # Generar el archivo según el formato solicitado
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"triskel_{data_type}_{timestamp}.csv"
 
-        response = Response(
-            csv_content,
-            mimetype="text/csv",
-            headers={"Content-Disposition": f"attachment; filename={filename}"},
-        )
+        if export_format == "json":
+            # Exportar como JSON
+            json_content = json.dumps(data_list, indent=2, ensure_ascii=False)
+            filename = f"triskel_{data_type}_{timestamp}.json"
 
-        logger.info(f"Datos exportados: {data_type}", filename=filename)
+            response = Response(
+                json_content,
+                mimetype="application/json",
+                headers={"Content-Disposition": f"attachment; filename={filename}"},
+            )
+        else:
+            # Exportar como CSV (por defecto)
+            output = io.StringIO()
+
+            if data_list:
+                # Usar las claves del primer elemento como fieldnames
+                fieldnames = list(data_list[0].keys())
+                writer = csv.DictWriter(output, fieldnames=fieldnames)
+                writer.writeheader()
+
+                for row in data_list:
+                    # Convertir objetos complejos a string para CSV
+                    csv_row = {}
+                    for key, value in row.items():
+                        if isinstance(value, (dict, list)):
+                            csv_row[key] = str(value)
+                        else:
+                            csv_row[key] = value
+                    writer.writerow(csv_row)
+
+            csv_content = output.getvalue()
+            output.close()
+            filename = f"triskel_{data_type}_{timestamp}.csv"
+
+            response = Response(
+                csv_content,
+                mimetype="text/csv",
+                headers={"Content-Disposition": f"attachment; filename={filename}"},
+            )
+
+        logger.info(f"Datos exportados: {data_type} ({export_format})", filename=filename)
 
         # Registrar en audit log
         _create_export_audit_log(
             data_type=data_type,
             filename=filename,
+            export_format=export_format,
             ip_address=request.remote_addr,
             user_agent=request.headers.get("User-Agent"),
         )

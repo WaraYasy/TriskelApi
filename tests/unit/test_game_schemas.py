@@ -72,8 +72,11 @@ class TestLevelComplete:
     @pytest.mark.edge_case
     def test_time_boundaries(self):
         """Validar límites de tiempo"""
-        # Mínimo
-        LevelComplete(level="senda_ebano", time_seconds=0, deaths=0)
+        # Opcional (None) - se calculará automáticamente
+        LevelComplete(level="senda_ebano", time_seconds=None, deaths=0)
+
+        # Mínimo válido (debe ser > 0)
+        LevelComplete(level="senda_ebano", time_seconds=1, deaths=0)
 
         # Máximo (24 horas)
         LevelComplete(level="senda_ebano", time_seconds=86400, deaths=0)
@@ -81,6 +84,10 @@ class TestLevelComplete:
         # Excede máximo
         with pytest.raises(ValidationError):
             LevelComplete(level="senda_ebano", time_seconds=86401, deaths=0)
+
+        # Cero no permitido (debe ser > 0)
+        with pytest.raises(ValidationError):
+            LevelComplete(level="senda_ebano", time_seconds=0, deaths=0)
 
         # Negativo
         with pytest.raises(ValidationError):

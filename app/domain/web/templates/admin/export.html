@@ -174,11 +174,11 @@
             <div class="export-container">
                 <div class="export-header">
                     <h2>Selecciona que datos exportar</h2>
-                    <p>Haz click en una opcion para descargar en formato CSV.</p>
+                    <p>Elige el formato de descarga: CSV o JSON</p>
                 </div>
 
                 <div class="export-options">
-                    <div class="option-card" onclick="confirmExport('players', 'Jugadores')">
+                    <div class="option-card">
                         <div class="option-icon">
                             <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
                                 <circle cx="20" cy="14" r="6" stroke="currentColor" stroke-width="2" />
@@ -195,9 +195,26 @@
                             <span class="field-tag">Creacion</span>
                             <span class="field-tag">+4 mas</span>
                         </div>
+                        <div class="option-actions">
+                            <button class="btn-export btn-csv" onclick="confirmExport('players', 'Jugadores', 'csv')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                                </svg>
+                                CSV
+                            </button>
+                            <button class="btn-export btn-json" onclick="confirmExport('players', 'Jugadores', 'json')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                    <path d="M14 2v6h6"/>
+                                    <path d="M10 12h4M10 16h4"/>
+                                </svg>
+                                JSON
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="option-card" onclick="confirmExport('games', 'Partidas')">
+                    <div class="option-card">
                         <div class="option-icon">
                             <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
                                 <rect x="6" y="10" width="28" height="20" rx="2" stroke="currentColor"
@@ -215,9 +232,26 @@
                             <span class="field-tag">Capitulo</span>
                             <span class="field-tag">+3 mas</span>
                         </div>
+                        <div class="option-actions">
+                            <button class="btn-export btn-csv" onclick="confirmExport('games', 'Partidas', 'csv')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                                </svg>
+                                CSV
+                            </button>
+                            <button class="btn-export btn-json" onclick="confirmExport('games', 'Partidas', 'json')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                    <path d="M14 2v6h6"/>
+                                    <path d="M10 12h4M10 16h4"/>
+                                </svg>
+                                JSON
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="option-card" onclick="confirmExport('decisions', 'Decisiones')">
+                    <div class="option-card">
                         <div class="option-icon">
                             <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
                                 <path d="M20 6v28M12 14l8-8 8 8M28 26l-8 8-8-8" stroke="currentColor"
@@ -233,9 +267,26 @@
                             <span class="field-tag">Impacto</span>
                             <span class="field-tag">+3 mas</span>
                         </div>
+                        <div class="option-actions">
+                            <button class="btn-export btn-csv" onclick="confirmExport('decisions', 'Decisiones', 'csv')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                                </svg>
+                                CSV
+                            </button>
+                            <button class="btn-export btn-json" onclick="confirmExport('decisions', 'Decisiones', 'json')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                    <path d="M14 2v6h6"/>
+                                    <path d="M10 12h4M10 16h4"/>
+                                </svg>
+                                JSON
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="option-card" onclick="confirmExport('events', 'Eventos')">
+                    <div class="option-card">
                         <div class="option-icon">
                             <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
                                 <path d="M6 20h8l6-12 8 24 6-12h6" stroke="currentColor" stroke-width="2"
@@ -250,6 +301,23 @@
                             <span class="field-tag">Timestamp</span>
                             <span class="field-tag">Capitulo</span>
                             <span class="field-tag">+3 mas</span>
+                        </div>
+                        <div class="option-actions">
+                            <button class="btn-export btn-csv" onclick="confirmExport('events', 'Eventos', 'csv')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                                </svg>
+                                CSV
+                            </button>
+                            <button class="btn-export btn-json" onclick="confirmExport('events', 'Eventos', 'json')">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                                    <path d="M14 2v6h6"/>
+                                    <path d="M10 12h4M10 16h4"/>
+                                </svg>
+                                JSON
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -270,6 +338,60 @@
     </div>
 
     <style>
+        .option-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color, rgba(75, 85, 99, 0.3));
+        }
+
+        .btn-export {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1.5px solid;
+        }
+
+        .btn-export svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn-csv {
+            background: var(--accent-bg, rgba(16, 185, 129, 0.1));
+            color: var(--accent, #10b981);
+            border-color: var(--accent, #10b981);
+        }
+
+        .btn-csv:hover {
+            background: var(--accent, #10b981);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-json {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .btn-json:hover {
+            background: #3b82f6;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
         .confirm-dialog {
             position: fixed;
             top: 0;
@@ -341,18 +463,23 @@
 
     <script>
         let pendingExportType = null;
+        let pendingExportFormat = 'csv';
 
-        function confirmExport(dataType, label) {
+        function confirmExport(dataType, label, format) {
             pendingExportType = dataType;
+            pendingExportFormat = format || 'csv';
+
+            const formatLabel = format.toUpperCase();
             document.getElementById('confirmTitle').textContent = `Exportar ${label}`;
             document.getElementById('confirmMessage').textContent =
-                `Se descargara un archivo CSV con todos los datos de ${label.toLowerCase()}. ¿Continuar?`;
+                `Se descargara un archivo ${formatLabel} con todos los datos de ${label.toLowerCase()}. ¿Continuar?`;
             document.getElementById('confirmDialog').classList.add('show');
         }
 
         function closeConfirmDialog() {
             document.getElementById('confirmDialog').classList.remove('show');
             pendingExportType = null;
+            pendingExportFormat = 'csv';
         }
 
         function executeExport() {
@@ -363,12 +490,18 @@
             form.method = 'POST';
             form.action = '/web/admin/export/download';
 
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = 'data_type';
-            input.value = pendingExportType;
+            const inputType = document.createElement('input');
+            inputType.type = 'hidden';
+            inputType.name = 'data_type';
+            inputType.value = pendingExportType;
 
-            form.appendChild(input);
+            const inputFormat = document.createElement('input');
+            inputFormat.type = 'hidden';
+            inputFormat.name = 'format';
+            inputFormat.value = pendingExportFormat;
+
+            form.appendChild(inputType);
+            form.appendChild(inputFormat);
             document.body.appendChild(form);
             form.submit();
 
