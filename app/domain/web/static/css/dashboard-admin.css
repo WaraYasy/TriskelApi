@@ -229,6 +229,7 @@
     flex: 1;
     padding: 1.5rem 1rem;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .nav-item {
@@ -789,6 +790,12 @@ body.sidebar-collapsed .main-content {
 
 .sidebar.collapsed .nav-admin-section .nav-divider,
 .sidebar.collapsed .nav-admin-section .nav-section-title {
+    display: none !important;
+}
+
+/* Ocultar títulos de sección y divisores al colapsar (regla general) */
+.sidebar.collapsed .nav-divider,
+.sidebar.collapsed .nav-section-title {
     display: none !important;
 }
 
