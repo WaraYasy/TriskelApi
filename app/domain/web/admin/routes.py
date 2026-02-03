@@ -227,8 +227,8 @@ def export_download():
                         "username": data.get("username", ""),
                         "display_name": data.get("display_name", ""),
                         "email": data.get("email", ""),
-                        "created_at": data.get("created_at", ""),
-                        "last_active": data.get("last_active", ""),
+                        "created_at": str(data.get("created_at", "")),
+                        "last_active": str(data.get("last_active", "")),
                         "total_games": data.get("total_games", 0),
                         "total_playtime_minutes": data.get("total_playtime_minutes", 0),
                     }
@@ -245,8 +245,8 @@ def export_download():
                     {
                         "game_id": game.id,
                         "player_uid": data.get("player_uid", ""),
-                        "started_at": data.get("started_at", ""),
-                        "ended_at": data.get("ended_at", ""),
+                        "started_at": str(data.get("started_at", "")),
+                        "ended_at": str(data.get("ended_at", "")),
                         "status": data.get("status", ""),
                         "current_chapter": data.get("current_chapter", ""),
                         "moral_alignment": data.get("moral_alignment", ""),
@@ -267,7 +267,7 @@ def export_download():
                         "player_uid": data.get("player_uid", ""),
                         "event_id": data.get("event_id", ""),
                         "choice_made": data.get("choice_made", ""),
-                        "timestamp": data.get("timestamp", ""),
+                        "timestamp": str(data.get("timestamp", "")),
                         "moral_impact": data.get("moral_impact", ""),
                     }
                 )
@@ -285,11 +285,76 @@ def export_download():
                         "player_uid": data.get("player_uid", ""),
                         "game_id": data.get("game_id", ""),
                         "event_type": data.get("event_type", ""),
-                        "timestamp": data.get("timestamp", ""),
+                        "timestamp": str(data.get("timestamp", "")),
                         "chapter": data.get("chapter", ""),
-                        "data": data.get("data", {}),  # Mantener como objeto para JSON
+                        "data": str(data.get("data", "")),
                     }
                 )
+
+        elif data_type == "admin_users":
+            # Exportar usuarios administradores (SQL)
+            from app.domain.auth.models import AdminUser
+            from app.infrastructure.database.sql_client import sql_manager
+
+            session = sql_manager.get_session()
+            if not session:
+                raise Exception("Base de datos SQL no disponible")
+
+            try:
+                users = session.query(AdminUser).all()
+                for user in users:
+                    data_list.append(
+                        {
+                            "id": user.id,
+                            "username": user.username,
+                            "email": user.email,
+                            "role": user.role,
+                            "is_active": user.is_active,
+                            "created_at": user.created_at.isoformat() if user.created_at else "",
+                            "updated_at": user.updated_at.isoformat() if user.updated_at else "",
+                            "last_login": user.last_login.isoformat() if user.last_login else "",
+                        }
+                    )
+            finally:
+                session.close()
+
+        elif data_type == "audit_logs":
+            # Exportar audit logs (SQL)
+            from app.domain.auth.models import AuditLog
+            from app.infrastructure.database.sql_client import sql_manager
+
+            session = sql_manager.get_session()
+            if not session:
+                raise Exception("Base de datos SQL no disponible")
+
+            try:
+                logs = session.query(AuditLog).order_by(AuditLog.timestamp.desc()).all()
+                for log in logs:
+                    data_list.append(
+                        {
+                            "id": log.id,
+                            "user_id": log.user_id,
+                            "username": log.username,
+                            "action": log.action,
+                            "resource_type": log.resource_type,
+                            "resource_id": log.resource_id,
+                            "timestamp": log.timestamp.isoformat() if log.timestamp else "",
+                            "ip_address": log.ip_address or "",
+                            "user_agent": log.user_agent or "",
+                            "details": log.details or "",
+                            "success": log.success,
+                            "error_message": log.error_message or "",
+                        }
+                    )
+            finally:
+                session.close()
+
+        # Verificar si el tipo de datos soporta JSON
+        # Solo los datos de SQL (admin_users, audit_logs) soportan JSON
+        sql_data_types = ["admin_users", "audit_logs"]
+        if export_format == "json" and data_type not in sql_data_types:
+            # Forzar CSV para datos de Firestore
+            export_format = "csv"
 
         # Generar el archivo según el formato solicitado
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
