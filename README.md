@@ -32,6 +32,7 @@
 - [Endpoints](#-endpoints)
 - [Autenticación](#-autenticación)
 - [Dashboard Web](#-dashboard-web)
+- [Cache y Actualización de Datos](#-cache-y-actualización-de-datos)
 - [Migraciones](#-migraciones)
 - [Despliegue](#-despliegue)
 - [Testing](#-testing)
@@ -44,12 +45,13 @@
 
 - **🚀 API REST de Alto Rendimiento**: FastAPI con validación automática y documentación interactiva
 - **📊 Dashboard de Analytics**: Visualizaciones en tiempo real con Plotly
+- **⚡ Cache Inteligente con Redis**: Métricas cacheadas para respuestas ultra-rápidas
 - **🔐 Autenticación Multi-Nivel**: JWT, API Keys y tokens de jugador
 - **💾 Base de Datos Híbrida**: Firestore para datos del juego + PostgreSQL para administración
 - **📈 Telemetría Avanzada**: Sistema completo de tracking de eventos
 - **🎮 Integración Unity**: SDK simplificado para el cliente del juego
 - **🔄 Sistema de Migraciones**: Gestión visual de esquemas de base de datos
-- **📦 Exportación de Datos**: Descarga de datasets en CSV/JSON
+- **📦 Exportación de Datos**: Descarga de datasets en CSV/JSON (Firestore) o CSV+JSON (SQL)
 - **🎨 Tema Claro/Oscuro**: Dashboard adaptable con diseño moderno
 
 ---
@@ -85,10 +87,11 @@ El proyecto sigue una **arquitectura hexagonal** (Ports & Adapters) que separa l
                              ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │               CAPA DE INFRAESTRUCTURA (Adapters)                 │
-│  ┌─────────────────────────┐  ┌──────────────────────┐          │
-│  │   Firebase Firestore    │  │     PostgreSQL       │          │
-│  │  (Datos del Juego)      │  │  (Autenticación)     │          │
-│  └─────────────────────────┘  └──────────────────────┘          │
+│  ┌─────────────────┐  ┌──────────────┐  ┌─────────────────┐    │
+│  │    Firebase     │  │  PostgreSQL  │  │     Redis       │    │
+│  │   Firestore     │  │     (SQL)    │  │    (Cache)      │    │
+│  │ (Datos Juego)   │  │   (Auth)     │  │  (Métricas)     │    │
+│  └─────────────────┘  └──────────────┘  └─────────────────┘    │
 └─────────────────────────────────────────────────────────────────┘
                              │
                              ▼
@@ -167,6 +170,7 @@ Triskel-API/
 | **Hashing** | passlib (bcrypt) | 1.7.4 | Hash de contraseñas |
 | **Validación** | Pydantic | 2.5.0 | Validación de datos |
 | **Visualizaciones** | Plotly | 5.18.0 | Gráficos interactivos |
+| **Cache** | Redis | 7.0+ | Cache de métricas y sesiones |
 | **ASGI Server** | Uvicorn | 0.27.0 | Servidor de desarrollo |
 | **WSGI Server** | Gunicorn | 21.2.0 | Servidor de producción |
 
@@ -178,6 +182,7 @@ Triskel-API/
 
 - Python 3.10 o superior
 - PostgreSQL 13+ (opcional, para autenticación admin)
+- Redis 7.0+ (opcional, para cache de analytics)
 - Cuenta de Firebase con Firestore habilitado
 - Git
 
@@ -243,6 +248,16 @@ DB_PORT=5432
 DB_NAME=triskel_db
 DB_USER=postgres
 DB_PASSWORD=tu_password_de_postgres
+
+# ===== REDIS (Opcional - Cache de analytics) =====
+# Desarrollo local
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=  # Dejar vacío para desarrollo local
+REDIS_DB=0
+
+# Producción (Railway auto-inyecta REDIS_URL si agregas addon)
+# REDIS_URL=redis://default:password@host:port
 
 # ===== CONFIGURACIÓN ADICIONAL =====
 # Entorno (development/production)
@@ -389,6 +404,130 @@ El dashboard proporciona visualizaciones en tiempo real y herramientas de admini
 
 ---
 
+## 🔄 Cache y Actualización de Datos
+
+### Sistema de Cache con Redis
+
+El dashboard utiliza **Redis** para cachear métricas y reducir la carga en las bases de datos.
+
+#### Configuración de Redis
+
+**Desarrollo Local:**
+```bash
+# Instalar Redis
+# macOS:
+brew install redis
+brew services start redis
+
+# Ubuntu/Debian:
+sudo apt install redis-server
+sudo systemctl start redis
+
+# Windows:
+# Descargar desde https://github.com/microsoftarchive/redis/releases
+```
+
+**Variables de Entorno:**
+```bash
+# Redis (Opcional - usa cache local si no está disponible)
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=  # Dejar vacío para desarrollo local
+REDIS_DB=0
+
+# Railway automáticamente inyecta REDIS_URL si agregas Redis addon
+# REDIS_URL=redis://default:password@host:port
+```
+
+**Producción (Railway):**
+1. En tu proyecto de Railway, click en "New"
+2. Selecciona "Database" → "Add Redis"
+3. Railway automáticamente inyecta `REDIS_URL`
+4. El sistema detecta y usa Redis automáticamente
+
+### Actualización de Datos
+
+#### Tiempo de Cache
+
+| Tipo de Métrica | TTL (Time To Live) | Actualización |
+|-----------------|-------------------|---------------|
+| **Métricas Globales** | 5 minutos | Automática en background |
+| **Estadísticas de Jugadores** | 10 minutos | On-demand (al acceder) |
+| **Distribución de Decisiones** | 15 minutos | Automática |
+| **Timeline de Eventos** | 30 segundos | Tiempo casi real |
+| **Datos de Partidas** | 3 minutos | Automática |
+
+#### Invalidación de Cache
+
+El cache se invalida automáticamente cuando:
+- ✅ Se completa una partida nueva
+- ✅ Se registra una decisión moral
+- ✅ Se crea un nuevo jugador
+- ✅ Expira el TTL configurado
+
+#### Actualización Manual
+
+**Desde el Dashboard:**
+- Cada página tiene un botón de "Actualizar" (🔄)
+- Click para forzar recarga de datos (bypassing cache)
+
+**Desde la API:**
+```python
+# Endpoint para invalidar cache (Admin)
+DELETE /api/v1/cache/analytics
+```
+
+**Desde CLI (Redis):**
+```bash
+# Limpiar todo el cache de analytics
+redis-cli FLUSHDB
+
+# Limpiar claves específicas
+redis-cli DEL analytics:global_metrics
+redis-cli DEL analytics:player_stats
+```
+
+### Fallback sin Redis
+
+Si Redis **no está disponible**:
+- ✅ El sistema funciona normalmente
+- ✅ Las métricas se calculan en tiempo real (sin cache)
+- ⚠️ Mayor latencia en dashboard (2-5 segundos)
+- ⚠️ Mayor carga en Firestore/PostgreSQL
+
+El logger mostrará:
+```
+[WARN] Redis no disponible. Usando cálculo directo sin cache.
+```
+
+### Monitoreo de Cache
+
+**Verificar estado de Redis:**
+```bash
+# Desde terminal
+redis-cli ping
+# Respuesta: PONG
+
+# Ver estadísticas
+redis-cli INFO stats
+
+# Ver claves en uso
+redis-cli KEYS analytics:*
+```
+
+**Desde Python:**
+```python
+from app.infrastructure.cache.redis_client import redis_client
+
+# Verificar conexión
+if redis_client.ping():
+    print("✓ Redis conectado")
+else:
+    print("✗ Redis no disponible")
+```
+
+---
+
 ## 🔄 Migraciones
 
 El sistema usa **Alembic** para gestionar cambios en el esquema de PostgreSQL.
@@ -467,10 +606,17 @@ Railway detecta automáticamente FastAPI y maneja el despliegue.
    DATABASE_URL=${DATABASE_URL}  # Auto-inyectada por Railway
    ```
 
-3. **Agregar PostgreSQL** (Opcional):
+3. **Agregar Bases de Datos** (Opcional):
+
+   **PostgreSQL** (para autenticación admin):
    - En tu proyecto de Railway, click en "New"
    - Selecciona "Database" → "Add PostgreSQL"
    - Railway automáticamente inyecta `DATABASE_URL`
+
+   **Redis** (para cache de analytics):
+   - En tu proyecto de Railway, click en "New"
+   - Selecciona "Database" → "Add Redis"
+   - Railway automáticamente inyecta `REDIS_URL`
 
 4. **Deploy Automático**:
    - Railway detecta `requirements.txt` y `uvicorn`
@@ -581,18 +727,19 @@ tests/
 - ✓ Sistema de autenticación JWT multi-nivel
 - ✓ Dashboard web con 7 páginas de analytics
 - ✓ 15+ visualizaciones interactivas con Plotly
-- ✓ Exportación de datos (CSV/JSON)
+- ✓ Exportación de datos (CSV/JSON para Firestore, CSV+JSON para SQL)
 - ✓ Sistema de migraciones con UI (Alembic)
 - ✓ Tema claro/oscuro adaptable
 - ✓ Audit logs y tracking de eventos
+- ✓ Cache con Redis (fallback automático si no disponible)
+- ✓ Exportación de admin users y audit logs
 
 ### 🚧 En Desarrollo
 
 - ⏳ Dominio Sessions (sesiones de juego persistentes)
-- ⏳ Leaderboards en tiempo real (Firebase Realtime DB)
+- ⏳ Leaderboards en tiempo real
 - ⏳ Tests automatizados completos (>80% cobertura)
 - ⏳ Webhooks para notificaciones
-- ⏳ Cache con Redis para mejorar rendimiento
 
 ### 🔮 Roadmap Futuro
 
