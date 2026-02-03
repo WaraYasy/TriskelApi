@@ -32,7 +32,6 @@ analytics_service = AnalyticsService(
     use_mock_data=False,  # Usar endpoints reales /v1/games y /v1/events
 )
 
-
 @analytics_bp.route("/")
 def index():
     """Dashboard principal con métricas globales.
