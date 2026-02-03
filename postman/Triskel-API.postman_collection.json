@@ -1,0 +1,1139 @@
+{
+	"info": {
+		"_postman_id": "triskel-api-v2",
+		"name": "Triskel API - Complete",
+		"description": "# Triskel API - Colección Completa\n\n## Descripción\nColección completa de endpoints para la API de Triskel: La Balada del Último Guardián.\n\nIncluye todos los dominios:\n- **Players**: Gestión de jugadores\n- **Games**: Gestión de partidas\n- **Events**: Telemetría y eventos de gameplay\n- **Sessions**: Sesiones de juego (tracking de tiempo)\n- **Auth**: Autenticación de administradores\n\n## Base URL\n```\nhttp://localhost:8000\n```\n\n## Tipos de Autenticación\n\n### 1. Público (Sin autenticación)\n- POST /v1/players - Crear jugador\n- POST /v1/auth/login - Login de administrador\n\n### 2. Autenticación de Jugador\nRequiere headers:\n- `X-Player-ID`: ID del jugador\n- `X-Player-Token`: Token secreto del jugador\n\n### 3. Autenticación de Admin\nRequiere header:\n- `X-API-Key`: Clave de API de administrador\n\nPermite acceso total a todos los endpoints.\n\n### 4. Autenticación JWT (Dashboard Admin)\nRequiere header:\n- `Authorization: Bearer <token>`\n\nUsado para el dashboard web de administración.\n\n## Variables de Colección\n\nConfigura estas variables:\n- `baseUrl`: URL base de la API (default: http://localhost:8000)\n- `apiKey`: Clave de API para acceso administrativo\n- `playerId`: ID del jugador (se auto-completa al crear jugador)\n- `playerToken`: Token del jugador (se auto-completa al crear jugador)\n- `gameId`: ID de la partida actual (se auto-completa al crear partida)\n- `jwtToken`: Token JWT de admin (se auto-completa al login)\n\n## Documentación Completa\nPara más información, visita: http://localhost:8000/docs\n\n---\n\n**Versión:** 2.0.0  \n**Autor:** Equipo Triskel  \n**Última actualización:** 2026-02-03",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Players",
+			"description": "Endpoints de gestión de jugadores",
+			"item": [
+				{
+					"name": "Create Player",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201 Created\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"playerId\", jsonData.player_id);",
+									"    pm.collectionVariables.set(\"playerToken\", jsonData.player_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"jugador_test\",\n  \"email\": \"jugador@triskel.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/players",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "players"]
+						},
+						"description": "Crear un nuevo jugador (público)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/players/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "players", "me"]
+						},
+						"description": "Obtener mi perfil de jugador"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Player by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/players/{{playerId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "players", "{{playerId}}"]
+						},
+						"description": "Obtener jugador por ID (solo tu propio ID o admin)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Player",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"total_playtime_seconds\": 7200,\n  \"games_played\": 10\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/players/{{playerId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "players", "{{playerId}}"]
+						},
+						"description": "Actualizar datos del jugador"
+					},
+					"response": []
+				},
+				{
+					"name": "List All Players (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/players?limit=100",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "players"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Listar todos los jugadores (requiere API Key)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Player",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/players/{{playerId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "players", "{{playerId}}"]
+						},
+						"description": "Eliminar jugador (solo tu propio ID o admin)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Games",
+			"description": "Endpoints de gestión de partidas",
+			"item": [
+				{
+					"name": "Create Game",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"gameId\", jsonData.game_id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"player_id\": \"{{playerId}}\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/games",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "games"]
+						},
+						"description": "Crear una nueva partida para el jugador autenticado"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Game by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/games/{{gameId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "games", "{{gameId}}"]
+						},
+						"description": "Obtener partida por ID (solo tus propias partidas o admin)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Player Games",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/games/player/{{playerId}}?limit=50",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "games", "player", "{{playerId}}"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "50"
+								},
+								{
+									"key": "days",
+									"value": "7",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Obtener todas las partidas de un jugador"
+					},
+					"response": []
+				},
+				{
+					"name": "Start Level",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"level\": \"senda_ebano\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/games/{{gameId}}/level/start",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "games", "{{gameId}}", "level", "start"]
+						},
+						"description": "Registrar inicio de un nivel"
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Level",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"level\": \"senda_ebano\",\n  \"time_seconds\": 300,\n  \"deaths\": 5,\n  \"choice\": \"sanar\",\n  \"relic\": \"lirio\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/games/{{gameId}}/level/complete",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "games", "{{gameId}}", "level", "complete"]
+						},
+						"description": "Registrar completado de un nivel con métricas y decisiones"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Game",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"status\": \"in_progress\",\n  \"total_time_seconds\": 1800\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/games/{{gameId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "games", "{{gameId}}"]
+						},
+						"description": "Actualizar datos de la partida"
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Game",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/games/{{gameId}}/complete",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "games", "{{gameId}}", "complete"]
+						},
+						"description": "Finalizar una partida (marcarla como completada)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Games (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/games?limit=100&days=7",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "games"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "days",
+									"value": "7"
+								}
+							]
+						},
+						"description": "Listar todas las partidas (requiere API Key)"
+					},
+					"response": []
+				},
+				{
+					"name": "Count Games (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/games/count?days=30",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "games", "count"],
+							"query": [
+								{
+									"key": "days",
+									"value": "30"
+								},
+								{
+									"key": "status",
+									"value": "completed",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Contar partidas con filtros (requiere API Key)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Game",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/games/{{gameId}}",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "games", "{{gameId}}"]
+						},
+						"description": "Eliminar una partida"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Events",
+			"description": "Endpoints de telemetría y eventos de gameplay",
+			"item": [
+				{
+					"name": "Create Event",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"player_id\": \"{{playerId}}\",\n  \"game_id\": \"{{gameId}}\",\n  \"event_type\": \"player_death\",\n  \"event_data\": {\n    \"location\": \"bosque_sombrio\",\n    \"cause\": \"enemigo\"\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/events",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "events"]
+						},
+						"description": "Crear un evento de gameplay"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Batch Events",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"events\": [\n    {\n      \"player_id\": \"{{playerId}}\",\n      \"game_id\": \"{{gameId}}\",\n      \"event_type\": \"level_start\",\n      \"event_data\": {\"level\": \"senda_ebano\"}\n    },\n    {\n      \"player_id\": \"{{playerId}}\",\n      \"game_id\": \"{{gameId}}\",\n      \"event_type\": \"item_collected\",\n      \"event_data\": {\"item\": \"pocion_vida\"}\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/events/batch",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "events", "batch"]
+						},
+						"description": "Crear múltiples eventos en una sola petición (optimización Unity)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Game Events",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/events/game/{{gameId}}?limit=500",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "events", "game", "{{gameId}}"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "500"
+								}
+							]
+						},
+						"description": "Obtener eventos de una partida"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Player Events",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/events/player/{{playerId}}?limit=200",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "events", "player", "{{playerId}}"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "200"
+								},
+								{
+									"key": "days",
+									"value": "7",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Obtener eventos de un jugador"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Game Events by Type",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/events/game/{{gameId}}/type/player_death",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "events", "game", "{{gameId}}", "type", "player_death"]
+						},
+						"description": "Obtener eventos de una partida filtrados por tipo"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Events (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/events?limit=100&days=1",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "events"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "days",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Listar todos los eventos (requiere API Key, por defecto últimas 24h)"
+					},
+					"response": []
+				},
+				{
+					"name": "Count Events (Admin)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-API-Key",
+								"value": "{{apiKey}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/events/count?days=7",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "events", "count"],
+							"query": [
+								{
+									"key": "days",
+									"value": "7"
+								},
+								{
+									"key": "event_type",
+									"value": "player_death",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Contar eventos con filtros (requiere API Key)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Sessions",
+			"description": "Endpoints de sesiones de juego (tracking de tiempo)",
+			"item": [
+				{
+					"name": "Start Session",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"game_id\": \"{{gameId}}\",\n  \"platform\": \"pc\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/sessions",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "sessions"]
+						},
+						"description": "Iniciar una nueva sesión de juego"
+					},
+					"response": []
+				},
+				{
+					"name": "End Session",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/sessions/:sessionId/end",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "sessions", ":sessionId", "end"],
+							"variable": [
+								{
+									"key": "sessionId",
+									"value": "session-id-here"
+								}
+							]
+						},
+						"description": "Terminar una sesión de juego activa"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Player Sessions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/sessions/player/{{playerId}}?limit=100",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "sessions", "player", "{{playerId}}"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Obtener sesiones de un jugador"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Game Sessions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "X-Player-ID",
+								"value": "{{playerId}}"
+							},
+							{
+								"key": "X-Player-Token",
+								"value": "{{playerToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/sessions/game/{{gameId}}?limit=100",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "sessions", "game", "{{gameId}}"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								}
+							]
+						},
+						"description": "Obtener sesiones de una partida"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Auth",
+			"description": "Endpoints de autenticación de administradores (Dashboard Web)",
+			"item": [
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set(\"jwtToken\", jsonData.access_token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/auth/login",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "auth", "login"]
+						},
+						"description": "Login de administrador (obtiene token JWT)"
+					},
+					"response": []
+				},
+				{
+					"name": "Refresh Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"refresh_token\": \"refresh-token-here\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/auth/refresh",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "auth", "refresh"]
+						},
+						"description": "Renovar token de acceso usando refresh token"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Current User",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/auth/me",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "auth", "me"]
+						},
+						"description": "Obtener información del administrador autenticado"
+					},
+					"response": []
+				},
+				{
+					"name": "Logout",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/auth/logout",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "auth", "logout"]
+						},
+						"description": "Cerrar sesión (registra en audit log)"
+					},
+					"response": []
+				},
+				{
+					"name": "Change Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"old_password\": \"admin123\",\n  \"new_password\": \"new_password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/auth/change-password",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "auth", "change-password"]
+						},
+						"description": "Cambiar contraseña del usuario actual"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Admin User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"username\": \"nuevo_admin\",\n  \"email\": \"admin@triskel.com\",\n  \"password\": \"password123\",\n  \"role\": \"moderator\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/auth/admin/users",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "auth", "admin", "users"]
+						},
+						"description": "Crear un nuevo usuario administrador (requiere permiso create_admins)"
+					},
+					"response": []
+				},
+				{
+					"name": "List Admin Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/auth/admin/users?limit=100",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "auth", "admin", "users"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "role",
+									"value": "admin",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Listar usuarios administradores (requiere permiso view_admins)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Admin User by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/auth/admin/users/:userId",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "auth", "admin", "users", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Obtener usuario administrador por ID (requiere permiso view_admins)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Admin User",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"nuevo_email@triskel.com\",\n  \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/v1/auth/admin/users/:userId",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "auth", "admin", "users", ":userId"],
+							"variable": [
+								{
+									"key": "userId",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Actualizar usuario administrador (requiere permiso edit_admins)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Audit Logs",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{jwtToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/v1/auth/admin/audit?limit=100",
+							"host": ["{{baseUrl}}"],
+							"path": ["v1", "auth", "admin", "audit"],
+							"query": [
+								{
+									"key": "limit",
+									"value": "100"
+								},
+								{
+									"key": "action",
+									"value": "login",
+									"disabled": true
+								},
+								{
+									"key": "success",
+									"value": "true",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Obtener registros de auditoría (requiere permiso view_audit_logs)"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "apiKey",
+			"value": "triskel_admin_api_key_desarrollo_2024",
+			"type": "string"
+		},
+		{
+			"key": "playerId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "playerToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "gameId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "jwtToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
