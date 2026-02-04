@@ -256,11 +256,23 @@ class GameService:
         status = "completed" if completed else "abandoned"
         update_data = GameUpdate(status=status, ended_at=datetime.now(timezone.utc))
 
-        # Actualizar partida
+        # Actualizar partida en la BD
         updated_game = self.game_repository.update(game_id, update_data)
 
-        # Actualizar stats del jugador
-        self.player_service.update_player_stats_after_game(game.player_id, updated_game)
+        # IMPORTANTE: updated_game contiene TODOS los datos frescos de Firestore
+        # (total_time_seconds, decisiones, reliquias, métricas, etc.)
+        # porque repository.update() hace get_by_id() después de actualizar.
+        # Usar este objeto completo para calcular stats del jugador.
+        if updated_game:
+            logger.info(
+                f"🏁 Finalizando partida: {game_id[:8]}... | "
+                f"Status: {updated_game.status} | "
+                f"Tiempo total: {updated_game.total_time_seconds}s ({updated_game.total_time_seconds/60:.1f} min) | "
+                f"Decisiones: {updated_game.choices.model_dump(exclude_none=True)} | "
+                f"Reliquias: {updated_game.relics} | "
+                f"Muertes: {updated_game.metrics.total_deaths}"
+            )
+            self.player_service.update_player_stats_after_game(game.player_id, updated_game)
 
         return updated_game
 

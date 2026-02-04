@@ -197,13 +197,25 @@ class PlayerService:
         if not player:
             return None
 
+        logger.info(
+            f"📥 Actualizando stats del jugador {player_id[:8]}... | "
+            f"Partida: {game.game_id[:8]}... | "
+            f"Recibido: time={game.total_time_seconds}s, status={game.status}, "
+            f"muertes={game.metrics.total_deaths}"
+        )
+
         # 1. CONTADORES DE PARTIDAS
         player.games_played += 1
         if game.status == "completed":
             player.games_completed += 1
 
         # 2. TIEMPO TOTAL DE JUEGO
+        old_playtime = player.total_playtime_seconds
         player.total_playtime_seconds += game.total_time_seconds
+        logger.info(
+            f"⏱️  Tiempo actualizado: {old_playtime}s + {game.total_time_seconds}s = "
+            f"{player.total_playtime_seconds}s ({player.total_playtime_seconds/60:.1f} min)"
+        )
 
         # 3. MUERTES TOTALES
         player.stats.total_deaths += game.metrics.total_deaths

@@ -311,25 +311,33 @@ class AnalyticsService:
     def _get_dark_layout(self):
         """
         Retorna configuración de layout oscuro para gráficos de Plotly.
+        Incluye prevención de overflow y responsive design.
         """
         return {
             "paper_bgcolor": "rgba(0,0,0,0)",
             "plot_bgcolor": "rgba(0,0,0,0)",
-            "font": {"color": "#a0aec0", "family": "Inter, sans-serif"},
+            "font": {"color": "#a0aec0", "family": "Inter, sans-serif", "size": 12},
             "xaxis": {
                 "gridcolor": "#2d3748",
                 "color": "#a0aec0",
                 "showline": False,
                 "zeroline": False,
+                "automargin": True,  # Previene corte de etiquetas
             },
             "yaxis": {
                 "gridcolor": "#2d3748",
                 "color": "#a0aec0",
                 "showline": False,
                 "zeroline": False,
+                "automargin": True,  # Previene corte de etiquetas
             },
-            "legend": {"font": {"color": "#a0aec0"}, "bgcolor": "rgba(0,0,0,0)"},
-            "margin": {"t": 40, "r": 20, "b": 40, "l": 60},
+            "legend": {
+                "font": {"color": "#a0aec0"},
+                "bgcolor": "rgba(0,0,0,0)",
+                "orientation": "v",  # Vertical para evitar overflow horizontal
+            },
+            "margin": {"t": 40, "r": 20, "b": 60, "l": 70},  # Aumentado para etiquetas largas
+            "autosize": True,  # Responsive
         }
 
     def get_all_players(self) -> List[Dict[str, Any]]:
@@ -476,9 +484,9 @@ class AnalyticsService:
 
         try:
             # OPTIMIZACIÓN: Llamar endpoint admin directo
-            logger.info("[Analytics] Calling GET /v1/events with limit=500")
+            logger.info("[Analytics] Calling GET /v1/events with limit=500, days=30")
 
-            response = self.client.get("/v1/events", params={"limit": 500})
+            response = self.client.get("/v1/events", params={"limit": 500, "days": 30})
 
             logger.info(f"[Analytics] Response status: {response.status_code}")
             logger.info(
@@ -782,11 +790,17 @@ class AnalyticsService:
             df,
             x="Tiempo (min)",
             title="Distribución de Tiempo de Juego",
-            labels={"Tiempo (min)": "Tiempo total de juego (minutos)"},
+            labels={
+                "Tiempo (min)": "Tiempo total de juego (minutos)",
+                "count": "Número de jugadores",
+            },
             nbins=20,
         )
 
         fig.update_layout(self._get_dark_layout())
+
+        # Personalizar eje Y para mayor claridad
+        fig.update_yaxes(title_text="Número de jugadores")
 
         return fig.to_json()
 
@@ -1047,12 +1061,16 @@ class AnalyticsService:
             df,
             x="Align",
             nbins=20,
-            labels={"Align": "Alineación Moral (0=Malo, 1=Bueno)"},
+            labels={"Align": "Alineación Moral (0=Malo, 1=Bueno)", "count": "Número de jugadores"},
             color_discrete_sequence=["#8b5cf6"],
         )
 
         fig.update_layout(self._get_dark_layout())
         fig.update_layout(title=None, bargap=0.1)
+
+        # Personalizar eje Y para mayor claridad
+        fig.update_yaxes(title_text="Número de jugadores")
+
         return fig.to_json()
 
     def create_relics_distribution_chart(self, games: List[Dict]) -> str:
