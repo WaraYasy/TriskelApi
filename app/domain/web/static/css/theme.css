@@ -697,3 +697,14 @@ body {
 [data-theme="light"] .confirm-message {
     color: var(--text-secondary);
 }
+
+/* Alert Success en modo claro - más teal/oscuro para mejor contraste */
+[data-theme="light"] .alert-success {
+    background: linear-gradient(135deg, rgba(20, 184, 166, 0.15) 0%, rgba(13, 148, 136, 0.1) 100%);
+    border: 1px solid rgba(20, 184, 166, 0.4);
+    color: #0f766e;
+}
+
+[data-theme="light"] .alert-success svg {
+    color: #14b8a6;
+}
