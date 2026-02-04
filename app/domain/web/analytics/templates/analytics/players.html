@@ -84,7 +84,7 @@
 </section>
 
 <!-- Leaderboards -->
-<section class="events-section">
+<section class="events-section" style="margin-bottom: 3rem;">
     <div class="section-header">
         <h2 class="section-title">Leaderboards</h2>
     </div>
@@ -175,7 +175,14 @@
                 return;
             }
 
-            tbody.innerHTML = players.map(player => {
+            // Ordenar por última actividad (last_login) - más reciente primero
+            const sortedPlayers = players.sort((a, b) => {
+                const dateA = new Date(a.last_login || 0);
+                const dateB = new Date(b.last_login || 0);
+                return dateB - dateA;
+            });
+
+            tbody.innerHTML = sortedPlayers.map(player => {
                 // Obtener moral_alignment desde stats o directamente (compatibilidad)
                 const alignment = player.stats?.moral_alignment ?? player.moral_alignment;
 
