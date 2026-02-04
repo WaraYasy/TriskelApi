@@ -327,4 +327,12 @@ class PlayerService:
             f"Guardado exitoso: {updated_player is not None}"
         )
 
+        # Log detallado de stats morales guardados
+        logger.info(
+            f"📊 STATS MORALES GUARDADOS → Player: {player_id[:8]}... | "
+            f"total_good_choices={player.stats.total_good_choices}, "
+            f"total_bad_choices={player.stats.total_bad_choices}, "
+            f"moral_alignment={player.stats.moral_alignment:.2f}"
+        )
+
         return updated_player
