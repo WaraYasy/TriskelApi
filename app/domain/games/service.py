@@ -160,6 +160,12 @@ class GameService:
 
         # Si la partida terminó, actualizar stats del jugador
         if game_update.status in ["completed", "abandoned"]:
+            logger.warning(
+                f"⚠️  update_game() está finalizando partida {game_id[:8]}... | "
+                f"Status: {game_update.status} | "
+                f"⚠️  RECOMENDACIÓN: Usar finish_game() en lugar de update_game() "
+                f"para finalizar partidas y evitar duplicación de stats."
+            )
             self.player_service.update_player_stats_after_game(game.player_id, updated_game)
 
         return updated_game
@@ -272,6 +278,15 @@ class GameService:
                 f"Reliquias: {updated_game.relics} | "
                 f"Muertes: {updated_game.metrics.total_deaths}"
             )
+
+            # ADVERTENCIA: Si el tiempo es 0, probablemente finish_game se llamó antes de complete_level
+            if updated_game.total_time_seconds == 0:
+                logger.error(
+                    f"❌ ERROR: Partida {game_id[:8]}... tiene total_time_seconds=0! "
+                    f"Esto indica que finish_game se llamó ANTES de que se completaran los niveles. "
+                    f"Unity debe llamar complete_level para TODOS los niveles ANTES de llamar finish_game."
+                )
+
             self.player_service.update_player_stats_after_game(game.player_id, updated_game)
 
         return updated_game

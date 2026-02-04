@@ -204,6 +204,15 @@ class PlayerService:
             f"muertes={game.metrics.total_deaths}"
         )
 
+        # ADVERTENCIA: Esta función incrementa contadores cada vez que se llama
+        # Si se llama múltiples veces para la misma partida, los datos se duplicarán
+        logger.warning(
+            f"⚠️  ANTES de actualizar → Player: {player_id[:8]}... | "
+            f"games_played={player.games_played}, "
+            f"games_completed={player.games_completed}, "
+            f"total_playtime={player.total_playtime_seconds}s ({player.total_playtime_seconds/60:.1f} min)"
+        )
+
         # 1. CONTADORES DE PARTIDAS
         player.games_played += 1
         if game.status == "completed":
@@ -308,4 +317,14 @@ class PlayerService:
             stats=player.stats,
         )
 
-        return self.repository.update(player_id, update_data)
+        updated_player = self.repository.update(player_id, update_data)
+
+        logger.info(
+            f"✅ DESPUÉS de actualizar → Player: {player_id[:8]}... | "
+            f"games_played={player.games_played}, "
+            f"games_completed={player.games_completed}, "
+            f"total_playtime={player.total_playtime_seconds}s ({player.total_playtime_seconds/60:.1f} min) | "
+            f"Guardado exitoso: {updated_player is not None}"
+        )
+
+        return updated_player

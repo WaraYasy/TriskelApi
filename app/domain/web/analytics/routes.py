@@ -3,12 +3,12 @@
 Dashboard de métricas y visualizaciones del juego.
 
 Rutas:
-- GET /dashboard/          → Dashboard principal con métricas globales.
-- GET /dashboard/players   → Análisis detallado de jugadores.
-- GET /dashboard/games     → Análisis de partidas y progresión.
-- GET /dashboard/choices   → Análisis de decisiones morales.
-- GET /dashboard/events    → Análisis de eventos de gameplay.
-- GET /dashboard/export    → Exportar datos a CSV.
+- GET /dashboard/             → Dashboard principal con métricas globales.
+- GET /dashboard/players      → Análisis detallado de jugadores.
+- GET /dashboard/games        → Análisis de partidas y progresión.
+- GET /dashboard/choices      → Análisis de decisiones morales.
+- GET /dashboard/events       → Análisis de eventos de gameplay.
+- GET /dashboard/export       → Exportar datos a CSV.
 
 Autor: Mandrágora
 """

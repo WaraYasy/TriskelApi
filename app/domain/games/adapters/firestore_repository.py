@@ -250,12 +250,17 @@ class FirestoreGameRepository(IGameRepository):
         game = Game.from_dict(doc.to_dict())
 
         # Guardar timestamp de inicio del nivel para cálculo automático
-        game.metrics.level_start_times[level_data.level] = datetime.now(timezone.utc)
+        start_timestamp = datetime.now(timezone.utc)
+        game.metrics.level_start_times[level_data.level] = start_timestamp
         game.current_level = level_data.level
 
         # Guardar cambios
         doc_ref.set(game.to_dict())
 
+        logger.info(
+            f"⏱️  Timestamp de INICIO guardado para nivel '{level_data.level}': {start_timestamp} "
+            f"[Partida: {game_id[:8]}...]"
+        )
         logger.info(
             f"⏱️  Nivel iniciado: {level_data.level} en partida {game_id[:8]}... "
             f"[Timestamp guardado: {game.metrics.level_start_times[level_data.level]}]"
@@ -297,6 +302,11 @@ class FirestoreGameRepository(IGameRepository):
 
         if time_seconds is None:
             # Calcular desde timestamp guardado en start_level
+            logger.info(
+                f"🔍 Buscando timestamp de inicio para '{level_data.level}' | "
+                f"Timestamps guardados: {list(game.metrics.level_start_times.keys())} "
+                f"[Partida: {game_id[:8]}...]"
+            )
             level_start_time = game.metrics.level_start_times.get(level_data.level)
 
             if level_start_time:
@@ -331,8 +341,10 @@ class FirestoreGameRepository(IGameRepository):
             else:
                 # No hay timestamp de inicio, usar 1 segundo como fallback
                 time_seconds = 1
-                logger.warning(
-                    f"⚠️  No se encontró timestamp de inicio para '{level_data.level}'. "
+                logger.error(
+                    f"❌ ERROR: No se encontró timestamp de inicio para '{level_data.level}'! "
+                    f"Timestamps disponibles: {list(game.metrics.level_start_times.keys())} | "
+                    f"Unity debe llamar start_level() ANTES de complete_level(). "
                     f"Usando fallback de 1s. [Partida: {game_id[:8]}...]"
                 )
         else:
