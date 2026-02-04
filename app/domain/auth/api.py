@@ -1,3 +1,19 @@
+"""API REST para Autenticación de Administradores.
+
+Este módulo proporciona endpoints para:
+- Login JWT con rate limiting
+- Refresh de tokens de acceso
+- Gestión de usuarios administradores (CRUD)
+- Cambio de contraseñas con validación
+- Logs de auditoría de acciones admin
+- Información del usuario actual autenticado
+
+Requiere autenticación Bearer (JWT token) o API Key según el endpoint.
+Los endpoints de gestión de usuarios requieren role='admin'.
+
+Autor: Mandrágora
+"""
+
 from datetime import datetime
 from typing import List, Optional
 
@@ -216,6 +232,36 @@ def logout(
 
 @router.get("/me", response_model=CurrentUserResponse)
 def get_current_user_info(current_user: dict = Depends(get_current_admin)):
+    """Obtener información del usuario admin actualmente autenticado.
+
+    Requiere JWT token válido (Bearer token en header Authorization).
+    Retorna los datos del usuario que realizó el login, incluyendo
+    su role, permisos y estado de cuenta.
+
+    Args:
+        current_user (dict): Usuario actual obtenido del JWT (inyectado automáticamente).
+
+    Returns:
+        CurrentUserResponse: Datos del usuario con id, username, email, role, is_active.
+
+    Raises:
+        HTTPException: 401 si el token es inválido, expirado o el usuario está desactivado.
+
+    Example:
+        ```
+        GET /v1/auth/me
+        Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+
+        Response 200:
+        {
+            "id": 1,
+            "username": "admin",
+            "email": "admin@triskel.com",
+            "role": "admin",
+            "is_active": true
+        }
+        ```
+    """
     return CurrentUserResponse(**current_user)
 
 

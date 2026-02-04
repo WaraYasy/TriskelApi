@@ -1,3 +1,19 @@
+"""Rutas del Panel de Administración Web.
+
+Este módulo implementa la interfaz web Flask para administradores con:
+- Login y gestión de sesiones (cookies JWT)
+- Panel de control (dashboard)
+- Gestión de migraciones de base de datos SQL
+- Logs de auditoría de acciones
+- Exportación de datos (CSV/JSON) con auditoría
+- Visualización de métricas del sistema
+
+Todos los endpoints requieren autenticación mediante JWT almacenado
+en cookie 'admin_token'. Los usuarios deben tener role='admin'.
+
+Autor: Mandrágora
+"""
+
 import csv
 import io
 import json
@@ -13,10 +29,32 @@ admin_bp = Blueprint("admin", __name__, template_folder="../templates/admin")
 
 
 def login_required(f):
-    """
-    Decorador que protege rutas de admin.
-    Valida el JWT desde la cookie 'admin_token'.
-    Si no es válido, redirige al login.
+    """Decorador que protege rutas de admin requiriendo autenticación JWT.
+
+    Valida el JWT desde la cookie 'admin_token' y redirige al login
+    si el token es inválido, expirado o no existe. Guarda la información
+    del usuario en el contexto Flask global (g.current_user) para su
+    uso en las vistas protegidas.
+
+    Args:
+        f (callable): Función de vista Flask a proteger.
+
+    Returns:
+        callable: Función decorada con validación de JWT.
+
+    Example:
+        ```python
+        @admin_bp.route("/dashboard")
+        @login_required
+        def dashboard():
+            username = g.current_user["username"]
+            return render_template("dashboard.html", username=username)
+        ```
+
+    Note:
+        - Verifica que el token sea de tipo "access" (no refresh)
+        - Almacena user_id, username y role en g.current_user
+        - Redirige a admin.login si falla la validación
     """
 
     @wraps(f)
@@ -59,10 +97,42 @@ def _create_export_audit_log(
     success: bool = True,
     error_message: str = None,
 ):
-    """
-    Crea un registro de auditoría para exportaciones.
-    Si la base de datos SQL no está disponible, solo registra en logs.
-    Obtiene la información del usuario actual desde g.current_user.
+    """Crea un registro de auditoría para exportaciones de datos.
+
+    Registra en la base de datos SQL (tabla audit_logs) todas las
+    exportaciones realizadas por administradores, incluyendo metadatos
+    de la operación. Si la BD SQL no está disponible, solo registra
+    en logs estructurados.
+
+    Args:
+        data_type (str): Tipo de datos exportados (ej: "players", "games", "events").
+        filename (str, optional): Nombre del archivo generado (ej: "players_20260204.csv").
+        export_format (str): Formato de exportación ("csv" o "json"). Default: "csv".
+        ip_address (str, optional): Dirección IP del cliente que exporta.
+        user_agent (str, optional): User-Agent del navegador.
+        success (bool): Indica si la exportación fue exitosa. Default: True.
+        error_message (str, optional): Mensaje de error si la exportación falló.
+
+    Returns:
+        None
+
+    Note:
+        - Obtiene user_id y username de g.current_user (Flask context global)
+        - Si SQL no está disponible, solo registra warning en logs
+        - La acción se registra como "export_{data_type}_{format}"
+        - Los detalles JSON incluyen data_type, format y filename
+
+    Example:
+        ```python
+        _create_export_audit_log(
+            data_type="players",
+            filename="players_20260204.csv",
+            export_format="csv",
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get("User-Agent"),
+            success=True
+        )
+        ```
     """
     from app.core.logger import logger
     from app.domain.auth.adapters.sql_repository import SQLAuthRepository

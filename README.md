@@ -384,7 +384,7 @@ El dashboard proporciona visualizaciones en tiempo real y herramientas de admini
 |------|-------------|--------|
 | `/web/` | Landing page con métricas destacadas | Público |
 | `/web/analytics/` | Dashboard principal con estadísticas globales | Público |
-| `/web/analytics/players` | Análisis detallado de jugadores | Público |
+| `/web/analytics/players` | Análisis detallado de jugadores + Top 10 completadas | Público |
 | `/web/analytics/games` | Análisis de partidas y progresión | Público |
 | `/web/analytics/choices` | Distribución de decisiones morales | Público |
 | `/web/analytics/events` | Timeline de eventos del sistema | Público |
@@ -401,6 +401,17 @@ El dashboard proporciona visualizaciones en tiempo real y herramientas de admini
 - 📥 **Exportación Flexible**: Descarga de datos en CSV o JSON
 - 🎮 **Análisis de Gameplay**: Muertes, reliquias, decisiones morales, progresión
 - 👥 **Perfiles de Jugador**: Estadísticas individuales y alineación moral
+- 🏆 **Ranking Simple**: Top 10 jugadores con más partidas completadas (en página Players)
+
+### Sobre el Sistema de Leaderboards
+
+> **Nota de Diseño**: El backend incluye un sistema completo de leaderboards con múltiples categorías (speedruns, muertes, completadas, etc.). Sin embargo, **no se expone en el dashboard web** porque:
+>
+> - 🎭 **"La Balada del Último Guardián" es un juego narrativo** donde lo importante es leer la historia y vivir la experiencia
+> - ⏱️ Métricas competitivas como speedruns o rankings de eficiencia **no aportan valor** a la experiencia que buscamos ofrecer
+> - 🎯 El único ranking visible es "partidas completadas" para celebrar a quienes terminaron la historia
+>
+> La arquitectura está **preparada para ser escalable**: si en el futuro el juego evoluciona hacia mecánicas competitivas, el sistema de leaderboards puede activarse sin cambios en el backend. Por ahora, priorizamos la inmersión narrativa sobre la competición.
 
 ---
 
@@ -709,7 +720,7 @@ tests/
 | Documento | Descripción |
 |-----------|-------------|
 | [API.md](docs/API.md) | Referencia completa de endpoints con ejemplos |
-| [UNITY_INTEGRATION.md](docs/UNITY_INTEGRATION.md) | Guía de integración con Unity |
+| [INTEGRACION_UNITY.md](docs/INTEGRACION_UNITY.md) | Guía completa de integración con Unity (español) |
 | [RAILWAY_DEPLOYMENT.md](docs/RAILWAY_DEPLOYMENT.md) | Tutorial de despliegue en Railway |
 | [SECURITY_KEYS.md](docs/SECURITY_KEYS.md) | Generación y gestión de claves |
 | [CLAUDE.md](CLAUDE.md) | Instrucciones para Claude Code (desarrollo) |
@@ -737,9 +748,18 @@ tests/
 ### 🚧 En Desarrollo
 
 - ⏳ Dominio Sessions (sesiones de juego persistentes)
-- ⏳ Leaderboards en tiempo real
 - ⏳ Tests automatizados completos (>80% cobertura)
 - ⏳ Webhooks para notificaciones
+
+### 🎯 Decisiones de Diseño
+
+**Sistema de Leaderboards:**
+- ✅ Backend completamente implementado y funcional (API `/v1/leaderboard`)
+- ✅ Arquitectura escalable con múltiples categorías (speedruns, completadas, muertes, etc.)
+- ❌ **Intencionalmente NO expuesto en dashboard web** por decisión de diseño de juego
+- 🎭 El juego es narrativo/experiencial, no competitivo - métricas como speedruns contradicen la experiencia
+- 📊 Solo se muestra "Top 10 Completadas" para celebrar a quienes terminaron la historia
+- 🔮 Sistema listo para activarse si el juego evoluciona hacia mecánicas competitivas
 
 ### 🔮 Roadmap Futuro
 
