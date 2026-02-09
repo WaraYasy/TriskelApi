@@ -37,7 +37,7 @@ python-multipart==0.0.6            # Form data parsing para login
 slowapi==0.1.9                     # Rate limiting para FastAPI
 
 # ==================== Producción ====================
-gunicorn==21.2.0                 # WSGI server (producción)
+gunicorn==25.0.3                 # WSGI server (producción)
 
 # ==================== Scheduling ====================
 APScheduler==3.10.4              # Tareas programadas para leaderboards
